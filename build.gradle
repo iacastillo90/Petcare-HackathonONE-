@@ -19,12 +19,46 @@ repositories {
 }
 
 dependencies {
-	implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
-	implementation 'org.springframework.boot:spring-boot-starter-data-rest'
+
+	// Dependencias Web y seguridad
+	implementation 'org.springframework.boot:spring-boot-starter-security'
 	implementation 'org.springframework.boot:spring-boot-starter-web'
+	implementation 'org.springframework.boot:spring-boot-starter-websocket'
+	implementation 'org.springframework.boot:spring-boot-starter-thymeleaf'
+
+	// Test
+	testImplementation 'org.springframework.boot:spring-boot-starter-test' // Librerías de testing
+	testImplementation 'org.springframework.security:spring-security-test' // Librerías de testing de seguridad
+	testRuntimeOnly 'org.junit.platform:junit-platform-launcher' // Launcher de JUnit
+	testImplementation 'com.h2database:h2' // Base de datos H2 para testing
+	implementation 'org.testng:testng:7.7.0'
+
+	// Dependencias de JPA y base de datos
+	implementation 'org.springframework.boot:spring-boot-starter-data-jpa' // JPA
+	implementation 'org.springframework.boot:spring-boot-starter-data-rest' // Repositorios expuestos como API REST
 	runtimeOnly 'com.h2database:h2'
-	testImplementation 'org.springframework.boot:spring-boot-starter-test'
-	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+	//runtimeOnly 'com.mysql:mysql-connector-j:9.2.0' // Conector MySQL
+
+	// Lombok
+	compileOnly 'org.projectlombok:lombok' // Lombok para simplificar código
+	annotationProcessor 'org.projectlombok:lombok' // Procesador de anotaciones de Lombok
+
+	// JJWT (para autenticación y tokens JWT)
+	implementation 'io.jsonwebtoken:jjwt-api:0.11.5' // API de JWT
+	runtimeOnly 'io.jsonwebtoken:jjwt-impl:0.11.5' // Implementación de JWT
+	runtimeOnly 'io.jsonwebtoken:jjwt-jackson:0.11.5' // Integración con Jackson para JWT
+
+	// Mail
+	implementation 'org.springframework.boot:spring-boot-starter-mail' // Starter para enviar correos electrónicos
+
+	// PDF
+	implementation 'com.itextpdf:itext7-core:7.2.5'
+
+	// Validación
+	implementation 'org.springframework.boot:spring-boot-starter-validation'
+
+	// Documentacion
+	implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.5.0'
 }
 
 tasks.named('test') {
