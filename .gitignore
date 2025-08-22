@@ -35,3 +35,22 @@ out/
 
 ### VS Code ###
 .vscode/
+
+# Archivos de configuración locales con secretos
+application-local.properties
+
+# Archivos compilados de Java
+*.class
+/target/
+
+# Archivos de logs
+*.log
+
+# Archivos de configuración de IDEs
+.idea/
+*.iml
+.vscode/
+
+# Archivos del sistema operativo
+.DS_Store
+Thumbs.db

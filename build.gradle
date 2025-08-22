@@ -36,7 +36,7 @@ dependencies {
 	// Dependencias de JPA y base de datos
 	implementation 'org.springframework.boot:spring-boot-starter-data-jpa' // JPA
 	implementation 'org.springframework.boot:spring-boot-starter-data-rest' // Repositorios expuestos como API REST
-	//runtimeOnly 'com.h2database:h2' // H2 para desarrollo
+	//runtimeOnly 'com.h2database:h2'
 	runtimeOnly 'com.mysql:mysql-connector-j:9.2.0' // Conector MySQL
 
 	// Lombok
@@ -63,4 +63,8 @@ dependencies {
 
 tasks.named('test') {
 	useJUnitPlatform()
+}
+
+tasks.withType(JavaCompile) {
+	options.compilerArgs += "-Xlint:deprecation"
 }

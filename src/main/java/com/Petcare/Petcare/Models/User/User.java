@@ -1,13 +1,22 @@
-package com.Petcare.Petcare.Models;
+package com.Petcare.Petcare.Models.User;
 
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
+import java.util.Collection;
+import java.util.List;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.userdetails.UserDetails;
 
+
+@Builder
+@AllArgsConstructor
 @Entity
-@Table(name = "users") // Es una buena práctica nombrar las tablas en plural y minúsculas
-public class User {
+@Table(name = "users")
+public class User implements UserDetails {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -16,14 +25,14 @@ public class User {
     @Column(nullable = false, length = 250)
     private String firstName;
 
-    @Column(length = 250) // Por defecto, nullable es true
+    @Column(length = 250)
     private String lastName;
 
     @Column(nullable = false, unique = true, length = 250)
     private String email;
 
     @Column(nullable = false)
-    private String password; // Importante: Este campo debe almacenar el hash de la contraseña
+    private String password;
 
     @Column(columnDefinition = "TEXT")
     private String address;
@@ -31,9 +40,9 @@ public class User {
     @Column(length = 250)
     private String phoneNumber;
 
-    // @Enumerated(EnumType.STRING)
-   // @Column(nullable = false)
-   // private Role role;
+   @Enumerated(EnumType.STRING)
+   @Column(nullable = false)
+   private Role role;
 
    // @Enumerated(EnumType.STRING)
    // private PermissionLevel permissionLevel;
@@ -45,15 +54,25 @@ public class User {
 
     private LocalDateTime lastLoginAt;
 
-    @CreationTimestamp // Gestionado automáticamente por Hibernate
+    @CreationTimestamp
     @Column(updatable = false)
     private LocalDateTime createdAt;
 
-    @UpdateTimestamp // Gestionado automáticamente por Hibernate
+    @UpdateTimestamp
     private LocalDateTime updatedAt;
 
 
     public User() {
+    }
+
+    public User(Long id, String firstName, String lastName, String email, String password, String address, String phoneNumber) {
+        this.id = id;
+        this.firstName = firstName;
+        this.lastName = lastName;
+        this.email = email;
+        this.password = password;
+        this.address = address;
+        this.phoneNumber = phoneNumber;
     }
 
 
@@ -89,10 +108,6 @@ public class User {
         this.email = email;
     }
 
-    public String getPassword() {
-        return password;
-    }
-
     public void setPassword(String password) {
         this.password = password;
     }
@@ -111,6 +126,14 @@ public class User {
 
     public void setPhoneNumber(String phoneNumber) {
         this.phoneNumber = phoneNumber;
+    }
+
+    public Role getRole() {
+        return role;
+    }
+
+    public void setRole(Role role) {
+        this.role = role;
     }
 
     public boolean isActive() {
@@ -152,4 +175,39 @@ public class User {
     public void setUpdatedAt(LocalDateTime updatedAt) {
         this.updatedAt = updatedAt;
     }
+
+    @Override
+    public Collection<? extends GrantedAuthority> getAuthorities() {
+        return List.of();
+    }
+
+    public String getPassword() {
+        return password;
+    }
+
+    @Override
+    public String getUsername() {
+        return this.email;
+    }
+
+    @Override
+    public boolean isAccountNonExpired() {
+        return UserDetails.super.isAccountNonExpired();
+    }
+
+    @Override
+    public boolean isAccountNonLocked() {
+        return UserDetails.super.isAccountNonLocked();
+    }
+
+    @Override
+    public boolean isCredentialsNonExpired() {
+        return UserDetails.super.isCredentialsNonExpired();
+    }
+
+    @Override
+    public boolean isEnabled() {
+        return UserDetails.super.isEnabled();
+    }
+
 }
