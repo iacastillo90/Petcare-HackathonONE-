@@ -1,9 +1,10 @@
 package com.Petcare.Petcare.Repositories;
 
-import com.Petcare.Petcare.Models.ServiceOffering.ServiceOffering;
+import com.Petcare.Petcare.Models.Pet;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
 @Repository
-public interface ServiceOfferingRepository extends JpaRepository< ServiceOffering, Long > {
+public interface PetRepository extends JpaRepository<Pet, Long> {
+
 }
