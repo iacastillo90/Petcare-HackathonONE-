@@ -1,9 +1,9 @@
 package com.Petcare.Petcare.Configurations.Auth;
 
 import com.Petcare.Petcare.Configurations.Security.Jwt.JwtService;
-import com.Petcare.Petcare.Models.Auth.Request.LoginRequest;
-import com.Petcare.Petcare.Models.Auth.Request.RegisterRequest;
-import com.Petcare.Petcare.Models.Auth.Respone.AuthResponse;
+import com.Petcare.Petcare.DTOs.Auth.Request.LoginRequest;
+import com.Petcare.Petcare.DTOs.Auth.Request.RegisterRequest;
+import com.Petcare.Petcare.DTOs.Auth.Respone.AuthResponse;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
 
