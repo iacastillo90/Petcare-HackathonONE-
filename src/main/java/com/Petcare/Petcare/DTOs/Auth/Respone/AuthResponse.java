@@ -1,4 +1,4 @@
-package com.Petcare.Petcare.Models.Auth.Respone;
+package com.Petcare.Petcare.DTOs.Auth.Respone;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
