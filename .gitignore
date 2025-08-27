@@ -48,9 +48,9 @@ application-local.properties
 
 # Archivos de configuración de IDEs
 .idea/
-*.iml
-.vscode/
+
 
 # Archivos del sistema operativo
 .DS_Store
 Thumbs.db
+.env
