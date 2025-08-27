@@ -61,6 +61,9 @@ public class User implements UserDetails {
     @UpdateTimestamp
     private LocalDateTime updatedAt;
 
+//    @OneToMany(mappedBy = "user")
+//    private List<Account> accounts;
+
 
     public User() {
     }
@@ -209,5 +212,14 @@ public class User implements UserDetails {
     public boolean isEnabled() {
         return UserDetails.super.isEnabled();
     }
+
+//    public List<Account> getAccounts() {
+//        return accounts;
+//    }
+//
+//    public void setAccounts(List<Account> accounts) {
+//        this.accounts = accounts;
+//    }
+
 
 }
