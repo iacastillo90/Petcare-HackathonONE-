@@ -24,4 +24,8 @@ public class Pet {
     private String gender;
 
     private String color;
+
+    private String type;
+
+    private String owner;
 }
