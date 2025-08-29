@@ -1,4 +1,4 @@
-package com.Petcare.Petcare.Models.Auth.Request;
+package com.Petcare.Petcare.DTOs.Auth.Request;
 
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;

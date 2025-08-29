@@ -1,8 +1,8 @@
 package com.Petcare.Petcare.Configurations.Auth;
 
-import com.Petcare.Petcare.Models.Auth.Request.LoginRequest;
-import com.Petcare.Petcare.Models.Auth.Request.RegisterRequest;
-import com.Petcare.Petcare.Models.Auth.Respone.AuthResponse;
+import com.Petcare.Petcare.DTOs.Auth.Request.LoginRequest;
+import com.Petcare.Petcare.DTOs.Auth.Request.RegisterRequest;
+import com.Petcare.Petcare.DTOs.Auth.Respone.AuthResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
