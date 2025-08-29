@@ -1,20 +1,20 @@
 package com.Petcare.Petcare.Services;
 
-import com.Petcare.Petcare.Models.User.User;
+import com.Petcare.Petcare.DTOs.UserDTO;
 import java.util.List;
 import java.util.Optional;
 
 public interface UserService {
 
-    List<User> getAllUsers();
+    List<UserDTO> getAllUsers();
 
-    Optional<User> getUserById(Long id);
+    UserDTO getUserById(Long id);
 
-    User createUser(User user);
+    UserDTO createUser(UserDTO userDTO);
 
-    User updateUser(Long id, User user);
+    UserDTO updateUser(Long id, UserDTO userDTO);
 
     void deleteUser(Long id);
 
-    Optional<User> getUserByEmail(String email);
+    Optional<UserDTO> getUserByEmail(String email);
 }

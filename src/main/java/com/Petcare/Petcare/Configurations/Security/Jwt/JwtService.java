@@ -37,7 +37,7 @@ public class JwtService {
      * @throws IllegalArgumentException Si la clave secreta es nula, vacía, no está codificada en Base64 o tiene menos de 256 bits.
      */
     public JwtService(
-            @Value("${jwt.secret}") String secretKey,
+            @Value("${jwt.secret:}") String secretKey,
             @Value("${jwt.expiration:86400000}") long expirationTime
     ) {
         if (secretKey == null || secretKey.trim().isEmpty()) {

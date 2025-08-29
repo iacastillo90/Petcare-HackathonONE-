@@ -1,51 +1,41 @@
 package com.Petcare.Petcare.Controllers;
 
-import com.Petcare.Petcare.Models.User.User;
+import com.Petcare.Petcare.DTOs.UserDTO;
 import com.Petcare.Petcare.Services.UserService;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.Optional;
 
 @RestController
-@RequestMapping("/api/user")
+@RequestMapping("/users")
 public class UserController {
 
-    @Autowired
-    private UserService userService;
+    private final UserService userService;
 
-    // Crear un nuevo usuario
-    @PostMapping
-    public User createUser(@RequestBody User user) {
-        return userService.createUser(user);
+    public UserController(UserService userService) {
+        this.userService = userService;
     }
 
-    // Listar todos los usuarios
     @GetMapping
-    public List<User> getAllUsers() {
+    public List<UserDTO> getAllUsers() {
         return userService.getAllUsers();
     }
 
-    // Buscar usuario por ID
     @GetMapping("/{id}")
-    public Optional<User> getUserById(@PathVariable Long id) {
+    public UserDTO getUserById(@PathVariable Long id) {
         return userService.getUserById(id);
     }
 
-    // Buscar usuario por email
-    @GetMapping("/email/{email}")
-    public Optional<User> getUserByEmail(@PathVariable String email) {
-        return userService.getUserByEmail(email);
+    @PostMapping
+    public UserDTO createUser(@RequestBody UserDTO userDTO) {
+        return userService.createUser(userDTO);
     }
 
-    // Actualizar usuario por ID
     @PutMapping("/{id}")
-    public User updateUser(@PathVariable Long id, @RequestBody User user) {
-        return userService.updateUser(id, user);
+    public UserDTO updateUser(@PathVariable Long id, @RequestBody UserDTO userDTO) {
+        return userService.updateUser(id, userDTO);
     }
 
-    // Eliminar usuario por ID
     @DeleteMapping("/{id}")
     public void deleteUser(@PathVariable Long id) {
         userService.deleteUser(id);
