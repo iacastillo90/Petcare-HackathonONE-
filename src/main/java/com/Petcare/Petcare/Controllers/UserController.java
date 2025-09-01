@@ -1,13 +1,14 @@
 package com.Petcare.Petcare.Controllers;
 
-import com.Petcare.Petcare.DTOs.UserDTO;
+import com.Petcare.Petcare.DTOs.user.UserDTO;
+import com.Petcare.Petcare.DTOs.user.UserCreateDTO;
 import com.Petcare.Petcare.Services.UserService;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
 @RestController
-@RequestMapping("/users")
+@RequestMapping("/api/users")
 public class UserController {
 
     private final UserService userService;
@@ -27,13 +28,13 @@ public class UserController {
     }
 
     @PostMapping
-    public UserDTO createUser(@RequestBody UserDTO userDTO) {
-        return userService.createUser(userDTO);
+    public UserDTO createUser(@RequestBody UserCreateDTO userCreateDTO) {
+        return userService.createUser(userCreateDTO);
     }
 
     @PutMapping("/{id}")
-    public UserDTO updateUser(@PathVariable Long id, @RequestBody UserDTO userDTO) {
-        return userService.updateUser(id, userDTO);
+    public UserDTO updateUser(@PathVariable Long id, @RequestBody UserCreateDTO userCreateDTO) {
+        return userService.updateUser(id, userCreateDTO);
     }
 
     @DeleteMapping("/{id}")

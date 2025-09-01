@@ -1,6 +1,7 @@
 package com.Petcare.Petcare.Services.Implement;
 
-import com.Petcare.Petcare.DTOs.UserDTO;
+import com.Petcare.Petcare.DTOs.user.UserDTO;
+import com.Petcare.Petcare.DTOs.user.UserCreateDTO;
 import com.Petcare.Petcare.Models.User.User;
 import com.Petcare.Petcare.Repositories.UserRepository;
 import com.Petcare.Petcare.Services.UserService;
@@ -19,18 +20,23 @@ public class UserServiceImplement implements UserService {
         this.userRepository = userRepository;
     }
 
+    // ======== CONVERSIONES ========
     private UserDTO convertToDTO(User user) {
         return new UserDTO(user.getId(), user.getFirstName(), user.getLastName(), user.getEmail());
     }
 
-    private User convertToEntity(UserDTO dto) {
+    private User convertToEntity(UserCreateDTO dto) {
         User user = new User();
         user.setFirstName(dto.getFirstName());
         user.setLastName(dto.getLastName());
         user.setEmail(dto.getEmail());
+        user.setPassword(dto.getPassword()); // ahora sí se guarda
+        user.setRole(dto.getRole());
+        user.setActive(dto.isActive());
         return user;
     }
 
+    // ======== MÉTODOS ========
     @Override
     public List<UserDTO> getAllUsers() {
         return userRepository.findAll().stream()
@@ -40,23 +46,28 @@ public class UserServiceImplement implements UserService {
 
     @Override
     public UserDTO getUserById(Long id) {
-        User user = userRepository.findById(id).orElseThrow(() -> new RuntimeException("User not found"));
+        User user = userRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("User not found"));
         return convertToDTO(user);
     }
 
     @Override
-    public UserDTO createUser(UserDTO userDTO) {
-        User user = convertToEntity(userDTO);
+    public UserDTO createUser(UserCreateDTO userCreateDTO) {
+        User user = convertToEntity(userCreateDTO);
         user = userRepository.save(user);
         return convertToDTO(user);
     }
 
     @Override
-    public UserDTO updateUser(Long id, UserDTO userDTO) {
-        User user = userRepository.findById(id).orElseThrow(() -> new RuntimeException("User not found"));
-        user.setFirstName(userDTO.getFirstName());
-        user.setLastName(userDTO.getLastName());
-        user.setEmail(userDTO.getEmail());
+    public UserDTO updateUser(Long id, UserCreateDTO userCreateDTO) {
+        User user = userRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+        user.setFirstName(userCreateDTO.getFirstName());
+        user.setLastName(userCreateDTO.getLastName());
+        user.setEmail(userCreateDTO.getEmail());
+        user.setPassword(userCreateDTO.getPassword());
+        user.setRole(userCreateDTO.getRole());
+        user.setActive(userCreateDTO.isActive());
         user = userRepository.save(user);
         return convertToDTO(user);
     }
@@ -71,5 +82,4 @@ public class UserServiceImplement implements UserService {
         return userRepository.findByEmail(email)
                 .map(this::convertToDTO);
     }
-
 }

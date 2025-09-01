@@ -1,4 +1,4 @@
-package com.Petcare.Petcare.DTOs;
+package com.Petcare.Petcare.DTOs.user;
 
 public class UserDTO {
     private Long id;

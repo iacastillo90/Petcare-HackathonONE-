@@ -1,6 +1,7 @@
 package com.Petcare.Petcare.Services;
 
-import com.Petcare.Petcare.DTOs.UserDTO;
+import com.Petcare.Petcare.DTOs.user.UserDTO;
+import com.Petcare.Petcare.DTOs.user.UserCreateDTO;
 import java.util.List;
 import java.util.Optional;
 
@@ -10,9 +11,9 @@ public interface UserService {
 
     UserDTO getUserById(Long id);
 
-    UserDTO createUser(UserDTO userDTO);
+    UserDTO createUser(UserCreateDTO userCreateDTO);
 
-    UserDTO updateUser(Long id, UserDTO userDTO);
+    UserDTO updateUser(Long id, UserCreateDTO userCreateDTO);
 
     void deleteUser(Long id);
 
