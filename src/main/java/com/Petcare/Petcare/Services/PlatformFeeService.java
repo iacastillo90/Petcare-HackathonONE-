@@ -3,6 +3,8 @@ package com.Petcare.Petcare.Services;
 
 import com.Petcare.Petcare.DTOs.PlatformFee.CreatePlatformFeeRequest;
 import com.Petcare.Petcare.DTOs.PlatformFee.PlatformFeeResponse;
+import com.Petcare.Petcare.Models.Booking.Booking;
+import com.Petcare.Petcare.Models.PlatformFee;
 
 public interface PlatformFeeService {
     /**
@@ -11,4 +13,15 @@ public interface PlatformFeeService {
      * @return DTO con los detalles de la tarifa recién creada.
      */
     PlatformFeeResponse calculateAndCreateFee(CreatePlatformFeeRequest request);
+
+
+    /**
+     * Calcula y crea las tarifas de plataforma para una reserva.
+     */
+    PlatformFee calculateAndCreatePlatformFee(Booking booking);
+
+    /**
+     * Recalcula las tarifas cuando cambia el precio de la reserva.
+     */
+    void recalculatePlatformFee(Booking booking);
 }

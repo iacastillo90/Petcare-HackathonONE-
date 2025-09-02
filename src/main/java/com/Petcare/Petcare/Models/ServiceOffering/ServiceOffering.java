@@ -71,7 +71,7 @@ public class ServiceOffering {
     /**
      * Duración estimada del servicio en minutos.
      */
-    private Time durationInMinutes;
+    private Integer durationInMinutes;
     
     /**
      * Indica si el servicio está actualmente disponible.
