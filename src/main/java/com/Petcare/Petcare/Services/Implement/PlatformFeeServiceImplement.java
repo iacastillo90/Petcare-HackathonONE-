@@ -49,4 +49,16 @@ public class PlatformFeeServiceImplement implements PlatformFeeService {
         // 4. Devolver la respuesta en formato DTO
         return PlatformFeeResponse.fromEntity(savedFee);
     }
+
+    @Override
+    public PlatformFee calculateAndCreatePlatformFee(Booking booking) {
+        return null;
+    }
+
+    @Override
+    public void recalculatePlatformFee(Booking booking) {
+
+    }
+
+
 }

@@ -128,16 +128,4 @@ public class CreateBookingRequest {
     public String getNotes() {
         return notes;
     }
-
-    @Override
-    public String toString() {
-        return "CreateBookingRequest{" +
-                "petId=" + petId +
-                ", sitterId=" + sitterId +
-                ", serviceOfferingId=" + serviceOfferingId +
-                ", startTime=" + startTime +
-                ", notes='" + (notes != null && notes.length() > 50 ?
-                notes.substring(0, 50) + "..." : notes) + '\'' +
-                '}';
-    }
 }
