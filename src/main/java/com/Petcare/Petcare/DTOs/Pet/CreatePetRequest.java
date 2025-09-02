@@ -7,57 +7,36 @@ import jakarta.validation.constraints.PositiveOrZero;
 import jakarta.validation.constraints.Size;
 
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
 
 /**
- * DTO intermedio para transferencia de datos de mascotas con validaciones completas.
+ * DTO para la solicitud de creación de una nueva mascota.
  *
- * <p>Este DTO sirve como clase intermedia para operaciones internas del sistema
- * que requieren validación completa de datos de mascotas. A diferencia de los DTOs
- * de entrada y salida especializados, este incluye tanto el ID como validaciones
- * Bean Validation para uso en servicios internos.</p>
+ * <p>Este DTO encapsula todos los datos necesarios para registrar una nueva mascota
+ * en el sistema, excluyendo campos de sistema como ID, timestamps y estado activo
+ * que son gestionados automáticamente.</p>
  *
- * <p><strong>Funcionalidades:</strong></p>
+ * <p><strong>Validaciones aplicadas:</strong></p>
  * <ul>
- * <li>Validación Bean Validation completa con mensajes en español</li>
- * <li>Conversión bidireccional con la entidad Pet</li>
- * <li>Soporte para operaciones de transferencia interna</li>
- * <li>Incluye ID para operaciones de actualización</li>
- * </ul>
- *
- * <p><strong>Casos de uso:</strong></p>
- * <ul>
- * <li>Operaciones internas entre capas de servicio</li>
- * <li>Validación de datos en procesos batch</li>
- * <li>Transferencia entre microservicios (futuro)</li>
- * <li>Cache intermedio con validación</li>
+ * <li>Cuenta obligatoria y debe existir</li>
+ * <li>Nombre obligatorio y limitado a 100 caracteres</li>
+ * <li>Campos opcionales con límites apropiados</li>
+ * <li>Edad y peso no pueden ser negativos</li>
+ * <li>Notas limitadas para optimización de base de datos</li>
  * </ul>
  *
  * @author Equipo Petcare 10
  * @version 1.0
  * @since 1.0
  * @see Pet
- * @see CreatePetRequest
  * @see PetResponse
  */
-public class PetDTO {
+public class CreatePetRequest {
 
     /**
-     * Identificador único de la mascota.
-     * <p>Puede ser null para nuevas mascotas.</p>
-     */
-    private Long id;
-
-    /**
-     * ID de la cuenta propietaria.
+     * ID de la cuenta a la que pertenecerá la mascota.
      */
     @NotNull(message = "El ID de la cuenta es obligatorio")
     private Long accountId;
-
-    /**
-     * Nombre de la cuenta propietaria (solo lectura).
-     */
-    private String accountName;
 
     /**
      * Nombre de la mascota.
@@ -67,13 +46,13 @@ public class PetDTO {
     private String name;
 
     /**
-     * Especie de la mascota.
+     * Especie de la mascota (ej: "Perro", "Gato").
      */
     @Size(max = 50, message = "La especie no puede exceder los 50 caracteres")
     private String species;
 
     /**
-     * Raza de la mascota.
+     * Raza específica de la mascota.
      */
     @Size(max = 100, message = "La raza no puede exceder los 100 caracteres")
     private String breed;
@@ -126,27 +105,12 @@ public class PetDTO {
     @Size(max = 2000, message = "Las notas especiales no pueden exceder los 2000 caracteres")
     private String specialNotes;
 
-    /**
-     * Estado de actividad de la mascota.
-     */
-    private boolean isActive = true;
-
-    /**
-     * Fecha y hora de creación.
-     */
-    private LocalDateTime createdAt;
-
-    /**
-     * Fecha y hora de última actualización.
-     */
-    private LocalDateTime updatedAt;
-
     // ========== CONSTRUCTORES ==========
 
     /**
      * Constructor por defecto.
      */
-    public PetDTO() {}
+    public CreatePetRequest() {}
 
     /**
      * Constructor con campos principales.
@@ -157,7 +121,7 @@ public class PetDTO {
      * @param breed Raza de la mascota
      * @param age Edad de la mascota
      */
-    public PetDTO(Long accountId, String name, String species, String breed, Integer age) {
+    public CreatePetRequest(Long accountId, String name, String species, String breed, Integer age) {
         this.accountId = accountId;
         this.name = name;
         this.species = species;
@@ -165,80 +129,7 @@ public class PetDTO {
         this.age = age;
     }
 
-    // ========== MÉTODOS DE FÁBRICA ==========
-
-    /**
-     * Método de fábrica estático para convertir una entidad Pet a DTO.
-     *
-     * @param pet La entidad Pet a convertir
-     * @return PetDTO con la información de la mascota, o null si pet es null
-     */
-    public static PetDTO fromEntity(Pet pet) {
-        if (pet == null) {
-            return null;
-        }
-
-        PetDTO dto = new PetDTO();
-        dto.setId(pet.getId());
-        dto.setName(pet.getName());
-        dto.setSpecies(pet.getSpecies());
-        dto.setBreed(pet.getBreed());
-        dto.setAge(pet.getAge());
-        dto.setWeight(pet.getWeight());
-        dto.setGender(pet.getGender());
-        dto.setColor(pet.getColor());
-        dto.setPhysicalDescription(pet.getPhysicalDescription());
-        dto.setMedications(pet.getMedications());
-        dto.setAllergies(pet.getAllergies());
-        dto.setSpecialNotes(pet.getSpecialNotes());
-        dto.setActive(pet.isActive());
-        dto.setCreatedAt(pet.getCreatedAt());
-        dto.setUpdatedAt(pet.getUpdatedAt());
-
-        // Información de la cuenta si está disponible
-        if (pet.getAccount() != null) {
-            dto.setAccountId(pet.getAccount().getId());
-            dto.setAccountName(pet.getAccount().getAccountName());
-        }
-
-        return dto;
-    }
-
-    /**
-     * Convierte este DTO a una entidad Pet.
-     * <p>Nota: La cuenta debe ser establecida por separado ya que requiere
-     * una consulta a la base de datos.</p>
-     *
-     * @return Nueva instancia de Pet con los datos de este DTO
-     */
-    public Pet toEntity() {
-        Pet pet = new Pet();
-        pet.setId(this.id);
-        pet.setName(this.name);
-        pet.setSpecies(this.species);
-        pet.setBreed(this.breed);
-        pet.setAge(this.age);
-        pet.setWeight(this.weight);
-        pet.setGender(this.gender);
-        pet.setColor(this.color);
-        pet.setPhysicalDescription(this.physicalDescription);
-        pet.setMedications(this.medications);
-        pet.setAllergies(this.allergies);
-        pet.setSpecialNotes(this.specialNotes);
-        pet.setActive(this.isActive);
-        // Note: account, createdAt, updatedAt son manejados por el servicio
-        return pet;
-    }
-
     // ========== GETTERS Y SETTERS ==========
-
-    public Long getId() {
-        return id;
-    }
-
-    public void setId(Long id) {
-        this.id = id;
-    }
 
     public Long getAccountId() {
         return accountId;
@@ -246,14 +137,6 @@ public class PetDTO {
 
     public void setAccountId(Long accountId) {
         this.accountId = accountId;
-    }
-
-    public String getAccountName() {
-        return accountName;
-    }
-
-    public void setAccountName(String accountName) {
-        this.accountName = accountName;
     }
 
     public String getName() {
@@ -342,29 +225,5 @@ public class PetDTO {
 
     public void setSpecialNotes(String specialNotes) {
         this.specialNotes = specialNotes;
-    }
-
-    public boolean isActive() {
-        return isActive;
-    }
-
-    public void setActive(boolean active) {
-        isActive = active;
-    }
-
-    public LocalDateTime getCreatedAt() {
-        return createdAt;
-    }
-
-    public void setCreatedAt(LocalDateTime createdAt) {
-        this.createdAt = createdAt;
-    }
-
-    public LocalDateTime getUpdatedAt() {
-        return updatedAt;
-    }
-
-    public void setUpdatedAt(LocalDateTime updatedAt) {
-        this.updatedAt = updatedAt;
     }
 }
