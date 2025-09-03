@@ -1,10 +1,16 @@
 services:
   petcare:
-    build: .
+    build:
+      context: .
+      no_cache: true
     ports:
-      - "8080:8080"
+      - "8088:8088"
     environment:
       - SPRING_PROFILES_ACTIVE=local
+      - SERVER_PORT=8088
+      - SPRING_DATASOURCE_URL=jdbc:mysql://petcare-db:3306/petcare
+      - SPRING_DATASOURCE_USERNAME=petcare_user
+      - SPRING_DATASOURCE_PASSWORD=petcare_pass
     depends_on:
       - petcare-db
     develop:
