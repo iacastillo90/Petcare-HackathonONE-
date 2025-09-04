@@ -1,11 +1,16 @@
 package com.Petcare.Petcare.Services.Implement;
 
 import com.Petcare.Petcare.Configurations.Security.Jwt.JwtService;
+import com.Petcare.Petcare.DTOs.Account.CreateAccountRequest;
 import com.Petcare.Petcare.DTOs.Auth.Request.LoginRequest;
 import com.Petcare.Petcare.DTOs.Auth.Respone.AuthResponse;
 import com.Petcare.Petcare.DTOs.User.*;
+import com.Petcare.Petcare.Models.Account.Account;
+import com.Petcare.Petcare.Models.Account.AccountUser;
 import com.Petcare.Petcare.Models.User.Role;
 import com.Petcare.Petcare.Models.User.User;
+import com.Petcare.Petcare.Repositories.AccountRepository;
+import com.Petcare.Petcare.Repositories.AccountUserRepository;
 import com.Petcare.Petcare.Repositories.UserRepository;
 import com.Petcare.Petcare.Services.EmailService;
 import com.Petcare.Petcare.Services.UserService;
@@ -26,6 +31,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.ThreadLocalRandom;
 import java.util.stream.Collectors;
 
 /**
@@ -71,6 +77,8 @@ public class UserServiceImplement implements UserService {
     private final EmailService emailService;
     @Value("${petcare.api.base-url:http://localhost:8088}")
     private String apiBaseUrl;
+    private final AccountRepository accountRepository;
+    private final AccountUserRepository accountUserRepository;
 
     // ========== MÉTODOS DE AUTENTICACIÓN ==========
 
@@ -117,6 +125,71 @@ public class UserServiceImplement implements UserService {
                 .build();
     }
 
+    @Override
+    public AuthResponse registerUserSitter(CreateUserRequest request) {
+        log.info("Intento de registro para email: {}", request.getEmail());
+
+        // 1. Validar si el email ya existe
+        if (userRepository.findByEmail(request.getEmail()).isPresent()) {
+            log.warn("Intento de registro con email duplicado: {}", request.getEmail());
+            throw new IllegalArgumentException("El email ya está registrado: " + request.getEmail());
+        }
+
+        // 2. Crear la entidad User
+        User newUser = createUserEntity(request, Role.SITTER);
+        User savedUser = userRepository.save(newUser);
+
+        // =================================================================
+        // PASO 2: LÓGICA AÑADIDA PARA CREAR LA CUENTA AUTOMÁTICAMENTE
+        // =================================================================
+
+        // 2a. Generar el número de cuenta único
+        String accountNumber = generateUniqueAccountNumber();
+
+        // 2b. Generar el nombre de la cuenta por defecto
+        String accountName = "Cuidadora - " + savedUser.getLastName();
+
+        // 2c. Crear y guardar la nueva entidad Account
+        Account newAccount = new Account(savedUser, accountName, accountNumber);
+        Account savedAccount = accountRepository.save(newAccount);
+
+        // 2d. Crear y guardar la relación en AccountUser
+        AccountUser accountUserLink = new AccountUser(savedAccount, savedUser, Role.SITTER);
+        accountUserRepository.save(accountUserLink);
+
+        log.info("Creada cuenta automática {} para para la cuidadora {}", savedAccount.getAccountNumber(), savedUser.getEmail());
+
+        try {
+            // 1. Generar el token de verificación
+            String verificationToken = jwtService.generateVerificationToken(savedUser);
+
+            // 2. Construir la URL completa
+            String verificationUrl = apiBaseUrl + "/api/users/verify?token=" + verificationToken;
+
+            // 3. Enviar el correo de forma asíncrona
+            emailService.sendVerificationEmail(
+                    savedUser.getEmail(),
+                    savedUser.getFullName(),
+                    verificationUrl,
+                    24 // Horas de expiración (para mostrar en el correo)
+            );
+            log.info("Correo de verificación encolado para: {}", savedUser.getEmail());
+        } catch (Exception e) {
+            log.error("Error al intentar enviar el correo de verificación para {}: {}", savedUser.getEmail(), e.getMessage());
+        }
+
+
+        // 3. Generar el token JWT para el nuevo usuario
+        String token = jwtService.getToken(savedUser);
+
+        log.info("Usuario registrado exitosamente: {} con ID: {}", savedUser.getEmail(), savedUser.getId());
+
+        // 4. Devolver la respuesta de autenticación
+        return AuthResponse.builder()
+                .token(token)
+                .role(savedUser.getRole().name())
+                .build();
+    }
     /**
      * Registra un nuevo usuario como CLIENT y lo autentica automáticamente.
      *
@@ -141,6 +214,26 @@ public class UserServiceImplement implements UserService {
         // 2. Crear la entidad User
         User newUser = createUserEntity(request, Role.CLIENT);
         User savedUser = userRepository.save(newUser);
+
+        // =================================================================
+        // PASO 2: LÓGICA AÑADIDA PARA CREAR LA CUENTA AUTOMÁTICAMENTE
+        // =================================================================
+
+        // 2a. Generar el número de cuenta único
+        String accountNumber = generateUniqueAccountNumber();
+
+        // 2b. Generar el nombre de la cuenta por defecto
+        String accountName = "Cuenta de Familia - " + savedUser.getLastName();
+
+        // 2c. Crear y guardar la nueva entidad Account
+        Account newAccount = new Account(savedUser, accountName, accountNumber);
+        Account savedAccount = accountRepository.save(newAccount);
+
+        // 2d. Crear y guardar la relación en AccountUser
+        AccountUser accountUserLink = new AccountUser(savedAccount, savedUser, Role.CLIENT);
+        accountUserRepository.save(accountUserLink);
+
+        log.info("Creada cuenta automática {} para el usuario {}", savedAccount.getAccountNumber(), savedUser.getEmail());
 
         try {
             // 1. Generar el token de verificación
@@ -499,6 +592,17 @@ public class UserServiceImplement implements UserService {
         user.setUpdatedAt(LocalDateTime.now());
 
         return user;
+    }
+
+    private String generateUniqueAccountNumber() {
+        String accountNumber;
+        do {
+            // Genera un número aleatorio de 8 dígitos
+            long randomNumber = ThreadLocalRandom.current().nextLong(10_000_000L, 100_000_000L);
+            accountNumber = "ACC-" + randomNumber;
+        } while (accountRepository.existsByAccountNumber(accountNumber)); // Verifica en la BD
+
+        return accountNumber;
     }
 
     @Override
