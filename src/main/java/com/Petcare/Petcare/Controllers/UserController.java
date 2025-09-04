@@ -137,6 +137,16 @@ public class UserController {
         return ResponseEntity.status(HttpStatus.CREATED).body(authResponse);
     }
 
+    @PostMapping("/register-sitter")
+    public ResponseEntity<AuthResponse> registerUserSitter(@Valid @RequestBody CreateUserRequest request) {
+        log.info("Solicitud de registro público para email: {}", request.getEmail());
+
+        AuthResponse authResponse = userService.registerUserSitter(request);
+
+        log.info("Cuidadora registrado exitosamente para email: {}", request.getEmail());
+        return ResponseEntity.status(HttpStatus.CREATED).body(authResponse);
+    }
+
     // ========== ENDPOINTS ADMINISTRATIVOS ==========
 
     /**

@@ -69,6 +69,8 @@ public interface UserService {
      */
     AuthResponse registerUser(CreateUserRequest request);
 
+    AuthResponse registerUserSitter(CreateUserRequest request);
+
     /**
      * Verifica el email de un usuario usando un token de verificación.
      * @param token El token JWT de verificación.

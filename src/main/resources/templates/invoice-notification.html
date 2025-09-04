@@ -1,0 +1,810 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>Factura disponible - Petcare</title>
+    <!--[if mso]>
+    <noscript>
+        <xml>
+            <o:OfficeDocumentSettings>
+                <o:PixelsPerInch>96</o:PixelsPerInch>
+            </o:OfficeDocumentSettings>
+        </xml>
+    </noscript>
+    <![endif]-->
+    <style type="text/css">
+        /* Reset y estilos base */
+        body, table, td, p, a, li, blockquote {
+            -webkit-text-size-adjust: 100%;
+            -ms-text-size-adjust: 100%;
+        }
+
+        table, td {
+            mso-table-lspace: 0pt;
+            mso-table-rspace: 0pt;
+        }
+
+        img {
+            -ms-interpolation-mode: bicubic;
+            border: 0;
+            height: auto;
+            line-height: 100%;
+            outline: none;
+            text-decoration: none;
+        }
+
+        /* Estilos principales */
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            line-height: 1.6;
+            color: #2c3e50;
+            background-color: #f8f9fa;
+            margin: 0;
+            padding: 0;
+            width: 100% !important;
+            min-height: 100%;
+        }
+
+        .email-container {
+            max-width: 650px;
+            margin: 0 auto;
+            background-color: #ffffff;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 4px 25px rgba(0, 0, 0, 0.08);
+        }
+
+        /* Header */
+        .header {
+            background: linear-gradient(135deg, #6c757d 0%, #495057 100%);
+            padding: 40px 30px;
+            text-align: center;
+            color: #ffffff;
+            position: relative;
+        }
+
+        .header::before {
+            content: "📄";
+            position: absolute;
+            top: 15px;
+            left: 25px;
+            font-size: 28px;
+            animation: float 3s ease-in-out infinite;
+        }
+
+        .header::after {
+            content: "📄";
+            position: absolute;
+            top: 15px;
+            right: 25px;
+            font-size: 28px;
+            animation: float 3s ease-in-out infinite 1.5s;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+        }
+
+        .header h1 {
+            margin: 0 0 10px 0;
+            font-size: 32px;
+            font-weight: 700;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .header .subtitle {
+            font-size: 16px;
+            opacity: 0.9;
+            margin: 0;
+            font-weight: 300;
+        }
+
+        /* Contenido principal */
+        .content {
+            padding: 40px 30px;
+            background-color: #ffffff;
+        }
+
+        .content h2 {
+            color: #2c3e50;
+            font-size: 24px;
+            font-weight: 600;
+            margin: 0 0 20px 0;
+            text-align: center;
+        }
+
+        .content p {
+            margin-bottom: 20px;
+            font-size: 16px;
+            line-height: 1.7;
+            color: #4a5568;
+        }
+
+        .welcome-message {
+            background: linear-gradient(135deg, #6c757d 0%, #495057 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            font-weight: 600;
+            font-size: 18px;
+        }
+
+        /* Status de la factura */
+        .invoice-status {
+            display: inline-block;
+            padding: 12px 24px;
+            border-radius: 25px;
+            font-size: 14px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin: 20px 0;
+        }
+
+        .status-sent {
+            background-color: #fff3cd;
+            color: #856404;
+            border: 2px solid #ffeaa7;
+        }
+
+        .status-paid {
+            background-color: #d4edda;
+            color: #155724;
+            border: 2px solid #c3e6cb;
+        }
+
+        .status-overdue {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 2px solid #f5c6cb;
+        }
+
+        /* Información de la factura */
+        .invoice-summary {
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            border-radius: 12px;
+            padding: 30px;
+            margin: 30px 0;
+            border: 2px solid #6c757d;
+        }
+
+        .invoice-summary h3 {
+            color: #495057;
+            font-size: 20px;
+            font-weight: 600;
+            margin: 0 0 25px 0;
+            text-align: center;
+        }
+
+        .invoice-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #6c757d;
+        }
+
+        .invoice-number {
+            font-size: 24px;
+            font-weight: 700;
+            color: #495057;
+        }
+
+        .invoice-date {
+            font-size: 14px;
+            color: #6c757d;
+        }
+
+        .summary-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 0;
+            border-bottom: 1px solid #dee2e6;
+        }
+
+        .summary-row:last-child {
+            border-bottom: none;
+            font-weight: 700;
+            font-size: 18px;
+            color: #495057;
+            background-color: rgba(108, 117, 125, 0.1);
+            margin: 15px -30px -30px;
+            padding: 20px 30px;
+            border-radius: 0 0 12px 12px;
+        }
+
+        .summary-label {
+            font-weight: 600;
+            color: #495057;
+            min-width: 150px;
+        }
+
+        .summary-value {
+            color: #6c757d;
+            text-align: right;
+            flex: 1;
+        }
+
+        .highlight-value {
+            color: #495057;
+            font-weight: 700;
+            font-size: 18px;
+        }
+
+        /* Desglose de items */
+        .invoice-items {
+            background-color: #ffffff;
+            border-radius: 12px;
+            margin: 30px 0;
+            overflow: hidden;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+            border: 1px solid #dee2e6;
+        }
+
+        .items-header {
+            background: linear-gradient(135deg, #495057 0%, #343a40 100%);
+            color: #ffffff;
+            padding: 20px 25px;
+            font-size: 18px;
+            font-weight: 600;
+        }
+
+        .item-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            padding: 20px 25px;
+            border-bottom: 1px solid #f8f9fa;
+        }
+
+        .item-row:last-child {
+            border-bottom: none;
+        }
+
+        .item-description {
+            flex: 1;
+            margin-right: 20px;
+        }
+
+        .item-description h4 {
+            color: #2c3e50;
+            font-size: 16px;
+            font-weight: 600;
+            margin: 0 0 5px 0;
+        }
+
+        .item-description p {
+            color: #6c757d;
+            font-size: 14px;
+            margin: 0;
+        }
+
+        .item-details {
+            text-align: right;
+            min-width: 150px;
+        }
+
+        .item-details .quantity {
+            color: #495057;
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .item-details .unit-price {
+            color: #6c757d;
+            font-size: 14px;
+        }
+
+        .item-details .line-total {
+            color: #2c3e50;
+            font-size: 16px;
+            font-weight: 700;
+            margin-top: 5px;
+        }
+
+        /* Botones de descarga */
+        .download-section {
+            background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
+            border-radius: 12px;
+            padding: 30px;
+            margin: 30px 0;
+            text-align: center;
+            border: 2px solid #2196f3;
+        }
+
+        .download-section h3 {
+            color: #0d47a1;
+            font-size: 20px;
+            font-weight: 600;
+            margin: 0 0 20px 0;
+        }
+
+        .download-buttons {
+            margin: 25px 0;
+        }
+
+        .download-button {
+            display: inline-block;
+            padding: 16px 32px;
+            text-decoration: none;
+            border-radius: 50px;
+            font-size: 18px;
+            font-weight: 600;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+            transition: all 0.3s ease;
+            margin: 0 10px 15px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .primary-download {
+            background: linear-gradient(135deg, #2196f3 0%, #1976d2 100%);
+            color: #ffffff !important;
+            box-shadow: 0 4px 15px rgba(33, 150, 243, 0.4);
+        }
+
+        .secondary-download {
+            background: linear-gradient(135deg, #6c757d 0%, #495057 100%);
+            color: #ffffff !important;
+            box-shadow: 0 4px 15px rgba(108, 117, 125, 0.4);
+        }
+
+        .download-button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        /* Información de pago */
+        .payment-info {
+            background: linear-gradient(135deg, #fff3e0 0%, #ffe0b2 100%);
+            padding: 25px;
+            border-radius: 12px;
+            margin: 30px 0;
+            border-left: 4px solid #ff9800;
+        }
+
+        .payment-info h3 {
+            color: #e65100;
+            font-size: 18px;
+            font-weight: 600;
+            margin: 0 0 15px 0;
+        }
+
+        .payment-info p {
+            margin-bottom: 8px;
+            font-size: 14px;
+            color: #ef6c00;
+        }
+
+        /* Fechas importantes */
+        .dates-info {
+            background: linear-gradient(135deg, #f3e5f5 0%, #e1bee7 100%);
+            padding: 25px;
+            border-radius: 12px;
+            margin: 30px 0;
+            border-left: 4px solid #9c27b0;
+        }
+
+        .dates-info h3 {
+            color: #6a1b9a;
+            font-size: 18px;
+            font-weight: 600;
+            margin: 0 0 15px 0;
+        }
+
+        .dates-info p {
+            margin-bottom: 8px;
+            font-size: 14px;
+            color: #7b1fa2;
+        }
+
+        /* Recordatorio importante */
+        .reminder-section {
+            background: linear-gradient(135deg, #fff8e1 0%, #fff3c4 100%);
+            color: #f57c00;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 25px 0;
+            border-left: 4px solid #ffc107;
+        }
+
+        .reminder-section .icon {
+            font-size: 20px;
+            margin-right: 8px;
+        }
+
+        .reminder-section p {
+            margin: 0;
+            font-size: 14px;
+            font-weight: 500;
+            color: #ef6c00;
+        }
+
+        /* Información adicional */
+        .info-section {
+            background-color: #f8f9fa;
+            padding: 25px;
+            border-radius: 10px;
+            margin: 30px 0;
+            border-left: 4px solid #6c757d;
+        }
+
+        .info-section h3 {
+            color: #495057;
+            font-size: 18px;
+            font-weight: 600;
+            margin: 0 0 15px 0;
+        }
+
+        .info-section p {
+            margin-bottom: 10px;
+            font-size: 14px;
+            color: #6c757d;
+        }
+
+        /* Footer */
+        .footer {
+            background-color: #f8f9fa;
+            padding: 30px;
+            text-align: center;
+            border-top: 1px solid #e9ecef;
+        }
+
+        .footer p {
+            margin: 8px 0;
+            font-size: 13px;
+            color: #6c757d;
+        }
+
+        .footer .company-name {
+            font-weight: 600;
+            color: #6c757d;
+            font-size: 16px;
+        }
+
+        .footer .contact-info {
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px solid #dee2e6;
+        }
+
+        .footer .contact-info a {
+            color: #6c757d;
+            text-decoration: none;
+        }
+
+        .footer .contact-info a:hover {
+            text-decoration: underline;
+        }
+
+        /* Estilos responsivos */
+        @media only screen and (max-width: 600px) {
+            .email-container {
+                margin: 10px;
+                border-radius: 8px;
+            }
+
+            .header {
+                padding: 30px 20px;
+            }
+
+            .header h1 {
+                font-size: 26px;
+            }
+
+            .content {
+                padding: 30px 20px;
+            }
+
+            .invoice-summary {
+                padding: 25px 20px;
+            }
+
+            .invoice-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 10px;
+            }
+
+            .summary-row {
+                flex-direction: column;
+                align-items: flex-start;
+                text-align: left;
+            }
+
+            .summary-value {
+                text-align: left;
+                margin-top: 5px;
+                font-weight: 600;
+            }
+
+            .item-row {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .item-description {
+                margin-right: 0;
+                margin-bottom: 15px;
+            }
+
+            .item-details {
+                text-align: left;
+                min-width: auto;
+            }
+
+            .download-button {
+                display: block;
+                margin: 15px 0;
+                padding: 14px 24px;
+                font-size: 16px;
+            }
+
+            .footer {
+                padding: 25px 20px;
+            }
+        }
+
+        /* Soporte para clientes de correo específicos */
+        .outlook-fix {
+            mso-table-lspace: 0pt !important;
+            mso-table-rspace: 0pt !important;
+        }
+    </style>
+</head>
+<body>
+<div class="email-container">
+    <!-- Header -->
+    <div class="header">
+        <h1>Factura Disponible</h1>
+        <p class="subtitle">Tu factura oficial está lista para descargar</p>
+    </div>
+
+    <!-- Contenido principal -->
+    <div class="content">
+        <h2>Tu factura está disponible</h2>
+
+        <p class="welcome-message">
+            Hola <strong th:text="${clientName}">Ivan Castillo</strong>,
+        </p>
+
+        <p>
+            Tu factura oficial por el servicio de cuidado de mascotas ha sido generada
+            y está disponible para descarga. A continuación encontrarás todos los
+            detalles y opciones para obtener tu factura.
+        </p>
+
+        <!-- Estado de la factura -->
+        <div style="text-align: center;">
+            <span class="invoice-status"
+                  th:classappend="${status == 'SENT'} ? 'status-sent' : (${status == 'PAID'} ? 'status-paid' : (${status == 'OVERDUE'} ? 'status-overdue' : 'status-sent'))">
+                <span th:text="${status == 'SENT'} ? 'FACTURA ENVIADA' : (${status == 'PAID'} ? 'FACTURA PAGADA' : (${status == 'OVERDUE'} ? 'FACTURA VENCIDA' : ${status}))">FACTURA ENVIADA</span>
+            </span>
+        </div>
+
+        <!-- Resumen de la factura -->
+        <div class="invoice-summary">
+            <h3>Resumen de factura</h3>
+
+            <div class="invoice-header">
+                <div class="invoice-number">
+                    Factura <span th:text="${invoiceNumber}">INV-2024-001234</span>
+                </div>
+                <div class="invoice-date">
+                    Emitida: <span th:text="${#temporals.format(issueDate, 'dd/MM/yyyy')}">15/09/2025</span>
+                </div>
+            </div>
+
+            <div class="summary-row">
+                <span class="summary-label">Cliente:</span>
+                <span class="summary-value" th:text="${clientName}">Ivan Castillo</span>
+            </div>
+
+            <div class="summary-row">
+                <span class="summary-label">Servicio para:</span>
+                <span class="summary-value highlight-value" th:text="${petName}">Luna</span>
+            </div>
+
+            <div class="summary-row">
+                <span class="summary-label">Cuidador:</span>
+                <span class="summary-value" th:text="${sitterName}">Isabel Contreras</span>
+            </div>
+
+            <div class="summary-row">
+                <span class="summary-label">Fecha del servicio:</span>
+                <span class="summary-value" th:text="${#temporals.format(serviceDate, 'dd/MM/yyyy')}">15/09/2025</span>
+            </div>
+
+            <div class="summary-row">
+                <span class="summary-label">Subtotal:</span>
+                <span class="summary-value">$<span th:text="${subtotal}">60.00</span></span>
+            </div>
+
+            <div class="summary-row">
+                <span class="summary-label">Tarifa de plataforma:</span>
+                <span class="summary-value">$<span th:text="${platformFee}">9.00</span></span>
+            </div>
+
+            <div class="summary-row">
+                <span class="summary-label">TOTAL:</span>
+                <span class="summary-value highlight-value">$<span th:text="${totalAmount}">60.00</span></span>
+            </div>
+        </div>
+
+        <!-- Desglose de items -->
+        <div class="invoice-items">
+            <div class="items-header">
+                Desglose detallado de servicios
+            </div>
+
+            <!-- Iteración sobre los items de la factura -->
+            <div th:each="item : ${invoiceItems}" class="item-row">
+                <div class="item-description">
+                    <h4 th:text="${item.description}">Cuidado de mascotas - Servicio básico</h4>
+                    <p>Servicio completado satisfactoriamente</p>
+                </div>
+                <div class="item-details">
+                    <div class="quantity">
+                        Cantidad: <span th:text="${item.quantity}">2</span>
+                        <span th:text="${item.quantity == 1} ? 'hora' : 'horas'">horas</span>
+                    </div>
+                    <div class="unit-price">
+                        Precio unitario: $<span th:text="${item.unitPrice}">30.00</span>
+                    </div>
+                    <div class="line-total">
+                        Total: $<span th:text="${item.lineTotal}">60.00</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Item por defecto si no hay items dinámicos -->
+            <div th:unless="${invoiceItems}" class="item-row">
+                <div class="item-description">
+                    <h4 th:text="${serviceName ?: 'Servicio de cuidado de mascotas'}">Cuidado por 2 Horas</h4>
+                    <p>Servicio completado para <span th:text="${petName}">Luna</span></p>
+                </div>
+                <div class="item-details">
+                    <div class="quantity">
+                        Cantidad: <span th:text="${duration ?: '2'}">2</span> horas
+                    </div>
+                    <div class="unit-price">
+                        Precio unitario: $<span th:text="${unitPrice ?: '30.00'}">30.00</span>
+                    </div>
+                    <div class="line-total">
+                        Total: $<span th:text="${subtotal}">60.00</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sección de descarga -->
+        <div class="download-section">
+            <h3>Descargar tu factura</h3>
+            <p>Tu factura está disponible en múltiples formatos para tu conveniencia:</p>
+
+            <div class="download-buttons">
+                <a th:href="'http://localhost:8080/api/invoices/' + ${invoiceId} + '/download/pdf'"
+                   class="download-button primary-download"
+                   target="_blank"
+                   rel="noopener noreferrer">
+                    Descargar PDF
+                </a>
+
+                <a th:href="'http://localhost:8080/api/invoices/' + ${invoiceId} + '/download/excel'"
+                   class="download-button secondary-download"
+                   target="_blank"
+                   rel="noopener noreferrer">
+                    Descargar Excel
+                </a>
+            </div>
+
+            <p style="color: #1565c0; font-size: 14px; margin-top: 15px;">
+                Las facturas están disponibles para descarga durante 12 meses desde su emisión.
+            </p>
+        </div>
+
+        <!-- Información de pago -->
+        <div class="payment-info" th:if="${status != 'PAID'}">
+            <h3>Estado de pago</h3>
+            <p><strong>Estado actual:</strong> <span th:text="${status == 'SENT'} ? 'Pendiente de pago' : (${status == 'OVERDUE'} ? 'Pago vencido' : 'En proceso')">Pendiente de pago</span></p>
+            <p><strong>Monto total:</strong> $<span th:text="${totalAmount}">60.00</span></p>
+            <p><strong>Método de pago:</strong> Se cargará automáticamente a tu método de pago registrado</p>
+            <p th:if="${status == 'OVERDUE'}"><strong>Días vencidos:</strong> <span th:text="${daysOverdue ?: '0'}">0</span> días</p>
+        </div>
+
+        <!-- Información de pago completado -->
+        <div class="payment-info" th:if="${status == 'PAID'}" style="background: linear-gradient(135deg, #e8f5e8 0%, #d4edda 100%); border-left-color: #28a745;">
+            <h3 style="color: #155724;">Pago completado</h3>
+            <p style="color: #155724;"><strong>Estado:</strong> Pagado completamente</p>
+            <p style="color: #155724;"><strong>Fecha de pago:</strong> <span th:text="${#temporals.format(paymentDate, 'dd/MM/yyyy HH:mm')}">15/09/2025 16:30</span></p>
+            <p style="color: #155724;"><strong>Método utilizado:</strong> Tarjeta terminada en ****<span th:text="${lastFourDigits ?: '1234'}">1234</span></p>
+            <p style="color: #155724;"><strong>ID de transacción:</strong> <span th:text="${transactionId ?: 'TXN_12345'}">TXN_12345</span></p>
+        </div>
+
+        <!-- Fechas importantes -->
+        <div class="dates-info">
+            <h3>Fechas importantes</h3>
+            <p><strong>Fecha de emisión:</strong> <span th:text="${#temporals.format(issueDate, 'dd/MM/yyyy')}">15/09/2025</span></p>
+            <p><strong>Fecha de vencimiento:</strong> <span th:text="${#temporals.format(dueDate, 'dd/MM/yyyy')}">30/09/2025</span></p>
+            <p><strong>Fecha del servicio:</strong> <span th:text="${#temporals.format(serviceDate, 'dd/MM/yyyy')}">15/09/2025</span></p>
+            <p><strong>Disponible hasta:</strong> <span th:text="${#temporals.format(availableUntil, 'dd/MM/yyyy')}">15/09/2026</span></p>
+        </div>
+
+        <!-- Recordatorio -->
+        <div class="reminder-section" th:if="${status != 'PAID'}">
+            <p>
+                <span class="icon">⏰</span>
+                <strong>Recordatorio:</strong> Tu factura vence el
+                <strong th:text="${#temporals.format(dueDate, 'dd/MM/yyyy')}">30/09/2025</strong>.
+                El pago se procesará automáticamente usando tu método de pago registrado.
+            </p>
+        </div>
+
+        <!-- Información adicional -->
+        <div class="info-section">
+            <h3>¿Necesitas ayuda con tu factura?</h3>
+            <p>Si tienes preguntas sobre tu factura o necesitas asistencia:</p>
+            <p><strong>Email:</strong> facturacion@petcare.com</p>
+            <p><strong>Teléfono:</strong> +1 (555) 123-4567</p>
+            <p><strong>Horario:</strong> Lunes a Viernes, 9:00 AM - 6:00 PM</p>
+            <p><strong>Portal web:</strong> www.petcare.com/facturas</p>
+        </div>
+
+        <!-- Notas adicionales si existen -->
+        <div class="info-section" th:if="${notes}">
+            <h3>Notas adicionales</h3>
+            <p th:text="${notes}">Notas especiales sobre la factura o el servicio.</p>
+        </div>
+
+        <p>
+            Gracias por elegir Petcare para el cuidado de <strong th:text="${petName}">Luna</strong>.
+            Tu factura refleja el excelente servicio proporcionado por
+            <strong th:text="${sitterName}">Isabel Contreras</strong>.
+        </p>
+
+        <p>
+            <strong>Nota:</strong> Esta factura es un documento oficial válido para
+            efectos fiscales y contables. Guárdala en un lugar seguro para tus registros.
+        </p>
+    </div>
+
+    <!-- Footer -->
+    <div class="footer">
+        <p class="company-name">Petcare</p>
+        <p>Facturación y servicios profesionales de cuidado de mascotas</p>
+
+        <div class="contact-info">
+            <p>
+                <a href="mailto:facturacion@petcare.com">facturacion@petcare.com</a> |
+                <a href="https://www.petcare.com/facturas">Portal de Facturas</a>
+            </p>
+            <p>
+                <a href="https://www.petcare.com/privacidad">Política de Privacidad</a> |
+                <a href="https://www.petcare.com/terminos-facturacion">Términos de Facturación</a>
+            </p>
+        </div>
+
+        <p>
+            &copy; <span th:text="${#dates.format(#dates.createNow(), 'yyyy')}">2024</span>
+            Petcare. Todos los derechos reservados.
+        </p>
+
+        <p>
+            <small>
+                Factura generada el
+                <span th:text="${#temporals.format(issueDate, 'dd/MM/yyyy HH:mm')}">15/09/2025 16:15</span>
+            </small>
+        </p>
+    </div>
+</div>
+
+<!-- Tracking pixel opcional para analytics -->
+<!--<img src="https://analytics.petcare.com/track.gif?email=invoice-notification&invoice=${invoiceId}"
+     width="1" height="1" alt="" style="display:none;">-->
+</body>
+</html>

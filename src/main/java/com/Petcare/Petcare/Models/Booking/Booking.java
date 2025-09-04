@@ -1,5 +1,7 @@
 package com.Petcare.Petcare.Models.Booking;
 
+import com.Petcare.Petcare.Models.Account.Account;
+import com.Petcare.Petcare.Models.Invoice.Invoice;
 import com.Petcare.Petcare.Models.Pet;
 import com.Petcare.Petcare.Models.PlatformFee;
 import com.Petcare.Petcare.Models.ServiceOffering.ServiceOffering;
@@ -12,20 +14,27 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.HashSet;
 import java.util.Objects;
+import java.util.Set;
 
 /**
  * Entidad que representa una reserva de servicios de cuidado de mascotas.
  *
  * <p>Esta entidad almacena la información básica de una reserva, incluyendo
- * las relaciones con otras entidades del sistema y los timestamps de auditoría.</p>
+ * las relaciones con otras entidades del sistema y los timestamps de auditoría.
+ * Es el núcleo del flujo de negocio, conectando clientes, cuidadores, mascotas
+ * y servicios en una transacción completa.</p>
  *
  * <p><strong>Relaciones principales:</strong></p>
  * <ul>
- *   <li>Pertenece a una mascota específica ({@link Pet})</li>
+ *   <li>Pertenece a una cuenta específica ({@link Account})</li>
+ *   <li>Incluye una mascota específica ({@link Pet})</li>
  *   <li>Asignada a un cuidador ({@link User} con rol SITTER)</li>
  *   <li>Basada en una oferta de servicio ({@link ServiceOffering})</li>
  *   <li>Creada por un usuario propietario ({@link User} con rol CLIENT)</li>
+ *   <li>Genera una factura ({@link Invoice})</li>
+ *   <li>Calcula tarifas de plataforma ({@link PlatformFee})</li>
  * </ul>
  *
  * <p><strong>Estados posibles:</strong></p>
@@ -37,25 +46,39 @@ import java.util.Objects;
  *   <li>CANCELLED: Reserva cancelada</li>
  * </ul>
  *
+ * <p><strong>Flujo de negocio:</strong></p>
+ * <ol>
+ *   <li>Cliente crea reserva (PENDING)</li>
+ *   <li>Cuidador confirma (CONFIRMED)</li>
+ *   <li>Servicio inicia (IN_PROGRESS)</li>
+ *   <li>Servicio termina (COMPLETED)</li>
+ *   <li>Se genera factura automáticamente</li>
+ * </ol>
+ *
  * <p><strong>Nota:</strong> La lógica de negocio y validaciones complejas
  * se manejan en el service layer, no en esta entidad.</p>
  *
  * @author Equipo Petcare 10
  * @version 1.0
  * @since 1.0
+ * @see Account
  * @see Pet
  * @see User
  * @see ServiceOffering
+ * @see Invoice
+ * @see PlatformFee
  * @see BookingStatus
  */
 @Entity
 @Table(name = "bookings",
         indexes = {
+                @Index(name = "idx_booking_account", columnList = "account_id"),
                 @Index(name = "idx_booking_status", columnList = "status"),
-                @Index(name = "idx_booking_dates", columnList = "startTime, endTime"),
+                @Index(name = "idx_booking_dates", columnList = "start_time, end_time"),
                 @Index(name = "idx_booking_sitter", columnList = "sitter_id"),
                 @Index(name = "idx_booking_client", columnList = "booked_by_user_id"),
-                @Index(name = "idx_booking_created_at", columnList = "createdAt")
+                @Index(name = "idx_booking_pet", columnList = "pet_id"),
+                @Index(name = "idx_booking_created_at", columnList = "created_at")
         })
 @EntityListeners(AuditingEntityListener.class)
 public class Booking {
@@ -70,12 +93,24 @@ public class Booking {
     private Long id;
 
     /**
+     * Cuenta a la cual pertenece esta reserva.
+     *
+     * <p>Relación obligatoria que establece la entidad financiera responsable
+     * de los pagos y a la cual se enviará la facturación. Es derivada de la
+     * mascota seleccionada, ya que cada mascota pertenece a una cuenta.</p>
+     */
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "account_id", nullable = false, foreignKey = @ForeignKey(name = "fk_booking_account"))
+    @NotNull(message = "La cuenta es obligatoria para crear una reserva")
+    private Account account;
+
+    /**
      * Mascota para la cual se solicita el servicio.
      *
      * <p>Relación obligatoria que establece qué mascota recibirá el cuidado.
      * La carga es lazy para optimizar el rendimiento.</p>
      */
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "pet_id", nullable = false, foreignKey = @ForeignKey(name = "fk_booking_pet"))
     @NotNull(message = "La mascota es obligatoria para crear una reserva")
     private Pet pet;
@@ -86,7 +121,7 @@ public class Booking {
      * <p>Debe ser un usuario con rol SITTER. El cuidador es responsable
      * de proporcionar el servicio acordado durante el período establecido.</p>
      */
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "sitter_id", nullable = false, foreignKey = @ForeignKey(name = "fk_booking_sitter"))
     @NotNull(message = "El cuidador es obligatorio para crear una reserva")
     private User sitter;
@@ -97,7 +132,7 @@ public class Booking {
      * <p>Define el tipo de servicio, duración base y precio que se aplicará
      * a esta reserva. Cada reserva debe estar basada en una oferta existente.</p>
      */
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "service_offering_id", nullable = false, foreignKey = @ForeignKey(name = "fk_booking_service_offering"))
     @NotNull(message = "La oferta de servicio es obligatoria")
     private ServiceOffering serviceOffering;
@@ -108,7 +143,7 @@ public class Booking {
      * <p>Generalmente el dueño de la mascota o un usuario autorizado
      * en la cuenta familiar. Debe tener permisos para crear reservas.</p>
      */
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "booked_by_user_id", nullable = false, foreignKey = @ForeignKey(name = "fk_booking_booked_by_user"))
     @NotNull(message = "El usuario que crea la reserva es obligatorio")
     private User bookedByUser;
@@ -207,7 +242,6 @@ public class Booking {
      * <p>Se establece automáticamente al persistir la entidad.
      * Inmutable después de la creación.</p>
      */
-
     @CreatedDate
     @Column(name = "created_at", updatable = false, nullable = false)
     private LocalDateTime createdAt;
@@ -218,7 +252,6 @@ public class Booking {
      * <p>Se actualiza automáticamente cada vez que se modifica la entidad.
      * Útil para auditoría y control de concurrencia.</p>
      */
-
     @LastModifiedDate
     @Column(name = "updated_at", nullable = false)
     private LocalDateTime updatedAt;
@@ -231,6 +264,16 @@ public class Booking {
      */
     @OneToOne(mappedBy = "booking", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private PlatformFee platformFee;
+
+    /**
+     * Facturas generadas para esta reserva.
+     *
+     * <p>Normalmente una reserva genera una sola factura al completarse,
+     * pero puede haber múltiples en casos de facturación parcial o
+     * modificaciones posteriores.</p>
+     */
+    @OneToMany(mappedBy = "booking", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private Set<Invoice> invoices = new HashSet<>();
 
     // ========== CONSTRUCTORES ==========
 
@@ -247,6 +290,7 @@ public class Booking {
      * <p>Solo incluye validaciones básicas de nulos. Las validaciones de negocio
      * complejas se manejan en el service layer.</p>
      *
+     * @param account la cuenta responsable de esta reserva
      * @param pet la mascota que recibirá el servicio
      * @param sitter el cuidador asignado
      * @param serviceOffering la oferta de servicio seleccionada
@@ -256,8 +300,9 @@ public class Booking {
      * @param totalPrice precio total acordado
      * @param notes notas adicionales (opcional)
      */
-    public Booking(Pet pet, User sitter, ServiceOffering serviceOffering, User bookedByUser,
+    public Booking(Account account, Pet pet, User sitter, ServiceOffering serviceOffering, User bookedByUser,
                    LocalDateTime startTime, LocalDateTime endTime, BigDecimal totalPrice, String notes) {
+        this.account = account;
         this.pet = pet;
         this.sitter = sitter;
         this.serviceOffering = serviceOffering;
@@ -273,11 +318,12 @@ public class Booking {
      * Constructor completo con todos los campos.
      * Principalmente para uso interno y testing.
      */
-    public Booking(Long id, Pet pet, User sitter, ServiceOffering serviceOffering, User bookedByUser,
+    public Booking(Long id, Account account, Pet pet, User sitter, ServiceOffering serviceOffering, User bookedByUser,
                    LocalDateTime startTime, LocalDateTime endTime, LocalDateTime actualStartTime,
                    LocalDateTime actualEndTime, BookingStatus status, BigDecimal totalPrice,
                    String notes, String cancellationReason, LocalDateTime createdAt, LocalDateTime updatedAt) {
         this.id = id;
+        this.account = account;
         this.pet = pet;
         this.sitter = sitter;
         this.serviceOffering = serviceOffering;
@@ -302,6 +348,14 @@ public class Booking {
 
     public void setId(Long id) {
         this.id = id;
+    }
+
+    public Account getAccount() {
+        return account;
+    }
+
+    public void setAccount(Account account) {
+        this.account = account;
     }
 
     public Pet getPet() {
@@ -424,6 +478,71 @@ public class Booking {
         this.platformFee = platformFee;
     }
 
+    public Set<Invoice> getInvoices() {
+        return invoices;
+    }
+
+    public void setInvoices(Set<Invoice> invoices) {
+        this.invoices = invoices;
+    }
+
+    // ========== MÉTODOS DE UTILIDAD PARA RELACIONES BIDIRECCIONALES ==========
+
+    /**
+     * Agrega una factura a esta reserva manteniendo la consistencia bidireccional.
+     */
+    public void addInvoice(Invoice invoice) {
+        invoices.add(invoice);
+        invoice.setBooking(this);
+    }
+
+    /**
+     * Remueve una factura de esta reserva manteniendo la consistencia bidireccional.
+     */
+    public void removeInvoice(Invoice invoice) {
+        invoices.remove(invoice);
+        invoice.setBooking(null);
+    }
+
+    // ========== MÉTODOS DE UTILIDAD DE NEGOCIO ==========
+
+    /**
+     * Verifica si la reserva está en un estado que permite generar factura.
+     *
+     * @return true si el estado es COMPLETED
+     */
+    public boolean canGenerateInvoice() {
+        return BookingStatus.COMPLETED.equals(this.status);
+    }
+
+    /**
+     * Verifica si la reserva puede ser cancelada.
+     *
+     * @return true si el estado es PENDING o CONFIRMED
+     */
+    public boolean canBeCancelled() {
+        return BookingStatus.PENDING.equals(this.status) ||
+                BookingStatus.CONFIRMED.equals(this.status);
+    }
+
+    /**
+     * Verifica si el servicio está actualmente en progreso.
+     *
+     * @return true si el estado es IN_PROGRESS
+     */
+    public boolean isInProgress() {
+        return BookingStatus.IN_PROGRESS.equals(this.status);
+    }
+
+    /**
+     * Verifica si la reserva está en un estado final.
+     *
+     * @return true si el estado es COMPLETED o CANCELLED
+     */
+    public boolean isFinalState() {
+        return BookingStatus.COMPLETED.equals(this.status) ||
+                BookingStatus.CANCELLED.equals(this.status);
+    }
 
     // ========== EQUALS, HASHCODE Y TOSTRING ==========
 

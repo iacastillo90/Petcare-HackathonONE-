@@ -71,7 +71,8 @@ public class UserDTO {
     /**
      * Número de teléfono del usuario.
      */
-    @Size(max = 250, message = "El número de teléfono no puede exceder 250 caracteres")
+    @NotBlank(message = "El número de teléfono es obligatorio")
+    @Size(max = 20, message = "El número de teléfono no puede exceder 20 caracteres")
     private String phoneNumber;
 
     /**

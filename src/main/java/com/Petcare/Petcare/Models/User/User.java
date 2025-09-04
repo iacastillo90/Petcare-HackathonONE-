@@ -1,12 +1,9 @@
 package com.Petcare.Petcare.Models.User;
 
-
 import com.Petcare.Petcare.Models.Account.AccountUser;
+import com.Petcare.Petcare.Models.SitterProfile;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.*;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
@@ -26,7 +23,8 @@ import java.util.Set;
  *
  * <p>Esta entidad implementa {@link UserDetails} de Spring Security para integración
  * con el sistema de autenticación y autorización. Maneja tanto usuarios clientes
- * como cuidadores de mascotas.</p>
+ * como cuidadores de mascotas, proporcionando la base para todo el sistema de
+ * gestión de usuarios y permisos.</p>
  *
  * <p><strong>Roles principales:</strong></p>
  * <ul>
@@ -39,17 +37,23 @@ import java.util.Set;
  * <ul>
  *   <li>Integración completa con Spring Security</li>
  *   <li>Control de estado de cuenta (activo/inactivo)</li>
- *   <li>Verificación de email</li>
- *   <li>Seguimiento de último login</li>
+ *   <li>Verificación de email obligatoria</li>
+ *   <li>Seguimiento de actividad y último login</li>
+ *   <li>Contraseñas hasheadas con bcrypt</li>
  * </ul>
  *
  * <p><strong>Membresías multi-cuenta:</strong></p>
  * <p>Un usuario puede pertenecer a múltiples cuentas familiares a través
  * de la entidad intermedia {@link AccountUser}, permitiendo gestión
- * colaborativa de mascotas.</p>
+ * colaborativa de mascotas con permisos granulares.</p>
  *
- * <p><strong>Nota:</strong> Las validaciones de negocio complejas y lógica
- * de autenticación se manejan en el service layer.</p>
+ * <p><strong>Perfil de cuidador:</strong></p>
+ * <p>Los usuarios con rol SITTER pueden tener un perfil de cuidador asociado
+ * a través de la relación {@link SitterProfile}, que contiene información
+ * específica del servicio de cuidado como tarifas y disponibilidad.</p>
+ *
+ * <p><strong>Nota:</strong> Las validaciones de negocio complejas, cifrado
+ * de contraseñas y lógica de autenticación se manejan en el service layer.</p>
  *
  * @author Equipo Petcare 10
  * @version 1.0
@@ -57,16 +61,15 @@ import java.util.Set;
  * @see UserDetails
  * @see Role
  * @see AccountUser
+ * @see SitterProfile
  */
-@Data
-@Builder
-@AllArgsConstructor
 @Entity
 @Table(name = "users",
         indexes = {
-                @Index(name = "idx_user_email", columnList = "email"),
+                @Index(name = "idx_user_email", columnList = "email", unique = true),
                 @Index(name = "idx_user_role", columnList = "role"),
-                @Index(name = "idx_user_active", columnList = "isActive"),
+                @Index(name = "idx_user_active", columnList = "is_active"),
+                @Index(name = "idx_user_permission_level", columnList = "permission_level"),
                 @Index(name = "idx_user_created_at", columnList = "created_at")
         })
 @EntityListeners(AuditingEntityListener.class)
@@ -87,19 +90,20 @@ public class User implements UserDetails {
      * <p>Campo obligatorio usado para personalización de la experiencia
      * de usuario y comunicaciones del sistema.</p>
      */
-    @Column(name = "first_name", nullable = false, length = 250)
+    @Column(name = "first_name", nullable = false, length = 100)
     @NotBlank(message = "El nombre es obligatorio")
-    @Size(max = 250, message = "El nombre no puede exceder 250 caracteres")
+    @Size(max = 100, message = "El nombre no puede exceder 100 caracteres")
     private String firstName;
 
     /**
      * Apellido del usuario.
      *
-     * <p>Campo opcional que complementa la identificación del usuario.
+     * <p>Campo obligatorio que complementa la identificación del usuario.
      * Útil para comunicaciones formales y verificación de identidad.</p>
      */
-    @Column(name = "last_name", length = 250)
-    @Size(max = 250, message = "El apellido no puede exceder 250 caracteres")
+    @Column(name = "last_name", nullable = false, length = 100)
+    @NotBlank(message = "El apellido es obligatorio")
+    @Size(max = 100, message = "El apellido no puede exceder 100 caracteres")
     private String lastName;
 
     /**
@@ -108,41 +112,44 @@ public class User implements UserDetails {
      * <p>Sirve como identificador único para autenticación y comunicaciones.
      * Debe ser válida y única en todo el sistema.</p>
      */
-    @Column(name = "email", nullable = false, unique = true, length = 250)
+    @Column(name = "email", nullable = false, unique = true, length = 255)
     @NotBlank(message = "El email es obligatorio")
     @Email(message = "Debe ser una dirección de email válida")
-    @Size(max = 250, message = "El email no puede exceder 250 caracteres")
+    @Size(max = 255, message = "El email no puede exceder 255 caracteres")
     private String email;
 
     /**
      * Contraseña cifrada del usuario.
      *
-     * <p>Almacenada usando un algoritmo de hash seguro (bcrypt).
-     * No debe exponerse nunca en logs o respuestas de API.</p>
+     * <p>Almacenada usando bcrypt. Nunca debe exponerse en logs,
+     * respuestas de API o ser enviada al frontend.</p>
      */
-    @Column(name = "password", nullable = false)
+    @Column(name = "password", nullable = false, length = 255)
     @NotBlank(message = "La contraseña es obligatoria")
+    @Size(max = 255, message = "La contraseña cifrada no puede exceder 255 caracteres")
     private String password;
-
-    /**
-     * Dirección física del usuario.
-     *
-     * <p>Campo opcional de texto libre para almacenar la dirección completa.
-     * Útil para servicios a domicilio y verificación de ubicación para cuidadores.</p>
-     */
-    @Column(name = "address", columnDefinition = "TEXT")
-    @Size(max = 500, message = "La dirección no puede exceder 500 caracteres")
-    private String address;
 
     /**
      * Número de teléfono del usuario.
      *
-     * <p>Campo opcional para comunicaciones de emergencia y coordinación
+     * <p>Campo obligatorio para comunicaciones de emergencia y coordinación
      * de servicios. Se almacena como texto para soportar formatos internacionales.</p>
      */
-    @Column(name = "phone_number", length = 250)
-    @Size(max = 250, message = "El número de teléfono no puede exceder 250 caracteres")
+    @Column(name = "phone_number", nullable = false, length = 20)
+    @NotBlank(message = "El número de teléfono es obligatorio")
+    @Size(max = 20, message = "El número de teléfono no puede exceder 20 caracteres")
     private String phoneNumber;
+
+    /**
+     * Dirección física del usuario.
+     *
+     * <p>Campo obligatorio para servicios a domicilio y verificación
+     * de ubicación para cuidadores.</p>
+     */
+    @Column(name = "address", nullable = false, columnDefinition = "TEXT")
+    @NotBlank(message = "La dirección es obligatoria")
+    @Size(max = 500, message = "La dirección no puede exceder 500 caracteres")
+    private String address;
 
     /**
      * Rol del usuario en el sistema.
@@ -158,6 +165,19 @@ public class User implements UserDetails {
     private Role role;
 
     /**
+     * Nivel de permisos adicional del usuario.
+     *
+     * <p>Proporciona una capa adicional de control de acceso más granular
+     * que complementa el rol básico del usuario.</p>
+     *
+     * @see PermissionLevel
+     */
+    @Enumerated(EnumType.STRING)
+    @Column(name = "permission_level", nullable = false, length = 20)
+    @NotNull(message = "El nivel de permisos es obligatorio")
+    private PermissionLevel permissionLevel = PermissionLevel.BASIC;
+
+    /**
      * Indica si la cuenta del usuario está activa.
      *
      * <p>Los usuarios inactivos no pueden acceder al sistema ni realizar
@@ -165,8 +185,6 @@ public class User implements UserDetails {
      * de datos.</p>
      */
     @Column(name = "is_active", nullable = false)
-    @NotNull(message = "El estado activo es obligatorio")
-    @Builder.Default
     private boolean isActive = true;
 
     /**
@@ -214,14 +232,18 @@ public class User implements UserDetails {
      * de este usuario en diferentes cuentas. Permite que un usuario
      * pueda gestionar mascotas de múltiples familias.</p>
      */
-    @OneToMany(
-            mappedBy = "user",
-            cascade = CascadeType.ALL,
-            fetch = FetchType.LAZY,
-            orphanRemoval = true
-    )
-    @Builder.Default
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY, orphanRemoval = true)
     private Set<AccountUser> accountMemberships = new HashSet<>();
+
+    /**
+     * Perfil de cuidador asociado al usuario.
+     *
+     * <p>Relación opcional que existe únicamente para usuarios con rol SITTER.
+     * Contiene información específica del servicio de cuidado como tarifas,
+     * disponibilidad y calificaciones.</p>
+     */
+    @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private SitterProfile sitterProfile;
 
     // ========== CONSTRUCTORES ==========
 
@@ -229,30 +251,56 @@ public class User implements UserDetails {
      * Constructor vacío requerido por JPA.
      */
     public User() {
-        this.isActive = true;
     }
 
     /**
      * Constructor principal para crear un nuevo usuario.
      *
+     * <p>Solo incluye validaciones básicas de nulos. Las validaciones de negocio
+     * complejas y el cifrado de contraseña se manejan en el service layer.</p>
+     *
      * @param firstName nombre del usuario
      * @param lastName apellido del usuario
-     * @param email dirección de correo electrónico
-     * @param password contraseña cifrada
-     * @param address dirección física
+     * @param email dirección de correo electrónico única
+     * @param password contraseña ya cifrada
      * @param phoneNumber número de teléfono
-     * @param role rol del usuario
+     * @param address dirección física
+     * @param role rol del usuario en el sistema
      */
     public User(String firstName, String lastName, String email, String password,
-                String address, String phoneNumber, Role role) {
+                String phoneNumber, String address, Role role) {
         this.firstName = firstName;
         this.lastName = lastName;
         this.email = email;
         this.password = password;
-        this.address = address;
         this.phoneNumber = phoneNumber;
+        this.address = address;
         this.role = role;
-        this.isActive = true;
+        this.permissionLevel = PermissionLevel.BASIC;
+    }
+
+    /**
+     * Constructor completo con todos los campos principales.
+     * Principalmente para uso interno y testing.
+     */
+    public User(Long id, String firstName, String lastName, String email, String password,
+                String phoneNumber, String address, Role role, PermissionLevel permissionLevel,
+                boolean isActive, LocalDateTime emailVerifiedAt, LocalDateTime lastLoginAt,
+                LocalDateTime createdAt, LocalDateTime updatedAt) {
+        this.id = id;
+        this.firstName = firstName;
+        this.lastName = lastName;
+        this.email = email;
+        this.password = password;
+        this.phoneNumber = phoneNumber;
+        this.address = address;
+        this.role = role;
+        this.permissionLevel = permissionLevel;
+        this.isActive = isActive;
+        this.emailVerifiedAt = emailVerifiedAt;
+        this.lastLoginAt = lastLoginAt;
+        this.createdAt = createdAt;
+        this.updatedAt = updatedAt;
     }
 
     // ========== GETTERS Y SETTERS ==========
@@ -297,14 +345,6 @@ public class User implements UserDetails {
         this.password = password;
     }
 
-    public String getAddress() {
-        return address;
-    }
-
-    public void setAddress(String address) {
-        this.address = address;
-    }
-
     public String getPhoneNumber() {
         return phoneNumber;
     }
@@ -313,12 +353,28 @@ public class User implements UserDetails {
         this.phoneNumber = phoneNumber;
     }
 
+    public String getAddress() {
+        return address;
+    }
+
+    public void setAddress(String address) {
+        this.address = address;
+    }
+
     public Role getRole() {
         return role;
     }
 
     public void setRole(Role role) {
         this.role = role;
+    }
+
+    public PermissionLevel getPermissionLevel() {
+        return permissionLevel;
+    }
+
+    public void setPermissionLevel(PermissionLevel permissionLevel) {
+        this.permissionLevel = permissionLevel;
     }
 
     public boolean isActive() {
@@ -367,6 +423,32 @@ public class User implements UserDetails {
 
     public void setAccountMemberships(Set<AccountUser> accountMemberships) {
         this.accountMemberships = accountMemberships;
+    }
+
+    public SitterProfile getSitterProfile() {
+        return sitterProfile;
+    }
+
+    public void setSitterProfile(SitterProfile sitterProfile) {
+        this.sitterProfile = sitterProfile;
+    }
+
+    // ========== MÉTODOS DE UTILIDAD PARA RELACIONES BIDIRECCIONALES ==========
+
+    /**
+     * Agrega una membresía de cuenta manteniendo la consistencia bidireccional.
+     */
+    public void addAccountMembership(AccountUser accountUser) {
+        accountMemberships.add(accountUser);
+        accountUser.setUser(this);
+    }
+
+    /**
+     * Remueve una membresía de cuenta manteniendo la consistencia bidireccional.
+     */
+    public void removeAccountMembership(AccountUser accountUser) {
+        accountMemberships.remove(accountUser);
+        accountUser.setUser(null);
     }
 
     // ========== MÉTODOS SPRING SECURITY UserDetails ==========
@@ -444,20 +526,14 @@ public class User implements UserDetails {
         return true;
     }
 
-    // ========== MÉTODOS UTILITARIOS ==========
+    // ========== MÉTODOS DE UTILIDAD DE NEGOCIO ==========
 
     /**
      * Retorna el nombre completo del usuario.
      *
-     * <p>Combina nombre y apellido, manejando casos donde el apellido
-     * puede ser null o vacío.</p>
-     *
-     * @return nombre completo formateado
+     * @return nombre y apellido concatenados
      */
     public String getFullName() {
-        if (lastName == null || lastName.trim().isEmpty()) {
-            return firstName;
-        }
         return firstName + " " + lastName;
     }
 
@@ -484,13 +560,58 @@ public class User implements UserDetails {
         this.lastLoginAt = LocalDateTime.now();
     }
 
+    /**
+     * Verifica si el usuario es un cuidador.
+     *
+     * @return true si el usuario tiene rol SITTER
+     */
+    public boolean isSitter() {
+        return Role.SITTER.equals(this.role);
+    }
+
+    /**
+     * Verifica si el usuario es un cliente.
+     *
+     * @return true si el usuario tiene rol CLIENT
+     */
+    public boolean isClient() {
+        return Role.CLIENT.equals(this.role);
+    }
+
+    /**
+     * Verifica si el usuario es un administrador.
+     *
+     * @return true si el usuario tiene rol ADMIN
+     */
+    public boolean isAdmin() {
+        return Role.ADMIN.equals(this.role);
+    }
+
+    /**
+     * Verifica si el usuario tiene un perfil de cuidador activo.
+     *
+     * @return true si tiene perfil de cuidador, false en caso contrario
+     */
+    public boolean hasSitterProfile() {
+        return sitterProfile != null;
+    }
+
+    /**
+     * Verifica si el usuario puede realizar operaciones como cuidador.
+     *
+     * @return true si es SITTER y tiene perfil activo
+     */
+    public boolean canProvideSitterServices() {
+        return isSitter() && hasSitterProfile() && isActive;
+    }
+
     // ========== EQUALS, HASHCODE Y TOSTRING ==========
 
     /**
-     * Implementación de equals basada en el email único.
+     * Implementación de equals basada en el ID único y email.
      *
-     * <p>Dos usuarios son iguales si tienen el mismo email,
-     * ya que este campo es único en el sistema.</p>
+     * <p>Se incluye el email como campo de negocio único para garantizar
+     * consistencia en colecciones hash incluso durante el ciclo de vida de la entidad.</p>
      */
     @Override
     public boolean equals(Object o) {
@@ -503,7 +624,7 @@ public class User implements UserDetails {
             return Objects.equals(this.id, user.id);
         }
 
-        // Si no tienen ID, comparar por email (único)
+        // Si no tienen ID, comparar por email único
         return Objects.equals(getEmail(), user.getEmail());
     }
 
@@ -526,7 +647,7 @@ public class User implements UserDetails {
      */
     @Override
     public String toString() {
-        return String.format("User{id=%d, email='%s', role=%s, isActive=%s, createdAt=%s}",
-                id, email, role, isActive, createdAt);
+        return String.format("User{id=%d, email='%s', fullName='%s', role=%s, isActive=%s, createdAt=%s}",
+                id, email, getFullName(), role, isActive, createdAt);
     }
 }

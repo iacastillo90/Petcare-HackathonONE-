@@ -7,6 +7,7 @@ import com.Petcare.Petcare.DTOs.Booking.CreateBookingRequest;
 import com.Petcare.Petcare.DTOs.Booking.UpdateBookingRequest;
 import com.Petcare.Petcare.Models.User.User;
 import com.Petcare.Petcare.Services.BookingService;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import jakarta.validation.ValidationException;
 import lombok.RequiredArgsConstructor;
@@ -16,6 +17,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
@@ -64,6 +66,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/bookings")
 @RequiredArgsConstructor
+@Tag(name = "Reservas", description = "Operaciones relacionadas con reservas")
 public class BookingController {
 
     private final BookingService bookingService;
@@ -113,9 +116,9 @@ public class BookingController {
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<BookingDetailResponse> createBooking(
             @Valid @RequestBody CreateBookingRequest request,
-            @AuthenticationPrincipal User currentUser
+            Authentication authentication
     ) {
-        BookingDetailResponse newBooking = bookingService.createBooking(request, currentUser);
+        BookingDetailResponse newBooking = bookingService.createBooking(request, authentication);
         return ResponseEntity.status(HttpStatus.CREATED).body(newBooking);
     }
 

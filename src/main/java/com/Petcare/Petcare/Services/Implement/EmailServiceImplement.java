@@ -65,6 +65,7 @@ public class EmailServiceImplement implements EmailService {
 
     // Plantillas predefinidas del sistema
     private static final String VERIFICATION_TEMPLATE = "Email-verified";
+    private static final String VERRIFICATION_BOOKING_TEMPLATE = "new-booking-sitter";
 
     // Dependencias inyectadas
     private final JavaMailSender javaMailSender;
@@ -370,8 +371,8 @@ public class EmailServiceImplement implements EmailService {
             }
 
             // Usar plantilla especificada o por defecto
-            String templateName = email.getTemplateName() != null ?
-                    email.getTemplateName() : VERIFICATION_TEMPLATE;
+            String templateName = email.getTemplateName();
+
 
             String htmlContent = templateEngine.process(templateName, context);
             logger.debug("Plantilla '{}' procesada correctamente", templateName);

@@ -4,6 +4,8 @@ import com.Petcare.Petcare.Models.Account.AccountUser;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
+import java.util.Optional;
+
 @Repository
 public interface AccountUserRepository extends JpaRepository<AccountUser, Long> {
 
@@ -14,4 +16,6 @@ public interface AccountUserRepository extends JpaRepository<AccountUser, Long> 
      * @return true si el usuario es miembro de la cuenta, false en caso contrario.
      */
     boolean existsByAccountIdAndUserId(Long accountId, Long userId);
+
+    Optional<AccountUser> findByUserId(Long currentUserId);
 }
