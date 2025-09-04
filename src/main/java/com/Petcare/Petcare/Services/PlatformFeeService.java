@@ -4,6 +4,7 @@ package com.Petcare.Petcare.Services;
 import com.Petcare.Petcare.DTOs.PlatformFee.CreatePlatformFeeRequest;
 import com.Petcare.Petcare.DTOs.PlatformFee.PlatformFeeResponse;
 import com.Petcare.Petcare.Models.Booking.Booking;
+import com.Petcare.Petcare.Models.Invoice.Invoice;
 import com.Petcare.Petcare.Models.PlatformFee;
 
 public interface PlatformFeeService {
@@ -24,4 +25,6 @@ public interface PlatformFeeService {
      * Recalcula las tarifas cuando cambia el precio de la reserva.
      */
     void recalculatePlatformFee(Booking booking);
+
+    void calculateAndCreateFee(Invoice savedInvoice);
 }
