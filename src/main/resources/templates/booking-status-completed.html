@@ -1,0 +1,801 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>Servicio completado y facturación - Petcare</title>
+    <!--[if mso]>
+    <noscript>
+        <xml>
+            <o:OfficeDocumentSettings>
+                <o:PixelsPerInch>96</o:PixelsPerInch>
+            </o:OfficeDocumentSettings>
+        </xml>
+    </noscript>
+    <![endif]-->
+    <style type="text/css">
+        /* Reset y estilos base */
+        body, table, td, p, a, li, blockquote {
+            -webkit-text-size-adjust: 100%;
+            -ms-text-size-adjust: 100%;
+        }
+
+        table, td {
+            mso-table-lspace: 0pt;
+            mso-table-rspace: 0pt;
+        }
+
+        img {
+            -ms-interpolation-mode: bicubic;
+            border: 0;
+            height: auto;
+            line-height: 100%;
+            outline: none;
+            text-decoration: none;
+        }
+
+        /* Estilos principales */
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            line-height: 1.6;
+            color: #2c3e50;
+            background-color: #f8f9fa;
+            margin: 0;
+            padding: 0;
+            width: 100% !important;
+            min-height: 100%;
+        }
+
+        .email-container {
+            max-width: 650px;
+            margin: 0 auto;
+            background-color: #ffffff;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 4px 25px rgba(0, 0, 0, 0.08);
+        }
+
+        /* Header completado */
+        .header {
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+            padding: 40px 30px;
+            text-align: center;
+            color: #ffffff;
+            position: relative;
+        }
+
+        .header::before {
+            content: "✅";
+            position: absolute;
+            top: 15px;
+            left: 25px;
+            font-size: 28px;
+            animation: checkmark 2s ease-in-out;
+        }
+
+        .header::after {
+            content: "✅";
+            position: absolute;
+            top: 15px;
+            right: 25px;
+            font-size: 28px;
+            animation: checkmark 2s ease-in-out 0.5s;
+        }
+
+        @keyframes checkmark {
+            0% { transform: scale(0) rotate(-45deg); opacity: 0; }
+            50% { transform: scale(1.2) rotate(0deg); opacity: 1; }
+            100% { transform: scale(1) rotate(0deg); opacity: 1; }
+        }
+
+        .header h1 {
+            margin: 0 0 10px 0;
+            font-size: 32px;
+            font-weight: 700;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .header .subtitle {
+            font-size: 16px;
+            opacity: 0.9;
+            margin: 0;
+            font-weight: 300;
+        }
+
+        /* Contenido principal */
+        .content {
+            padding: 40px 30px;
+            background-color: #ffffff;
+        }
+
+        .content h2 {
+            color: #2c3e50;
+            font-size: 24px;
+            font-weight: 600;
+            margin: 0 0 20px 0;
+            text-align: center;
+        }
+
+        .content p {
+            margin-bottom: 20px;
+            font-size: 16px;
+            line-height: 1.7;
+            color: #4a5568;
+        }
+
+        .welcome-message {
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            font-weight: 600;
+            font-size: 18px;
+        }
+
+        /* Status completado */
+        .status-badge {
+            display: inline-block;
+            padding: 12px 24px;
+            border-radius: 25px;
+            font-size: 16px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin: 20px 0;
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+            color: #ffffff;
+            box-shadow: 0 4px 15px rgba(40, 167, 69, 0.3);
+        }
+
+        /* Resumen del servicio */
+        .service-summary {
+            background: linear-gradient(135deg, #e8f5e8 0%, #d4edda 100%);
+            border-radius: 12px;
+            padding: 25px;
+            margin: 30px 0;
+            border: 2px solid #28a745;
+        }
+
+        .service-summary h3 {
+            color: #155724;
+            font-size: 20px;
+            font-weight: 600;
+            margin: 0 0 20px 0;
+            text-align: center;
+        }
+
+        .summary-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 0;
+            border-bottom: 1px solid #c3e6cb;
+        }
+
+        .summary-row:last-child {
+            border-bottom: none;
+        }
+
+        .summary-label {
+            font-weight: 600;
+            color: #155724;
+            min-width: 150px;
+        }
+
+        .summary-value {
+            color: #28a745;
+            text-align: right;
+            flex: 1;
+            font-weight: 500;
+        }
+
+        .highlight-value {
+            color: #155724;
+            font-weight: 700;
+            font-size: 18px;
+        }
+
+        /* Factura detallada */
+        .invoice-section {
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            border-radius: 12px;
+            padding: 30px;
+            margin: 30px 0;
+            border: 1px solid #dee2e6;
+        }
+
+        .invoice-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #28a745;
+        }
+
+        .invoice-title {
+            color: #2c3e50;
+            font-size: 24px;
+            font-weight: 700;
+            margin: 0;
+        }
+
+        .invoice-number {
+            color: #6c757d;
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .invoice-details {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .invoice-info {
+            padding: 15px;
+            background-color: #ffffff;
+            border-radius: 8px;
+            border: 1px solid #e9ecef;
+        }
+
+        .invoice-info h4 {
+            color: #495057;
+            font-size: 14px;
+            font-weight: 600;
+            margin: 0 0 10px 0;
+            text-transform: uppercase;
+        }
+
+        .invoice-info p {
+            color: #6c757d;
+            font-size: 14px;
+            margin: 5px 0;
+        }
+
+        /* Tabla de facturación */
+        .billing-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 25px 0;
+            background-color: #ffffff;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+        }
+
+        .billing-table th {
+            background: linear-gradient(135deg, #495057 0%, #6c757d 100%);
+            color: #ffffff;
+            padding: 15px 12px;
+            text-align: left;
+            font-weight: 600;
+            font-size: 14px;
+            text-transform: uppercase;
+        }
+
+        .billing-table td {
+            padding: 12px;
+            border-bottom: 1px solid #e9ecef;
+            color: #495057;
+        }
+
+        .billing-table tr:last-child td {
+            border-bottom: none;
+        }
+
+        .billing-table .amount-cell {
+            text-align: right;
+            font-weight: 600;
+            color: #28a745;
+        }
+
+        .billing-table .fee-cell {
+            text-align: right;
+            font-weight: 600;
+            color: #dc3545;
+        }
+
+        .billing-table .total-row {
+            background-color: #f8f9fa;
+            font-weight: 700;
+            font-size: 16px;
+        }
+
+        .billing-table .total-row td {
+            border-top: 2px solid #28a745;
+            color: #155724;
+        }
+
+        /* Desglose financiero */
+        .financial-breakdown {
+            background: linear-gradient(135deg, #fff3cd 0%, #ffeaa7 100%);
+            border-radius: 12px;
+            padding: 25px;
+            margin: 30px 0;
+            border-left: 4px solid #ffc107;
+        }
+
+        .financial-breakdown h3 {
+            color: #856404;
+            font-size: 18px;
+            font-weight: 600;
+            margin: 0 0 20px 0;
+        }
+
+        .breakdown-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 0;
+            color: #856404;
+        }
+
+        .breakdown-item .label {
+            font-weight: 500;
+        }
+
+        .breakdown-item .value {
+            font-weight: 600;
+        }
+
+        /* Información del cuidador */
+        .sitter-completion {
+            background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
+            padding: 25px;
+            border-radius: 12px;
+            margin: 30px 0;
+            border-left: 4px solid #2196f3;
+        }
+
+        .sitter-completion h3 {
+            color: #0d47a1;
+            font-size: 18px;
+            font-weight: 600;
+            margin: 0 0 15px 0;
+        }
+
+        .sitter-completion p {
+            margin-bottom: 8px;
+            font-size: 14px;
+            color: #1565c0;
+        }
+
+        /* Botones de acción */
+        .action-buttons {
+            text-align: center;
+            margin: 35px 0;
+        }
+
+        .action-button {
+            display: inline-block;
+            padding: 14px 28px;
+            text-decoration: none;
+            border-radius: 25px;
+            font-size: 16px;
+            font-weight: 600;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+            transition: all 0.3s ease;
+            margin: 0 10px 15px;
+        }
+
+        .primary-button {
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+            color: #ffffff !important;
+        }
+
+        .secondary-button {
+            background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
+            color: #ffffff !important;
+        }
+
+        .warning-button {
+            background: linear-gradient(135deg, #ffc107 0%, #e0a800 100%);
+            color: #212529 !important;
+        }
+
+        .action-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        /* Información fiscal */
+        .tax-info {
+            background-color: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 25px 0;
+            border: 1px solid #dee2e6;
+        }
+
+        .tax-info h4 {
+            color: #495057;
+            font-size: 16px;
+            font-weight: 600;
+            margin: 0 0 10px 0;
+        }
+
+        .tax-info p {
+            color: #6c757d;
+            font-size: 13px;
+            margin: 5px 0;
+        }
+
+        /* Footer */
+        .footer {
+            background-color: #f8f9fa;
+            padding: 30px;
+            text-align: center;
+            border-top: 1px solid #e9ecef;
+        }
+
+        .footer p {
+            margin: 8px 0;
+            font-size: 13px;
+            color: #6c757d;
+        }
+
+        .footer .company-name {
+            font-weight: 600;
+            color: #28a745;
+            font-size: 16px;
+        }
+
+        .footer .contact-info {
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px solid #dee2e6;
+        }
+
+        .footer .contact-info a {
+            color: #28a745;
+            text-decoration: none;
+        }
+
+        .footer .contact-info a:hover {
+            text-decoration: underline;
+        }
+
+        /* Estilos responsivos */
+        @media only screen and (max-width: 600px) {
+            .email-container {
+                margin: 10px;
+                border-radius: 8px;
+            }
+
+            .header {
+                padding: 30px 20px;
+            }
+
+            .header h1 {
+                font-size: 26px;
+            }
+
+            .content {
+                padding: 30px 20px;
+            }
+
+            .invoice-details {
+                grid-template-columns: 1fr;
+                gap: 15px;
+            }
+
+            .invoice-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 10px;
+            }
+
+            .billing-table {
+                font-size: 12px;
+            }
+
+            .billing-table th,
+            .billing-table td {
+                padding: 8px 6px;
+            }
+
+            .summary-row,
+            .breakdown-item {
+                flex-direction: column;
+                align-items: flex-start;
+                text-align: left;
+            }
+
+            .summary-value,
+            .breakdown-item .value {
+                text-align: left;
+                margin-top: 5px;
+                font-weight: 700;
+            }
+
+            .action-button {
+                display: block;
+                margin: 15px 0;
+                padding: 12px 24px;
+                font-size: 14px;
+            }
+        }
+
+        /* Soporte para clientes de correo específicos */
+        .outlook-fix {
+            mso-table-lspace: 0pt !important;
+            mso-table-rspace: 0pt !important;
+        }
+    </style>
+</head>
+<body>
+<div class="email-container">
+    <!-- Header -->
+    <div class="header">
+        <h1>Servicio Completado</h1>
+        <p class="subtitle">Tu mascota recibió el mejor cuidado</p>
+    </div>
+
+    <!-- Contenido principal -->
+    <div class="content">
+        <h2>¡Servicio completado exitosamente!</h2>
+
+        <p class="welcome-message">
+            Hola <strong th:text="${clientName}">Ivan Castillo</strong>,
+        </p>
+
+        <p>
+            Nos complace informarte que el servicio de cuidado para <strong th:text="${petName}">Luna</strong>
+            ha sido completado exitosamente por <strong th:text="${sitterName}">Isabel Contreras</strong>.
+            A continuación encontrarás el resumen completo del servicio y la facturación detallada.
+        </p>
+
+        <!-- Estado completado -->
+        <div style="text-align: center;">
+            <span class="status-badge">
+                ✅ SERVICIO COMPLETADO
+            </span>
+        </div>
+
+        <!-- Resumen del servicio -->
+        <div class="service-summary">
+            <h3>📋 Resumen del servicio</h3>
+
+            <div class="summary-row">
+                <span class="summary-label">🆔 ID Reserva:</span>
+                <span class="summary-value">#<span th:text="${bookingId}">1</span></span>
+            </div>
+
+            <div class="summary-row">
+                <span class="summary-label">🐾 Mascota:</span>
+                <span class="summary-value highlight-value" th:text="${petName}">Luna</span>
+            </div>
+
+            <div class="summary-row">
+                <span class="summary-label">👨‍⚕️ Cuidador:</span>
+                <span class="summary-value" th:text="${sitterName}">Isabel Contreras</span>
+            </div>
+
+            <div class="summary-row">
+                <span class="summary-label">🛍️ Servicio:</span>
+                <span class="summary-value" th:text="${serviceName}">Cuidado por 2 Horas</span>
+            </div>
+
+            <div class="summary-row">
+                <span class="summary-label">📅 Fecha realizada:</span>
+                <span class="summary-value" th:text="${#temporals.format(actualStartTime, 'dd/MM/yyyy')}">15/09/2025</span>
+            </div>
+
+            <div class="summary-row">
+                <span class="summary-label">⏰ Horario real:</span>
+                <span class="summary-value">
+                    <span th:text="${#temporals.format(actualStartTime, 'HH:mm')}">14:05</span> -
+                    <span th:text="${#temporals.format(actualEndTime, 'HH:mm')}">16:10</span>
+                </span>
+            </div>
+
+            <div class="summary-row">
+                <span class="summary-label">⏱️ Duración real:</span>
+                <span class="summary-value" th:text="${actualDurationInHours + ' horas'}">2.08 horas</span>
+            </div>
+        </div>
+
+        <!-- Factura detallada -->
+        <div class="invoice-section">
+            <div class="invoice-header">
+                <h3 class="invoice-title">Factura de Servicio</h3>
+                <div class="invoice-number">
+                    <strong>Factura #</strong><span th:text="${bookingId}">1</span><br>
+                    <span th:text="${#temporals.format(#temporals.createNow(), 'dd/MM/yyyy')}">03/09/2025</span>
+                </div>
+            </div>
+
+            <div class="invoice-details">
+                <div class="invoice-info">
+                    <h4>Facturado a:</h4>
+                    <p><strong th:text="${clientName}">Ivan Castillo</strong></p>
+                    <p>Cliente ID: #<span th:text="${clientId}">2</span></p>
+                    <p>Email: <span th:text="${clientEmail}">ivan@example.com</span></p>
+                </div>
+
+                <div class="invoice-info">
+                    <h4>Servicio proporcionado por:</h4>
+                    <p><strong th:text="${sitterName}">Isabel Contreras</strong></p>
+                    <p>Cuidador ID: #<span th:text="${sitterId}">6</span></p>
+                    <p>Servicio completado: <span th:text="${#temporals.format(actualEndTime, 'dd/MM/yyyy HH:mm')}">15/09/2025 16:10</span></p>
+                </div>
+            </div>
+
+            <!-- Tabla de facturación -->
+            <table class="billing-table">
+                <thead>
+                <tr>
+                    <th>Descripción del servicio</th>
+                    <th style="text-align: center;">Duración</th>
+                    <th style="text-align: right;">Precio base</th>
+                    <th style="text-align: right;">Subtotal</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr>
+                    <td>
+                        <strong th:text="${serviceName}">Cuidado por 2 Horas</strong><br>
+                        <small>Cuidado de <span th:text="${petName}">Luna</span></small>
+                    </td>
+                    <td style="text-align: center;">
+                        <span th:text="${actualDurationInHours}">2.08</span> hrs
+                    </td>
+                    <td class="amount-cell">
+                        $<span th:text="${baseAmount}">60.00</span>
+                    </td>
+                    <td class="amount-cell">
+                        $<span th:text="${baseAmount}">60.00</span>
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <strong>Tarifa de plataforma</strong><br>
+                        <small>Comisión Petcare (<span th:text="${feePercentage}">15</span>%)</small>
+                    </td>
+                    <td style="text-align: center;">-</td>
+                    <td class="fee-cell">
+                        -$<span th:text="${feeAmount}">9.00</span>
+                    </td>
+                    <td class="fee-cell">
+                        -$<span th:text="${feeAmount}">9.00</span>
+                    </td>
+                </tr>
+                <tr class="total-row">
+                    <td><strong>TOTAL COBRADO</strong></td>
+                    <td></td>
+                    <td></td>
+                    <td style="text-align: right;">
+                        <strong>$<span th:text="${totalPrice}">60.00</span></strong>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Desglose financiero detallado -->
+        <div class="financial-breakdown">
+            <h3>💰 Desglose financiero detallado</h3>
+
+            <div class="breakdown-item">
+                <span class="label">Monto base del servicio:</span>
+                <span class="value">$<span th:text="${baseAmount}">60.00</span></span>
+            </div>
+
+            <div class="breakdown-item">
+                <span class="label">Tarifa de plataforma (<span th:text="${feePercentage}">15</span>%):</span>
+                <span class="value">$<span th:text="${feeAmount}">9.00</span></span>
+            </div>
+
+            <div class="breakdown-item">
+                <span class="label">Monto neto al cuidador:</span>
+                <span class="value">$<span th:text="${netAmount}">51.00</span></span>
+            </div>
+
+            <div class="breakdown-item" style="border-top: 2px solid #ffc107; margin-top: 15px; padding-top: 15px; font-size: 18px; font-weight: 700;">
+                <span class="label">Total cobrado a tu tarjeta:</span>
+                <span class="value">$<span th:text="${totalPrice}">60.00</span></span>
+            </div>
+        </div>
+
+        <!-- Información del cuidador -->
+        <div class="sitter-completion">
+            <h3>👨‍⚕️ Reporte del cuidador</h3>
+            <p><strong>Cuidador:</strong> <span th:text="${sitterName}">Isabel Contreras</span></p>
+            <p><strong>Servicio iniciado:</strong> <span th:text="${#temporals.format(actualStartTime, 'dd/MM/yyyy HH:mm')}">15/09/2025 14:05</span></p>
+            <p><strong>Servicio finalizado:</strong> <span th:text="${#temporals.format(actualEndTime, 'dd/MM/yyyy HH:mm')}">15/09/2025 16:10</span></p>
+            <p><strong>Estado de la mascota:</strong> <span style="color: #28a745; font-weight: bold;">Excelente - Muy bien cuidada</span></p>
+            <p><strong>Notas del cuidador:</strong> <span th:text="${completionNotes ?: 'Servicio completado sin inconvenientes'}">Luna estuvo muy tranquila y disfrutó mucho el paseo. Comió bien y jugó en el parque.</span></p>
+        </div>
+
+        <!-- Información fiscal -->
+        <div class="tax-info">
+            <h4>📄 Información fiscal</h4>
+            <p><strong>Fecha de transacción:</strong> <span th:text="${#temporals.format(completedAt, 'dd/MM/yyyy HH:mm')}">15/09/2025 16:15</span></p>
+            <p><strong>Método de pago:</strong> Tarjeta de crédito terminada en ****<span th:text="${lastFourDigits ?: '1234'}">1234</span></p>
+            <p><strong>ID de transacción:</strong> TXN_<span th:text="${bookingId}">1</span>_<span th:text="${#temporals.format(completedAt, 'yyyyMMdd')}">20250915</span></p>
+            <p><strong>Estado del pago:</strong> <span style="color: #28a745; font-weight: bold;">✅ Procesado exitosamente</span></p>
+        </div>
+
+        <!-- Botones de acción -->
+        <div class="action-buttons">
+            <a href="#" class="action-button primary-button">
+                Descargar factura PDF
+            </a>
+            <a href="#" class="action-button secondary-button">
+                Calificar servicio
+            </a>
+            <a href="#" class="action-button warning-button">
+                Contactar soporte
+            </a>
+        </div>
+
+        <!-- Información importante post-servicio -->
+        <div class="service-summary">
+            <h3>ℹ️ ¿Qué sigue ahora?</h3>
+
+            <div class="summary-row">
+                <span class="summary-label">📧 Factura:</span>
+                <span class="summary-value">Disponible para descarga por 12 meses</span>
+            </div>
+
+            <div class="summary-row">
+                <span class="summary-label">⭐ Calificación:</span>
+                <span class="summary-value">Puedes calificar el servicio en los próximos 7 días</span>
+            </div>
+
+            <div class="summary-row">
+                <span class="summary-label">🔄 Repetir servicio:</span>
+                <span class="summary-value">Reserva nuevamente con el mismo cuidador</span>
+            </div>
+
+            <div class="summary-row">
+                <span class="summary-label">💬 Soporte:</span>
+                <span class="summary-value">Disponible 24/7 para cualquier consulta</span>
+            </div>
+        </div>
+
+        <p>
+            ¡Gracias por elegir Petcare! Esperamos que <strong th:text="${petName}">Luna</strong> haya
+            recibido el mejor cuidado posible. Tu confianza en nosotros y en nuestros cuidadores
+            verificados es lo que nos motiva a seguir mejorando. 🐾❤️
+        </p>
+
+        <p>
+            Si tienes alguna pregunta sobre esta factura o el servicio recibido, no dudes en contactarnos.
+        </p>
+    </div>
+
+    <!-- Footer -->
+    <div class="footer">
+        <p class="company-name">Petcare</p>
+        <p>El cuidado que tus mascotas merecen</p>
+
+        <div class="contact-info">
+            <p>
+                <a href="mailto:facturacion@petcare.com">facturacion@petcare.com</a> |
+                <a href="https://www.petcare.com">www.petcare.com</a>
+            </p>
+            <p>
+                <a href="https://www.petcare.com/privacidad">Política de Privacidad</a> |
+                <a href="https://www.petcare.com/terminos">Términos de Servicio</a>
+            </p>
+        </div>
+
+        <p>
+            &copy; <span th:text="${#dates.format(#dates.createNow(), 'yyyy')}">2024</span>
+            Petcare. Todos los derechos reservados.
+        </p>
+
+        <p>
+            <small>
+                Servicio completado el
+                <span th:text="${#temporals.format(actualEndTime, 'dd/MM/yyyy HH:mm')}">15/09/2025 16:10</span>
+            </small>
+        </p>
+    </div>
+</div>
+</body>
+</html>

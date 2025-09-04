@@ -1,0 +1,702 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>Nueva reserva disponible - Petcare</title>
+    <!--[if mso]>
+    <noscript>
+        <xml>
+            <o:OfficeDocumentSettings>
+                <o:PixelsPerInch>96</o:PixelsPerInch>
+            </o:OfficeDocumentSettings>
+        </xml>
+    </noscript>
+    <![endif]-->
+    <style type="text/css">
+        /* Reset y estilos base */
+        body, table, td, p, a, li, blockquote {
+            -webkit-text-size-adjust: 100%;
+            -ms-text-size-adjust: 100%;
+        }
+
+        table, td {
+            mso-table-lspace: 0pt;
+            mso-table-rspace: 0pt;
+        }
+
+        img {
+            -ms-interpolation-mode: bicubic;
+            border: 0;
+            height: auto;
+            line-height: 100%;
+            outline: none;
+            text-decoration: none;
+        }
+
+        /* Estilos principales */
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            line-height: 1.6;
+            color: #2c3e50;
+            background-color: #f8f9fa;
+            margin: 0;
+            padding: 0;
+            width: 100% !important;
+            min-height: 100%;
+        }
+
+        .email-container {
+            max-width: 600px;
+            margin: 0 auto;
+            background-color: #ffffff;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 4px 25px rgba(0, 0, 0, 0.08);
+        }
+
+        /* Header */
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 40px 30px;
+            text-align: center;
+            color: #ffffff;
+        }
+
+        .header h1 {
+            margin: 0 0 10px 0;
+            font-size: 32px;
+            font-weight: 700;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .header .subtitle {
+            font-size: 16px;
+            opacity: 0.9;
+            margin: 0;
+            font-weight: 300;
+        }
+
+        .logo {
+            max-width: 80px;
+            height: auto;
+            margin-bottom: 20px;
+            border-radius: 50%;
+        }
+
+        /* Contenido principal */
+        .content {
+            padding: 40px 30px;
+            background-color: #ffffff;
+        }
+
+        .content h2 {
+            color: #2c3e50;
+            font-size: 24px;
+            font-weight: 600;
+            margin: 0 0 20px 0;
+            text-align: center;
+        }
+
+        .content p {
+            margin-bottom: 20px;
+            font-size: 16px;
+            line-height: 1.7;
+            color: #4a5568;
+        }
+
+        .welcome-message {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            font-weight: 600;
+            font-size: 18px;
+        }
+
+        /* Urgencia de la notificación */
+        .urgency-banner {
+            background: linear-gradient(135deg, #ff9a56 0%, #ff6b35 100%);
+            color: #ffffff;
+            padding: 15px 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+            text-align: center;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.02); }
+            100% { transform: scale(1); }
+        }
+
+        .urgency-banner .icon {
+            font-size: 20px;
+            margin-right: 8px;
+        }
+
+        .urgency-banner p {
+            margin: 0;
+            font-size: 15px;
+            font-weight: 600;
+            color: #ffffff;
+        }
+
+        /* Detalles de la reserva */
+        .booking-details {
+            background: linear-gradient(135deg, #e8f5e8 0%, #f1f8e9 100%);
+            border-radius: 12px;
+            padding: 25px;
+            margin: 30px 0;
+            border: 2px solid #4CAF50;
+        }
+
+        .booking-details h3 {
+            color: #2e7d32;
+            font-size: 20px;
+            font-weight: 600;
+            margin: 0 0 20px 0;
+            text-align: center;
+        }
+
+        .detail-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 0;
+            border-bottom: 1px solid #c8e6c9;
+        }
+
+        .detail-row:last-child {
+            border-bottom: none;
+            font-weight: 600;
+            font-size: 18px;
+            color: #2e7d32;
+            background-color: rgba(76, 175, 80, 0.2);
+            margin: 15px -25px -25px;
+            padding: 20px 25px;
+            border-radius: 0 0 12px 12px;
+        }
+
+        .detail-label {
+            font-weight: 600;
+            color: #2e7d32;
+            min-width: 140px;
+        }
+
+        .detail-value {
+            color: #388e3c;
+            text-align: right;
+            flex: 1;
+        }
+
+        .highlight-value {
+            color: #2e7d32;
+            font-weight: 700;
+            font-size: 18px;
+        }
+
+        /* Información de la mascota */
+        .pet-info {
+            background: linear-gradient(135deg, #fff3e0 0%, #ffe0b2 100%);
+            padding: 25px;
+            border-radius: 12px;
+            margin: 30px 0;
+            border-left: 4px solid #ff9800;
+        }
+
+        .pet-info h3 {
+            color: #e65100;
+            font-size: 18px;
+            font-weight: 600;
+            margin: 0 0 15px 0;
+        }
+
+        .pet-info p {
+            margin-bottom: 8px;
+            font-size: 14px;
+            color: #ef6c00;
+        }
+
+        .pet-avatar {
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(135deg, #ff9800 0%, #f57c00 100%);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            color: white;
+            margin: 0 auto 15px;
+        }
+
+        /* Información del cliente */
+        .client-info {
+            background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
+            padding: 25px;
+            border-radius: 12px;
+            margin: 30px 0;
+            border-left: 4px solid #2196f3;
+        }
+
+        .client-info h3 {
+            color: #0d47a1;
+            font-size: 18px;
+            font-weight: 600;
+            margin: 0 0 15px 0;
+        }
+
+        .client-info p {
+            margin-bottom: 8px;
+            font-size: 14px;
+            color: #1565c0;
+        }
+
+        /* Notas especiales */
+        .notes-section {
+            background: linear-gradient(135deg, #fff8e1 0%, #fff3c4 100%);
+            padding: 20px;
+            border-radius: 10px;
+            margin: 25px 0;
+            border-left: 4px solid #ffc107;
+        }
+
+        .notes-section h3 {
+            color: #f57c00;
+            font-size: 16px;
+            font-weight: 600;
+            margin: 0 0 10px 0;
+        }
+
+        .notes-section p {
+            margin: 0;
+            font-size: 14px;
+            color: #ef6c00;
+            font-style: italic;
+            background-color: rgba(255, 193, 7, 0.1);
+            padding: 10px;
+            border-radius: 6px;
+        }
+
+        /* Botones de acción */
+        .action-buttons {
+            text-align: center;
+            margin: 40px 0;
+        }
+
+        .action-button {
+            display: inline-block;
+            padding: 16px 32px;
+            text-decoration: none;
+            border-radius: 50px;
+            font-size: 18px;
+            font-weight: 600;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+            transition: all 0.3s ease;
+            margin: 0 10px 15px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            min-width: 180px;
+        }
+
+        .accept-button {
+            background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%);
+            color: #ffffff !important;
+            box-shadow: 0 4px 15px rgba(76, 175, 80, 0.4);
+        }
+
+        .decline-button {
+            background: linear-gradient(135deg, #f44336 0%, #d32f2f 100%);
+            color: #ffffff !important;
+            box-shadow: 0 4px 15px rgba(244, 67, 54, 0.4);
+        }
+
+        .view-button {
+            background: linear-gradient(135deg, #2196f3 0%, #1976d2 100%);
+            color: #ffffff !important;
+            box-shadow: 0 4px 15px rgba(33, 150, 243, 0.4);
+        }
+
+        .action-button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        /* Earnings highlight */
+        .earnings-highlight {
+            background: linear-gradient(135deg, #e8f5e8 0%, #c8e6c9 100%);
+            border: 2px solid #4CAF50;
+            border-radius: 12px;
+            padding: 20px;
+            margin: 30px 0;
+            text-align: center;
+        }
+
+        .earnings-highlight h3 {
+            color: #2e7d32;
+            font-size: 20px;
+            font-weight: 700;
+            margin: 0 0 10px 0;
+        }
+
+        .earnings-amount {
+            font-size: 32px;
+            font-weight: 700;
+            color: #4CAF50;
+            margin: 10px 0;
+        }
+
+        /* Información importante */
+        .info-section {
+            background-color: #f8f9fa;
+            padding: 25px;
+            border-radius: 10px;
+            margin: 30px 0;
+            border-left: 4px solid #6c757d;
+        }
+
+        .info-section h3 {
+            color: #495057;
+            font-size: 18px;
+            font-weight: 600;
+            margin: 0 0 15px 0;
+        }
+
+        .info-section p {
+            margin-bottom: 10px;
+            font-size: 14px;
+            color: #6c757d;
+        }
+
+        /* Countdown timer visual */
+        .response-timer {
+            background: linear-gradient(135deg, #ffebee 0%, #fce4ec 100%);
+            border: 1px solid #f8bbd9;
+            border-radius: 10px;
+            padding: 20px;
+            margin: 25px 0;
+            text-align: center;
+        }
+
+        .response-timer .icon {
+            font-size: 24px;
+            margin-bottom: 10px;
+            display: block;
+        }
+
+        .response-timer p {
+            margin: 0;
+            font-size: 15px;
+            font-weight: 600;
+            color: #c2185b;
+        }
+
+        /* Footer */
+        .footer {
+            background-color: #f8f9fa;
+            padding: 30px;
+            text-align: center;
+            border-top: 1px solid #e9ecef;
+        }
+
+        .footer p {
+            margin: 8px 0;
+            font-size: 13px;
+            color: #6c757d;
+        }
+
+        .footer .company-name {
+            font-weight: 600;
+            color: #4CAF50;
+            font-size: 16px;
+        }
+
+        .footer .contact-info {
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px solid #dee2e6;
+        }
+
+        .footer .contact-info a {
+            color: #4CAF50;
+            text-decoration: none;
+        }
+
+        .footer .contact-info a:hover {
+            text-decoration: underline;
+        }
+
+        /* Estilos responsivos */
+        @media only screen and (max-width: 600px) {
+            .email-container {
+                margin: 10px;
+                border-radius: 8px;
+            }
+
+            .header {
+                padding: 30px 20px;
+            }
+
+            .header h1 {
+                font-size: 26px;
+            }
+
+            .content {
+                padding: 30px 20px;
+            }
+
+            .booking-details {
+                padding: 20px;
+            }
+
+            .detail-row {
+                flex-direction: column;
+                align-items: flex-start;
+                text-align: left;
+            }
+
+            .detail-value {
+                text-align: left;
+                margin-top: 5px;
+                font-weight: 600;
+            }
+
+            .action-button {
+                display: block;
+                margin: 15px 0;
+                padding: 14px 24px;
+                font-size: 16px;
+                min-width: auto;
+            }
+
+            .earnings-amount {
+                font-size: 28px;
+            }
+
+            .footer {
+                padding: 25px 20px;
+            }
+
+            .info-section, .pet-info, .client-info, .notes-section {
+                padding: 20px;
+            }
+        }
+
+        /* Soporte para modo oscuro */
+        @media (prefers-color-scheme: dark) {
+            .content p {
+                color: #4a5568;
+            }
+        }
+
+        /* Soporte para clientes de correo específicos */
+        .outlook-fix {
+            mso-table-lspace: 0pt !important;
+            mso-table-rspace: 0pt !important;
+        }
+    </style>
+</head>
+<body>
+<div class="email-container">
+    <!-- Header -->
+    <div class="header">
+        <!-- Logo opcional - descomenta si tienes logo -->
+        <!--<img src="https://tudominio.com/logo-petcare.png" alt="Petcare Logo" class="logo">-->
+        <h1>¡Nueva Reserva!</h1>
+        <p class="subtitle">Una oportunidad de cuidado te está esperando</p>
+    </div>
+
+    <!-- Contenido principal -->
+    <div class="content">
+        <h2>Tienes una nueva solicitud de reserva</h2>
+
+        <p class="welcome-message">
+            Hola <strong th:text="${sitterName}"></strong>,
+        </p>
+
+        <p>
+            ¡Excelente noticia! Un cliente ha solicitado tus servicios de cuidado de mascotas.
+            Revisa los detalles a continuación y decide si deseas aceptar esta reserva.
+        </p>
+
+        <!-- Banner de urgencia -->
+        <div class="urgency-banner">
+            <p>
+                <span class="icon">⏰</span>
+                <strong>¡Responde pronto!</strong> Las reservas se asignan por orden de respuesta
+            </p>
+        </div>
+
+        <!-- Destacado de ganancias -->
+        <div class="earnings-highlight">
+            <h3>💰 Ganarás con esta reserva</h3>
+            <div class="earnings-amount">$<span th:text="${totalPrice}"></span></div>
+            <p>Por <span th:text="${scheduledDurationInMinutes}"></span> minutos de <span th:text="${serviceName}"></span></p>
+        </div>
+
+        <!-- Detalles de la reserva -->
+        <div class="booking-details">
+            <h3>📋 Detalles de la reserva</h3>
+
+            <div class="detail-row">
+                <span class="detail-label">🆔 ID Reserva:</span>
+                <span class="detail-value">#<span th:text="${bookingId}"></span></span>
+            </div>
+
+            <div class="detail-row">
+                <span class="detail-label">🛍️ Servicio:</span>
+                <span class="detail-value" th:text="${serviceName}"></span>
+            </div>
+
+            <div class="detail-row">
+                <span class="detail-label">📅 Fecha:</span>
+                <span class="detail-value" th:text="${#temporals.format(startDate, 'dd/MM/yyyy')}"></span>
+            </div>
+
+            <div class="detail-row">
+                <span class="detail-label">⏰ Horario:</span>
+                <span class="detail-value">
+                    <span th:text="${#temporals.format(startDate, 'HH:mm')}"></span> -
+                    <span th:text="${#temporals.format(endDate, 'HH:mm')}"></span>
+                </span>
+            </div>
+
+            <div class="detail-row">
+                <span class="detail-label">⏱️ Duración:</span>
+                <span class="detail-value" th:text="${scheduledDurationInMinutes + ' minutos'}"></span>
+            </div>
+
+            <div class="detail-row">
+                <span class="detail-label">💰 Total a ganar:</span>
+                <span class="detail-value highlight-value">$<span th:text="${totalPrice}"></span></span>
+            </div>
+        </div>
+
+        <!-- Información de la mascota -->
+        <div class="pet-info">
+            <h3>🐾 Conoce a tu nueva mascota</h3>
+            <div class="pet-avatar">🐕</div>
+            <p style="text-align: center; font-size: 18px; font-weight: 600; color: #e65100;">
+                <span th:text="${petName}"></span>
+            </p>
+            <p><strong>ID de la mascota:</strong> #<span th:text="${petId}"></span></p>
+            <p><strong>Tipo:</strong> Información disponible después de aceptar</p>
+            <p><strong>Edad:</strong> Información disponible después de aceptar</p>
+            <p><strong>Características especiales:</strong> Se proporcionarán detalles completos una vez aceptes la reserva</p>
+        </div>
+
+        <!-- Información del cliente -->
+        <div class="client-info">
+            <h3>👤 Información del cliente</h3>
+            <p><strong>Nombre:</strong> <span th:text="${clientName}"></span></p>
+            <p><strong>ID de usuario:</strong> #<span th:text="${clientId}"></span></p>
+            <p><strong>Información de contacto:</strong> Se proporcionará después de aceptar la reserva</p>
+            <p><strong>Historial:</strong> Cliente verificado en Petcare</p>
+        </div>
+
+        <!-- Notas especiales si existen -->
+        <div class="notes-section" th:if="${notes}">
+            <h3>📝 Instrucciones especiales del cliente</h3>
+            <p th:text="${notes}"></p>
+        </div>
+
+        <!-- Timer de respuesta -->
+        <div class="response-timer">
+            <span class="icon">⏳</span>
+            <p>
+                <strong>Tiempo recomendado de respuesta:</strong> Dentro de las próximas 2 horas<br>
+                <small>Las reservas rápidamente respondidas tienen mayor prioridad</small>
+            </p>
+        </div>
+
+        <!-- Botones de acción principales -->
+        <div class="action-buttons">
+            <a th:href="'http://localhost:8080/api/users/sitter/accept-booking?bookingId=' + ${id}"
+               class="action-button accept-button"
+               target="_blank"
+               rel="noopener noreferrer">
+                ✅ Aceptar reserva
+            </a>
+
+            <a th:href="'http://localhost:8080/api/users/sitter/decline-booking?bookingId=' + ${id}"
+               class="action-button decline-button"
+               target="_blank"
+               rel="noopener noreferrer">
+                ❌ Rechazar reserva
+            </a>
+
+            <a href="#"
+               class="action-button view-button">
+                👁️ Ver más detalles
+            </a>
+        </div>
+
+        <!-- Información importante -->
+        <div class="info-section">
+            <h3>ℹ️ Información importante</h3>
+            <p>✓ Al aceptar la reserva, te comprometes a cumplir con el horario establecido</p>
+            <p>✓ Recibirás los datos completos de contacto del cliente y la mascota</p>
+            <p>✓ El pago se procesará automáticamente después de completar el servicio</p>
+            <p>✓ Puedes cancelar hasta 4 horas antes sin penalización</p>
+            <p>✓ Todas las actividades están cubiertas por nuestro seguro</p>
+        </div>
+
+        <!-- Información de contacto de emergencia -->
+        <div class="info-section">
+            <h3>🚨 ¿Necesitas ayuda para decidir?</h3>
+            <p>Si tienes preguntas sobre esta reserva o el cliente, contáctanos:</p>
+            <p>📧 Email: cuidadores@petcare.com</p>
+            <p>📞 Línea directa cuidadores: +1 (555) 987-6543</p>
+            <p>💬 Chat de soporte: www.petcare.com/sitter-support</p>
+        </div>
+
+        <p>
+            ¡Esperamos que aceptes esta oportunidad de brindar tu excelente servicio de cuidado!
+            <strong th:text="${petName}">Luna</strong> y <strong th:text="${bookedByUserName}">Ivan</strong>
+            confían en ti. 🐾❤️
+        </p>
+
+        <p>
+            <strong>Recuerda:</strong> Responder rápidamente a las reservas mejora tu calificación
+            como cuidador y te da prioridad para futuras oportunidades.
+        </p>
+    </div>
+
+    <!-- Footer -->
+    <div class="footer">
+        <p class="company-name">Petcare</p>
+        <p>Conectando cuidadores excepcionales con mascotas increíbles</p>
+
+        <div class="contact-info">
+            <p>
+                <a href="mailto:cuidadores@petcare.com">cuidadores@petcare.com</a> |
+                <a href="https://www.petcare.com/sitters">Panel de Cuidadores</a>
+            </p>
+            <p>
+                <a href="https://www.petcare.com/sitter-terms">Términos para Cuidadores</a> |
+                <a href="https://www.petcare.com/sitter-guide">Guía del Cuidador</a>
+            </p>
+        </div>
+
+        <p>
+            &copy; <span th:text="${#dates.format(#dates.createNow(), 'yyyy')}">2024</span>
+            Petcare. Todos los derechos reservados.
+        </p>
+
+        <p>
+            <small>
+                Reserva creada el
+                <span th:text="${#temporals.format(createdAt, 'dd/MM/yyyy HH:mm')}" th:if="${createdAt}">03/09/2025 20:23</span>
+            </small>
+        </p>
+    </div>
+</div>
+
+<!-- Tracking pixel opcional para analytics -->
+<!--<img src="https://analytics.petcare.com/track.gif?email=sitter-booking&booking=${id}"
+     width="1" height="1" alt="" style="display:none;">-->
+</body>
+</html>
