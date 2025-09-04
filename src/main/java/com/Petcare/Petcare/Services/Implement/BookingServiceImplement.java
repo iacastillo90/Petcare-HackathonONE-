@@ -4,6 +4,7 @@ import com.Petcare.Petcare.DTOs.Booking.BookingDetailResponse;
 import com.Petcare.Petcare.DTOs.Booking.BookingSummaryResponse;
 import com.Petcare.Petcare.DTOs.Booking.CreateBookingRequest;
 import com.Petcare.Petcare.DTOs.Booking.UpdateBookingRequest;
+import com.Petcare.Petcare.Models.Account.Account;
 import com.Petcare.Petcare.Models.Booking.Booking;
 import com.Petcare.Petcare.Models.Booking.BookingStatus;
 import com.Petcare.Petcare.Models.Pet;
@@ -12,6 +13,7 @@ import com.Petcare.Petcare.Models.User.Role;
 import com.Petcare.Petcare.Models.User.User;
 import com.Petcare.Petcare.Repositories.*;
 import com.Petcare.Petcare.Services.BookingService;
+import com.Petcare.Petcare.Services.InvoiceService;
 import com.Petcare.Petcare.Services.NotificationService;
 import com.Petcare.Petcare.Services.PlatformFeeService;
 import jakarta.validation.ValidationException;
@@ -20,6 +22,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DataAccessException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -111,6 +114,8 @@ public class BookingServiceImplement implements BookingService {
      */
     private final AccountUserRepository accountUserRepository;
 
+    private final InvoiceService invoiceService;
+
 
     // ========== IMPLEMENTACIÓN DE MÉTODOS DE SERVICIO ==========
 
@@ -149,7 +154,7 @@ public class BookingServiceImplement implements BookingService {
      * </ul>
      *
      * @param createBookingRequest DTO validado con datos de entrada
-     * @param currentUser Usuario autenticado obtenido del contexto de seguridad
+     * @param authentication Usuario autenticado obtenido del contexto de seguridad
      *
      * @return BookingDetailResponse con todos los datos de la reserva creada
      *
@@ -162,39 +167,61 @@ public class BookingServiceImplement implements BookingService {
      */
     @Override
     @Transactional
-    public BookingDetailResponse createBooking(CreateBookingRequest createBookingRequest, User currentUser) {
-        log.info("Iniciando creación de reserva para usuario ID: {} y mascota ID: {}",
-                currentUser.getId(), createBookingRequest.getPetId());
+    public BookingDetailResponse createBooking(CreateBookingRequest createBookingRequest, Authentication authentication) {
 
-        // 1. Validación inicial de parámetros
+        String userEmail = authentication.getName();
+
+        // 4. Busca la entidad User completa en la base de datos
+        User currentUser = userRepository.findByEmail(userEmail)
+                .orElseThrow(() -> new RuntimeException("Usuario autenticado no encontrado en la base de datos."));
+
+
+        // 1. Validación inicial (sin cambios)
         validateCreateBookingRequest(createBookingRequest, currentUser);
 
+        // --- INICIO DE LA MODIFICACIÓN ---
+
         // 2. Obtención y validación de entidades relacionadas
-        Pet pet = findAndValidatePet(createBookingRequest.getPetId(), currentUser);
+        Pet pet = petRepository.findById(createBookingRequest.getPetId())
+                .orElseThrow(() -> new IllegalArgumentException("Mascota no encontrada"));
+
+        // 3. AHORA, obtén la cuenta directamente de la mascota que ya está persistida
+        Account account = pet.getAccount();
+
+        if (account == null) {
+            throw new IllegalStateException("La mascota no está asociada a ninguna cuenta.");
+        }
+        if (!account.isActive()) {
+            throw new IllegalStateException("No se puede crear una reserva para una cuenta inactiva.");
+        }
+
         User sitter = findAndValidateSitter(createBookingRequest.getSitterId());
         ServiceOffering serviceOffering = findAndValidateServiceOffering(
                 createBookingRequest.getServiceOfferingId(), sitter);
 
-        // 3. Validación de reglas de negocio específicas
+        // 3. Validación de reglas de negocio (sin cambios)
         validateBusinessRules(createBookingRequest, pet, sitter, serviceOffering, currentUser);
 
-        // 4. Cálculo de campos derivados
+        // 4. Cálculo de campos derivados (sin cambios)
         BookingCalculations calculations = calculateBookingDetails(
                 createBookingRequest.getStartTime(), serviceOffering);
 
         // 5. Creación y configuración de la entidad Booking
         Booking newBooking = createBookingEntity(
+                account, // <-- PASA LA CUENTA AL MÉTODO
                 pet, sitter, serviceOffering, currentUser,
                 createBookingRequest, calculations);
 
-        // 6. Persistencia transaccional
+        // --- FIN DE LA MODIFICACIÓN ---
+
+        // 6. Persistencia transaccional (sin cambios)
         Booking savedBooking = bookingRepository.save(newBooking);
         log.info("Reserva creada exitosamente con ID: {}", savedBooking.getId());
 
-        // 7. Procesamiento post-creación
+        // 7. Procesamiento post-creación (sin cambios)
         processPostCreationTasks(savedBooking);
 
-        // 8. Construcción y retorno de la respuesta
+        // 8. Construcción y retorno de la respuesta (sin cambios)
         return BookingDetailResponse.fromEntity(savedBooking);
     }
 
@@ -459,14 +486,23 @@ public class BookingServiceImplement implements BookingService {
 
         // Validar transición
         validateStatusTransition(booking.getStatus(), targetStatus);
-
+        log.info("Validar transicion");
         // Aplicar cambio de estado
         booking.setStatus(targetStatus);
+        log.info("aplicar cambio de estado");
 
         // Manejar campos específicos según el nuevo estado
         handleStatusSpecificFields(booking, targetStatus, reason);
 
+        log.info("manejar los nuegos estados");
         Booking updatedBooking = bookingRepository.save(booking);
+
+        // Si el nuevo estado es COMPLETED, dispara la generación de la factura.
+        if (targetStatus == BookingStatus.COMPLETED) {
+            log.info("Disparando generación de factura para la reserva completada ID: {}", updatedBooking.getId());
+            // Llama al InvoiceService para que se encargue de todo el proceso
+            invoiceService.generateAndProcessInvoiceForBooking(updatedBooking);
+        }
 
         // Notificar cambio de estado
         notificationService.notifyStatusChange(updatedBooking);
@@ -639,10 +675,11 @@ public class BookingServiceImplement implements BookingService {
      *
      * @return Entidad Booking configurada
      */
-    private Booking createBookingEntity(Pet pet, User sitter, ServiceOffering serviceOffering,
+    private Booking createBookingEntity(Account account, Pet pet, User sitter, ServiceOffering serviceOffering,
                                         User currentUser, CreateBookingRequest request,
                                         BookingCalculations calculations) {
         return new Booking(
+                account,
                 pet,
                 sitter,
                 serviceOffering,
@@ -788,7 +825,8 @@ public class BookingServiceImplement implements BookingService {
                 booking.setActualStartTime(LocalDateTime.now());
                 break;
             case COMPLETED:
-                booking.setActualEndTime(LocalDateTime.now());
+                booking.setActualEndTime(booking.getEndTime());
+
                 break;
         }
     }
