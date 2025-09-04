@@ -98,7 +98,7 @@ public class CreateUserRequest {
      * de servicios. Se almacena como texto para soportar formatos internacionales.</p>
      */
     @NotBlank(message = "El número de teléfono es obligatorio")
-    @Size(max = 250, message = "El número de teléfono no puede exceder 250 caracteres")
+    @Size(max = 20, message = "El número de teléfono no puede exceder 20 caracteres")
     private String phoneNumber;
 
     // ========== CONSTRUCTORES ==========

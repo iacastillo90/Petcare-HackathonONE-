@@ -1,13 +1,12 @@
 package com.Petcare.Petcare.Controllers;
 
-
 import com.Petcare.Petcare.Models.SitterProfile;
 import com.Petcare.Petcare.Models.User.Role;
 import com.Petcare.Petcare.Models.User.User;
 import com.Petcare.Petcare.Repositories.SitterProfileRepository;
 import com.Petcare.Petcare.Repositories.UserRepository;
-import jakarta.validation.Valid; // Para activar las validaciones del DTO
-import lombok.RequiredArgsConstructor;
+import jakarta.validation.Valid;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -20,14 +19,17 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping("/api/sitter-profiles")
-@RequiredArgsConstructor
 public class SitterProfileController {
 
     private final UserRepository userRepository;
     private final SitterProfileRepository sitterProfileRepository;
 
-    // Prueba
-
+    @Autowired
+    public SitterProfileController(UserRepository userRepository,
+                                   SitterProfileRepository sitterProfileRepository) {
+        this.userRepository = userRepository;
+        this.sitterProfileRepository = sitterProfileRepository;
+    }
 
     @PostMapping
     @PreAuthorize("hasAnyRole('CLIENT')")
@@ -42,13 +44,18 @@ public class SitterProfileController {
                     .body("User already has a sitter profile.");
         }
 
-        SitterProfile profile = SitterProfile.builder()
-                .user(currentUser)
-                .bio(request.getBio())
-                .hourlyRate(request.getHourlyRate())
-                .isVerified(false)
-                .isAvailableForBookings(true)
-                .build();
+        // Reemplazar el builder por constructor
+        SitterProfile profile = new SitterProfile(
+                currentUser,
+                request.getBio(),
+                request.getHourlyRate(),
+                request.getServicingRadius(),
+                request.getProfileImageUrl()
+        );
+
+        // Establecer valores por defecto manualmente
+        profile.setVerified(false);
+        profile.setAvailableForBookings(true);
 
         currentUser.setRole(Role.SITTER);
 
