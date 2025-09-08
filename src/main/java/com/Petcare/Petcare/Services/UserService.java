@@ -231,4 +231,8 @@ public interface UserService {
      * @return lista de usuarios sin verificar email en formato resumido
      */
     List<UserSummaryResponse> getUnverifiedUsers();
+
+    DashboardStatsDTO getDashboardStatsForUser(Long userId);
+
+    //MainDashboardDTO getMainDashboardData(Long id);
 }
