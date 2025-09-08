@@ -4,14 +4,16 @@ import com.Petcare.Petcare.Configurations.Security.Jwt.JwtService;
 import com.Petcare.Petcare.DTOs.Account.CreateAccountRequest;
 import com.Petcare.Petcare.DTOs.Auth.Request.LoginRequest;
 import com.Petcare.Petcare.DTOs.Auth.Respone.AuthResponse;
+import com.Petcare.Petcare.DTOs.Booking.BookingSummaryResponse;
+import com.Petcare.Petcare.DTOs.Pet.PetSummaryResponse;
 import com.Petcare.Petcare.DTOs.User.*;
 import com.Petcare.Petcare.Models.Account.Account;
 import com.Petcare.Petcare.Models.Account.AccountUser;
+import com.Petcare.Petcare.Models.Booking.BookingStatus;
+import com.Petcare.Petcare.Models.Pet;
 import com.Petcare.Petcare.Models.User.Role;
 import com.Petcare.Petcare.Models.User.User;
-import com.Petcare.Petcare.Repositories.AccountRepository;
-import com.Petcare.Petcare.Repositories.AccountUserRepository;
-import com.Petcare.Petcare.Repositories.UserRepository;
+import com.Petcare.Petcare.Repositories.*;
 import com.Petcare.Petcare.Services.EmailService;
 import com.Petcare.Petcare.Services.UserService;
 import io.jsonwebtoken.Claims;
@@ -79,6 +81,9 @@ public class UserServiceImplement implements UserService {
     private String apiBaseUrl;
     private final AccountRepository accountRepository;
     private final AccountUserRepository accountUserRepository;
+    private final BookingRepository bookingRepository;
+    private final SitterProfileRepository sitterProfileRepository;
+    private final PetRepository petRepository;
 
     // ========== MÉTODOS DE AUTENTICACIÓN ==========
 
@@ -113,6 +118,16 @@ public class UserServiceImplement implements UserService {
         user.setLastLoginAt(LocalDateTime.now());
         userRepository.save(user);
 
+        // . Crea el DTO del perfil del usuario
+        UserProfileDTO userProfile = new UserProfileDTO(
+                user.getId(),
+                user.getFirstName(),
+                user.getLastName(),
+                user.getEmail(),
+                user.getRole().name(),
+                String.format("%c%c", user.getFirstName().charAt(0), user.getLastName().charAt(0)).toUpperCase()
+        );
+
         // 4. Generar el token JWT
         String token = jwtService.getToken(user);
 
@@ -122,6 +137,7 @@ public class UserServiceImplement implements UserService {
         return AuthResponse.builder()
                 .token(token)
                 .role(user.getRole().name())
+                .userProfile(userProfile)
                 .build();
     }
 
@@ -636,4 +652,205 @@ public class UserServiceImplement implements UserService {
         }
     }
 
+
+    @Override
+    @Transactional(readOnly = true)
+    public DashboardStatsDTO getDashboardStatsForUser(Long userId) {
+        log.debug("Generando estadísticas de dashboard para usuario ID: {}", userId);
+
+        try {
+            // 1. Validación inicial y obtención de cuenta
+            User user = userRepository.findById(userId)
+                    .orElseThrow(() -> {
+                        log.error("Usuario no encontrado con ID: {}", userId);
+                        return new IllegalArgumentException("Usuario no encontrado con ID: " + userId);
+                    });
+
+            Account account = accountRepository.findByOwnerUser(user)
+                    .orElseThrow(() -> {
+                        log.error("No se encontró cuenta para el usuario ID: {}", userId);
+                        return new IllegalStateException("No se encontró una cuenta para el usuario con ID: " + userId);
+                    });
+
+            Long accountId = account.getId();
+            log.debug("Calculando estadísticas para cuenta ID: {}", accountId);
+
+            // 2. Cálculo de mascotas activas
+            long activePetsCount = petRepository.countByAccountIdAndIsActiveTrue(accountId);
+            log.debug("Mascotas activas encontradas: {}", activePetsCount);
+
+            // 3. Cálculo de citas programadas (futuras y no canceladas/completadas)
+            LocalDateTime now = LocalDateTime.now();
+            long scheduledAppointmentsCount = bookingRepository.countByPetAccountIdAndStartTimeAfterAndStatusNotIn(
+                    accountId,
+                    now,
+                    List.of(BookingStatus.CANCELLED, BookingStatus.COMPLETED)
+            );
+            log.debug("Citas programadas encontradas: {}", scheduledAppointmentsCount);
+
+            // 4. Cálculo de vacunas (lógica simplificada - ajustar según tu modelo de datos)
+            List<Pet> userPets = petRepository.findByAccountIdAndIsActiveTrue(accountId);
+            String vaccinesStatus = calculateVaccinesStatus(userPets);
+
+            // 5. Cálculo de recordatorios pendientes
+            // Consideramos como recordatorios: citas confirmadas próximas (próximas 7 días)
+            LocalDateTime nextWeek = now.plusDays(7);
+            long pendingRemindersCount = bookingRepository.countByPet_Account_IdAndStartTimeBetweenAndStatus(
+                    accountId,
+                    now,
+                    nextWeek,
+                    BookingStatus.CONFIRMED
+            );
+            log.debug("Recordatorios pendientes encontrados: {}", pendingRemindersCount);
+
+            // 6. Construir y retornar el DTO
+            DashboardStatsDTO stats = new DashboardStatsDTO(
+                    (int) activePetsCount,
+                    generateChangeText("mascotas", activePetsCount),
+                    (int) scheduledAppointmentsCount,
+                    generateChangeText("citas", scheduledAppointmentsCount),
+                    vaccinesStatus,
+                    calculateVaccinesChangeText(userPets),
+                    (int) pendingRemindersCount,
+                    generateChangeText("recordatorios", pendingRemindersCount)
+            );
+
+            log.info("Estadísticas de dashboard generadas exitosamente para usuario ID: {} - " +
+                            "Mascotas: {}, Citas: {}, Recordatorios: {}",
+                    userId, activePetsCount, scheduledAppointmentsCount, pendingRemindersCount);
+
+            return stats;
+
+        } catch (Exception e) {
+            log.error("Error al generar estadísticas de dashboard para usuario ID {}: {}", userId, e.getMessage());
+            throw e;
+        }
+    }
+
+
+    /**
+     * Calcula el estado de vacunación de las mascotas.
+     * Nota: Esta implementación es básica - ajustar según tu modelo de vacunas real.
+     */
+    private String calculateVaccinesStatus(List<Pet> pets) {
+        if (pets.isEmpty()) {
+            return "0/0";
+        }
+
+        // Lógica simplificada - ajustar según tu modelo de Vaccine/VaccinationRecord
+        long totalPetsRequiringVaccines = pets.size();
+
+        // Por ahora, asumimos que todas las mascotas activas necesitan vacunas
+        // Puedes implementar lógica más compleja aquí:
+        // - Consultar tabla de vacunas por mascota
+        // - Verificar fechas de vencimiento
+        // - Considerar tipo de mascota y vacunas requeridas
+
+        long vaccinesUpToDateCount = pets.stream()
+                .mapToLong(pet -> {
+                    // Ejemplo: verificar si la mascota tiene vacunas registradas y al día
+                    // return vaccineRepository.countValidVaccinesForPet(pet.getId(), LocalDate.now());
+                    // Por ahora, lógica placeholder:
+                    return pet.getSpecialNotes() != null &&
+                            pet.getSpecialNotes().toLowerCase().contains("vacunado") ? 1 : 0;
+                })
+                .sum();
+
+        return String.format("%d/%d", vaccinesUpToDateCount, totalPetsRequiringVaccines);
+    }
+
+    /**
+     * Genera texto de cambio para vacunas.
+     */
+    private String calculateVaccinesChangeText(List<Pet> pets) {
+        if (pets.isEmpty()) {
+            return "Sin mascotas registradas";
+        }
+
+        // Lógica simplificada para calcular vacunas pendientes
+        long pendingVaccines = pets.stream()
+                .mapToLong(pet -> {
+                    // Lógica placeholder - implementar según tu modelo real
+                    return pet.getSpecialNotes() == null ||
+                            !pet.getSpecialNotes().toLowerCase().contains("vacunado") ? 1 : 0;
+                })
+                .sum();
+
+        if (pendingVaccines == 0) {
+            return "Todas al día";
+        }
+
+        return String.format("%d pendiente(s)", pendingVaccines);
+    }
+
+    /**
+     * Genera texto descriptivo para los cambios en las estadísticas.
+     */
+    private String generateChangeText(String type, long count) {
+        if (count == 0) {
+            return "Sin " + type + " registradas";
+        }
+
+        return switch (type) {
+            case "mascotas" -> count == 1 ? "Total de mascotas activas" : "Total de mascotas activas";
+            case "citas" -> count == 1 ? "Próxima cita programada" : "Próximas citas";
+            case "recordatorios" -> count == 1 ? "Evento próximo" : "Eventos próximos";
+            default -> "Elementos registrados";
+        };
+    }
+
+    /*@Override
+    public MainDashboardDTO getMainDashboardData(Long userId) {
+        // Busca el usuario principal. Si no existe, lanza una excepción.
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("Usuario no encontrado con ID: " + userId));
+
+        // Busca la cuenta asociada al usuario.
+        Account account = accountRepository.findByOwnerUser(user)
+                .orElseThrow(() -> new RuntimeException("No se encontró cuenta para el usuario ID: " + userId));
+        Long accountId = account.getId();
+
+        // --- Lógica para cada parte del Dashboard ---
+
+        // 1. Obtener el perfil del usuario
+        UserProfileDTO userProfile = new UserProfileDTO(
+                user.getId(),
+                user.getFirstName(),
+                user.getLastName(),
+                user.getEmail(),
+                user.getRole().name(),
+                String.format("%c%c", user.getFirstName().charAt(0), user.getLastName().charAt(0)).toUpperCase()
+        );
+
+        // 2. Obtener las estadísticas (usando el método que ya creaste)
+        DashboardStatsDTO stats = getDashboardStatsForUser(userId);
+
+        // 3. Obtener la lista de mascotas y mapearlas usando tu DTO existente
+        List<PetSummaryResponse> petSummaries = petRepository.findByAccountId(accountId)
+                .stream()
+                .map(PetSummaryResponse::fromEntity)
+                .collect(Collectors.toList());
+
+        // 4. Obtener la próxima cita y mapearla usando tu DTO existente
+        BookingSummaryResponse nextAppointment = bookingRepository
+                .findFirstByAccountIdAndStartTimeAfterOrderByStartTimeAsc(accountId, LocalDateTime.now())
+                .map(BookingSummaryResponse::fromEntity) // Usa tu método de fábrica
+                .orElse(null);
+
+        // 5. Obtener los cuidadores recientes (lógica de ejemplo)
+        // Necesitarás una consulta más específica aquí, por ahora listamos algunos
+        List<SitterSummaryDTO> recentSitters = sitterProfileRepository.findTop3ByOrderByLastServiceDateDesc() // Método de ejemplo
+                .stream()
+                .map(sitterProfile -> new SitterSummaryDTO(
+                        sitterProfile.getUser().getId(),
+                        sitterProfile.getUser().getFirstName() + " " + sitterProfile.getUser().getLastName(),
+                        "Especialidad aquí", // Deberás añadir este campo a tu SitterProfile
+                        sitterProfile.getProfileImageUrl(),
+                        sitterProfile.getAverageRating() != null ? sitterProfile.getAverageRating().doubleValue() : 0.0
+                ))
+                .collect(Collectors.toList());
+
+        // 6. Ensamblar y devolver el DTO principal
+        return new MainDashboardDTO(userProfile, nextAppointment, petSummaries, recentSitters, stats);
+    }*/
 }
