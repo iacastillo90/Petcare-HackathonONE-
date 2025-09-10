@@ -7,10 +7,6 @@ import java.math.BigDecimal;
 import java.sql.Time;
 
 public record CreateServiceOfferingDTO(
-        @NotNull (message = "El ID del cuidador es obligatorio")
-        @Positive (message = "El ID del cuidador debe ser positivo")
-        Long sitterId, // only here for test purposes
-
         @NotNull(message = "El tipo de servicio es obligatorio")
         ServiceType serviceType,
 
