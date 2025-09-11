@@ -6,5 +6,7 @@ public record UserProfileDTO (
     String lastName,
     String email,
     String role,
-    String initials
+    String initials,
+    Long accountId
+
 ) { }

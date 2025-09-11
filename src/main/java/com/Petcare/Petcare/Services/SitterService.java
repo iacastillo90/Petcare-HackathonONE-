@@ -1,6 +1,8 @@
 package com.Petcare.Petcare.Services;
 
 import com.Petcare.Petcare.DTOs.Sitter.SitterProfileDTO;
+import com.Petcare.Petcare.DTOs.Sitter.SitterProfileSummary;
+
 import java.util.List;
 
 public interface SitterService {
@@ -19,4 +21,6 @@ public interface SitterService {
 
     // Listar todos los perfiles de Sitter
     List<SitterProfileDTO> getAllSitterProfiles();
+
+    List<SitterProfileSummary> findSitters(String city);
 }
