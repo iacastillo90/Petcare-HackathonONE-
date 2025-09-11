@@ -14,6 +14,12 @@ java {
 	}
 }
 
+javadoc {
+    options.tags = [
+            'apiNote:a:API Note:'
+    ]
+}
+
 repositories {
 	mavenCentral()
 }
@@ -50,6 +56,7 @@ dependencies {
 
 	// Mail
 	implementation 'org.springframework.boot:spring-boot-starter-mail' // Starter para enviar correos electrónicos
+    implementation 'org.springframework.boot:spring-boot-starter-thymeleaf' // Starter para plantillas HTML
 
 	// PDF
 	implementation 'com.itextpdf:itext7-core:7.2.5'
@@ -58,11 +65,16 @@ dependencies {
 	implementation 'org.springframework.boot:spring-boot-starter-validation'
 
 	// Documentacion
-	implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.5.0'
+	implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.8.11'
+
+    // Monitor
+    implementation 'org.springframework.boot:spring-boot-starter-actuator'
+
 }
 
 tasks.named('test') {
 	useJUnitPlatform()
+	jvmArgs '-javaagent:' + configurations.testRuntimeClasspath.find { it.name.contains('mockito-core') }
 }
 
 tasks.withType(JavaCompile) {

@@ -1,5 +1,6 @@
 package com.Petcare.Petcare.Configurations.Security.Jwt;
 
+import io.jsonwebtoken.Claims;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -9,6 +10,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpHeaders;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -18,6 +20,9 @@ import org.springframework.util.StringUtils;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
+import java.util.Arrays;
+import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * Filtro de autenticación para validar tokens JWT en las solicitudes HTTP.
@@ -53,14 +58,26 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         }
 
         try {
-            final String username = jwtService.getUsernameFromToken(token);
-            if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
-                UserDetails userDetails = userDetailsService.loadUserByUsername(username);
-                if (jwtService.isTokenValid(token, userDetails)) {
+            if (jwtService.isTokenValid(token)) { // New isTokenValid method
+                final String username = jwtService.getUsernameFromToken(token);
+                if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
+                    // Get claims directly from the token
+                    Claims claims = jwtService.getAllClaims(token);
+                    String rolesString = (String) claims.get("authorities");
+
+                    // Create a list of authorities from the token
+                    List<SimpleGrantedAuthority> authorities = Arrays.stream(rolesString.split(","))
+                            .map(SimpleGrantedAuthority::new)
+                            .collect(Collectors.toList());
+
+                    // Create a basic UserDetails object from the token's information
+                    UserDetails userDetails = new org.springframework.security.core.userdetails.User(
+                            username, "", authorities); // No password needed here
+
                     UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
                             userDetails,
                             null,
-                            userDetails.getAuthorities());
+                            authorities);
                     authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
                     SecurityContextHolder.getContext().setAuthentication(authToken);
                     logger.info("JWT token validated successfully for username: {}", username);

@@ -1,5 +1,6 @@
 package com.Petcare.Petcare.Configurations.Security.Jwt;
 
+import com.Petcare.Petcare.Models.User.User;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
@@ -9,6 +10,7 @@ import io.jsonwebtoken.security.Keys;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
@@ -17,6 +19,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 
 /**
  * Servicio para manejar tokens JWT (JSON Web Tokens) en la aplicación PodStream.
@@ -28,6 +31,11 @@ public class JwtService {
     private final String secretKey;
     private final long expirationTime;
     private static final Logger logger = LoggerFactory.getLogger(JwtService.class);
+
+    @Value("${jwt.verification-expiration:3600000}") // 1 hora por defecto
+    private long verificationExpirationTime;
+
+    private static final String VERIFICATION_AUDIENCE = "email_verification";
 
     /**
      * Constructor de JwtService con validación de la clave secreta.
@@ -59,12 +67,19 @@ public class JwtService {
     /**
      * Genera un token JWT para el usuario especificado sin reclamos adicionales.
      *
-     * @param user El objeto UserDetails que representa al usuario.
+     * @param userDetails El objeto UserDetails que representa al usuario.
      * @return El token JWT generado como una cadena.
      */
-    public String getToken(UserDetails user) {
-        logger.debug("Generating token for user: {}", user.getUsername());
-        return getToken(new HashMap<>(), user);
+    public String getToken(UserDetails userDetails) {
+        Map<String, Object> extraClaims = new HashMap<>();
+
+        // Get the roles from the UserDetails object and add them to the claims
+        String roles = userDetails.getAuthorities().stream()
+                .map(GrantedAuthority::getAuthority)
+                .collect(Collectors.joining(","));
+        extraClaims.put("authorities", roles);
+
+        return getToken(extraClaims, userDetails);
     }
 
     /**
@@ -110,12 +125,16 @@ public class JwtService {
      * Valida el token JWT verificando si coincide con el usuario y si no ha expirado.
      *
      * @param token       El token JWT a validar.
-     * @param userDetails El objeto UserDetails para comparar con el subject del token.
+     *
      * @return Verdadero si el token es válido, falso en caso contrario.
      */
-    public boolean isTokenValid(String token, UserDetails userDetails) {
-        final String username = getUsernameFromToken(token);
-        return (username.equals(userDetails.getUsername()) && !isTokenExpired(token));
+    public boolean isTokenValid(String token) {
+        try {
+            getClaim(token, Claims::getSubject);
+            return !isTokenExpired(token);
+        } catch (Exception e) {
+            return false;
+        }
     }
 
     /**
@@ -125,7 +144,7 @@ public class JwtService {
      * @return Un objeto Claims que contiene todos los reclamos del token.
      * @throws IllegalArgumentException Si el token es inválido.
      */
-    private Claims getAllClaims(String token) {
+    public Claims getAllClaims(String token) {
         try {
             return Jwts
                     .parserBuilder()
@@ -173,5 +192,49 @@ public class JwtService {
      */
     private boolean isTokenExpired(String token) {
         return getExpiration(token).before(new Date());
+    }
+
+    /**
+     * Genera un token JWT específico para la verificación de email.
+     *
+     * @param user El usuario para quien se genera el token.
+     * @return El token de verificación JWT.
+     */
+    public String generateVerificationToken(User user) {
+        logger.debug("Generando token de verificación para: {}", user.getEmail());
+        Map<String, Object> extraClaims = new HashMap<>();
+        extraClaims.put("userId", user.getId()); // Añadir el ID del usuario es una buena práctica
+
+        return Jwts.builder()
+                .setClaims(extraClaims)
+                .setSubject(user.getEmail())
+                .setAudience(VERIFICATION_AUDIENCE) // Claim para identificar el propósito
+                .setIssuedAt(new Date(System.currentTimeMillis()))
+                .setExpiration(new Date(System.currentTimeMillis() + verificationExpirationTime))
+                .signWith(getKey(), SignatureAlgorithm.HS256)
+                .compact();
+    }
+
+    /**
+     * Valida un token de verificación y extrae los claims.
+     *
+     * @param token El token de verificación.
+     * @return Los claims del token si es válido.
+     * @throws JwtException si el token es inválido o no es para verificación.
+     */
+    public Claims getClaimsFromVerificationToken(String token) throws JwtException {
+        Claims claims = Jwts.parserBuilder()
+                .setSigningKey(getKey())
+                .requireAudience(VERIFICATION_AUDIENCE) // Asegura que el token sea para verificación
+                .build()
+                .parseClaimsJws(token)
+                .getBody();
+
+        // Opcional: Validar que el token no ha expirado (aunque .parseClaimsJws ya lo hace)
+        if (claims.getExpiration().before(new Date())) {
+            throw new JwtException("El token de verificación ha expirado");
+        }
+
+        return claims;
     }
 }
