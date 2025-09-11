@@ -1,6 +1,8 @@
 package com.Petcare.Petcare.Services.Implement;
 
 import com.Petcare.Petcare.DTOs.Sitter.SitterProfileDTO;
+import com.Petcare.Petcare.DTOs.Sitter.SitterProfileMapper;
+import com.Petcare.Petcare.DTOs.Sitter.SitterProfileSummary;
 import com.Petcare.Petcare.Models.SitterProfile;
 import com.Petcare.Petcare.Models.User.User;
 import com.Petcare.Petcare.Repositories.SitterProfileRepository;
@@ -12,17 +14,20 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 public class SitterServiceImpl implements SitterService {
 
     private final UserRepository userRepository;
     private final SitterProfileRepository sitterProfileRepository;
+    private final SitterProfileMapper sitterProfileMapper;
 
     public SitterServiceImpl(UserRepository userRepository,
-                             SitterProfileRepository sitterProfileRepository) {
+                             SitterProfileRepository sitterProfileRepository, SitterProfileMapper sitterProfileMapper) {
         this.userRepository = userRepository;
         this.sitterProfileRepository = sitterProfileRepository;
+        this.sitterProfileMapper = sitterProfileMapper;
     }
 
     @Override
@@ -111,5 +116,30 @@ public class SitterServiceImpl implements SitterService {
     }
 
 
+    /**
+     * Busca perfiles de cuidadores que cumplan con ciertos criterios.
+     * Solo retorna cuidadores verificados y disponibles para reservas.
+     *
+     * @param city El filtro de ciudad. Si es nulo, busca en todas las ciudades.
+     * @return Lista de DTOs de resumen de los cuidadores encontrados.
+     */
+    @Transactional(readOnly = true) // Es una consulta, por lo tanto, es de solo lectura.
+    public List<SitterProfileSummary> findSitters(String city) {
+
+        List<SitterProfile> profiles;
+
+        if (city != null && !city.trim().isEmpty()) {
+            // Asumiendo que tienes un método de búsqueda por ciudad en el repositorio.
+            profiles = sitterProfileRepository.findByIsVerifiedTrueAndIsAvailableForBookingsTrueAndUser_AddressContainingIgnoreCase(city);
+        } else {
+            // Búsqueda general si no hay filtro de ciudad.
+            profiles = sitterProfileRepository.findByIsVerifiedTrueAndIsAvailableForBookingsTrue();
+        }
+
+        // Mapea las entidades encontradas al DTO de respuesta.
+        return profiles.stream()
+                .map(sitterProfileMapper::toSummaryDto)
+                .collect(Collectors.toList());
+    }
 
 }

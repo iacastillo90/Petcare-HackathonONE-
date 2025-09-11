@@ -7,6 +7,7 @@ import com.Petcare.Petcare.Models.User.Role;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
+import javax.security.auth.login.AccountNotFoundException;
 import java.util.List;
 import java.util.Optional;
 
@@ -234,5 +235,6 @@ public interface UserService {
 
     DashboardStatsDTO getDashboardStatsForUser(Long userId);
 
-    //MainDashboardDTO getMainDashboardData(Long id);
+    MainDashboardDTO getMainDashboardData(Long id) throws AccountNotFoundException;
+
 }

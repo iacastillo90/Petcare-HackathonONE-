@@ -1,5 +1,6 @@
 package com.Petcare.Petcare.Repositories;
 
+import aj.org.objectweb.asm.commons.Remapper;
 import com.Petcare.Petcare.Models.Booking.Booking;
 
 import com.Petcare.Petcare.Models.Booking.BookingStatus;
@@ -40,4 +41,7 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
     long countByPetAccountIdAndStartTimeAfterAndStatusNotIn(Long accountId, LocalDateTime now, List<BookingStatus> cancelled);
 
     long countByPet_Account_IdAndStartTimeBetweenAndStatus(Long accountId, LocalDateTime now, LocalDateTime nextWeek, BookingStatus bookingStatus);
+
+    Optional<Booking> findFirstByAccountIdAndStartTimeAfterOrderByStartTimeAsc(Long accountId, LocalDateTime now);
+
 }
