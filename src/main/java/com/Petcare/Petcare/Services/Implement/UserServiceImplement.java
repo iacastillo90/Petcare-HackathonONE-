@@ -25,8 +25,12 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -117,6 +121,12 @@ public class UserServiceImplement implements UserService {
                     return new IllegalStateException("Usuario no encontrado después de la autenticación.");
                 });
 
+        // 3. Validación de negocio POST-autenticación (el email verificado es un buen ejemplo)
+        if (!user.isEmailVerified()) {
+            log.warn("Intento de login para {} con email no verificado.", request.getEmail());
+            throw new BadCredentialsException("El correo electrónico no ha sido verificado.");
+        }
+
         // 3. Actualizar último login
         user.setLastLoginAt(LocalDateTime.now());
         userRepository.save(user);
@@ -195,7 +205,7 @@ public class UserServiceImplement implements UserService {
                     verificationUrl,
                     24 // Horas de expiración (para mostrar en el correo)
             );
-            log.info("Correo de verificación encolado para: {}", savedUser.getEmail());
+            log.info("Correo de verificación enviando para: {}", savedUser.getEmail());
         } catch (Exception e) {
             log.error("Error al intentar enviar el correo de verificación para {}: {}", savedUser.getEmail(), e.getMessage());
         }
@@ -369,7 +379,7 @@ public class UserServiceImplement implements UserService {
      */
     @Override
     @Transactional
-    public UserResponse updateUser(Long id, CreateUserRequest request) {
+    public UserResponse updateUser(Long id, UpdateUserRequest request) {
         log.info("Actualizando usuario con ID: {}", id);
 
         User existingUser = userRepository.findById(id)

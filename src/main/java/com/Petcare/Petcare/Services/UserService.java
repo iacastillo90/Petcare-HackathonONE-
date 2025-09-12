@@ -134,7 +134,7 @@ public interface UserService {
      * @throws RuntimeException si el usuario no existe
      * @throws IllegalArgumentException si el nuevo email ya está en uso
      */
-    UserResponse updateUser(Long id, CreateUserRequest request);
+    UserResponse updateUser(Long id, UpdateUserRequest request);
 
     /**
      * Activa o desactiva una cuenta de usuario.
