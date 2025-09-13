@@ -1,11 +1,11 @@
 package com.Petcare.Petcare.Services.Implement;
 
 import com.Petcare.Petcare.Configurations.Security.Jwt.JwtService;
-import com.Petcare.Petcare.DTOs.Account.CreateAccountRequest;
 import com.Petcare.Petcare.DTOs.Auth.Request.LoginRequest;
 import com.Petcare.Petcare.DTOs.Auth.Respone.AuthResponse;
 import com.Petcare.Petcare.DTOs.Booking.BookingSummaryResponse;
 import com.Petcare.Petcare.DTOs.Pet.PetSummaryResponse;
+import com.Petcare.Petcare.DTOs.Sitter.SitterProfileSummary;
 import com.Petcare.Petcare.DTOs.User.*;
 import com.Petcare.Petcare.Models.Account.Account;
 import com.Petcare.Petcare.Models.Account.AccountUser;
@@ -23,13 +23,16 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import javax.security.auth.login.AccountNotFoundException;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
@@ -118,6 +121,8 @@ public class UserServiceImplement implements UserService {
         user.setLastLoginAt(LocalDateTime.now());
         userRepository.save(user);
 
+        Optional<Account> account = accountRepository.findByOwnerUser(user);
+
         // . Crea el DTO del perfil del usuario
         UserProfileDTO userProfile = new UserProfileDTO(
                 user.getId(),
@@ -125,7 +130,8 @@ public class UserServiceImplement implements UserService {
                 user.getLastName(),
                 user.getEmail(),
                 user.getRole().name(),
-                String.format("%c%c", user.getFirstName().charAt(0), user.getLastName().charAt(0)).toUpperCase()
+                String.format("%c%c", user.getFirstName().charAt(0), user.getLastName().charAt(0)).toUpperCase(),
+                account.get().getId()
         );
 
         // 4. Generar el token JWT
@@ -799,58 +805,74 @@ public class UserServiceImplement implements UserService {
         };
     }
 
-    /*@Override
-    public MainDashboardDTO getMainDashboardData(Long userId) {
-        // Busca el usuario principal. Si no existe, lanza una excepción.
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new RuntimeException("Usuario no encontrado con ID: " + userId));
+    @Override
+    @Transactional(readOnly = true) // Toda la operación es de solo lectura.
+    public MainDashboardDTO getMainDashboardData(Long userId) throws AccountNotFoundException {
+        // 1. Obtener entidades principales
+        User user = findUserById(userId);
+        Account account = findAccountByUser(user);
 
-        // Busca la cuenta asociada al usuario.
-        Account account = accountRepository.findByOwnerUser(user)
-                .orElseThrow(() -> new RuntimeException("No se encontró cuenta para el usuario ID: " + userId));
-        Long accountId = account.getId();
+        // 2. Obtener las diferentes piezas del dashboard llamando a métodos especializados
+        UserProfileDTO userProfile = buildUserProfile(user);
+        DashboardStatsDTO stats = getDashboardStatsForUser(userId);
+        List<PetSummaryResponse> petSummaries = getPetSummaries(account.getId());
+        BookingSummaryResponse nextAppointment = getNextAppointment(account.getId());
+        List<SitterProfileSummary> recentSitters = getRecentSitters();
+        // 3. Ensamblar y devolver el DTO principal
+        return new MainDashboardDTO(userProfile, nextAppointment, petSummaries, recentSitters, stats);
+    }
 
-        // --- Lógica para cada parte del Dashboard ---
+// --- MÉTODOS PRIVADOS DE AYUDA (HELPERS) ---
 
-        // 1. Obtener el perfil del usuario
-        UserProfileDTO userProfile = new UserProfileDTO(
+    private User findUserById(Long userId) {
+        return userRepository.findById(userId)
+                .orElseThrow(() -> new UsernameNotFoundException("Usuario no encontrado con ID: " + userId));
+    }
+
+    private Account findAccountByUser(User user) throws AccountNotFoundException {
+        return accountRepository.findByOwnerUser(user)
+                .orElseThrow(() -> new AccountNotFoundException("No se encontró cuenta para el usuario ID: " + user.getId()));
+    }
+
+    private UserProfileDTO buildUserProfile(User user) {
+
+        Optional<Account> account = accountRepository.findByOwnerUser(user);
+
+        String initials = String.format("%c%c", user.getFirstName().charAt(0), user.getLastName().charAt(0)).toUpperCase();
+        return new UserProfileDTO(
                 user.getId(),
                 user.getFirstName(),
                 user.getLastName(),
                 user.getEmail(),
                 user.getRole().name(),
-                String.format("%c%c", user.getFirstName().charAt(0), user.getLastName().charAt(0)).toUpperCase()
+                initials,
+                account.get().getId()
         );
+    }
 
-        // 2. Obtener las estadísticas (usando el método que ya creaste)
-        DashboardStatsDTO stats = getDashboardStatsForUser(userId);
-
-        // 3. Obtener la lista de mascotas y mapearlas usando tu DTO existente
-        List<PetSummaryResponse> petSummaries = petRepository.findByAccountId(accountId)
+    private List<PetSummaryResponse> getPetSummaries(Long accountId) {
+        return petRepository.findByAccountId(accountId)
                 .stream()
                 .map(PetSummaryResponse::fromEntity)
                 .collect(Collectors.toList());
+    }
 
-        // 4. Obtener la próxima cita y mapearla usando tu DTO existente
-        BookingSummaryResponse nextAppointment = bookingRepository
+    private BookingSummaryResponse getNextAppointment(Long accountId) {
+        return bookingRepository
                 .findFirstByAccountIdAndStartTimeAfterOrderByStartTimeAsc(accountId, LocalDateTime.now())
-                .map(BookingSummaryResponse::fromEntity) // Usa tu método de fábrica
+                .map(BookingSummaryResponse::fromEntity)
                 .orElse(null);
+    }
 
-        // 5. Obtener los cuidadores recientes (lógica de ejemplo)
-        // Necesitarás una consulta más específica aquí, por ahora listamos algunos
-        List<SitterSummaryDTO> recentSitters = sitterProfileRepository.findTop3ByOrderByLastServiceDateDesc() // Método de ejemplo
+    private List<SitterProfileSummary> getRecentSitters() {
+        // Creamos un objeto Pageable para pedir la primera página (índice 0) con 3 elementos.
+        Pageable pageable = PageRequest.of(0, 3);
+
+
+        // Llamamos al método del repositorio corregido, pasando el Pageable.
+        return sitterProfileRepository.findRecentWithUser(pageable)
                 .stream()
-                .map(sitterProfile -> new SitterSummaryDTO(
-                        sitterProfile.getUser().getId(),
-                        sitterProfile.getUser().getFirstName() + " " + sitterProfile.getUser().getLastName(),
-                        "Especialidad aquí", // Deberás añadir este campo a tu SitterProfile
-                        sitterProfile.getProfileImageUrl(),
-                        sitterProfile.getAverageRating() != null ? sitterProfile.getAverageRating().doubleValue() : 0.0
-                ))
+                .map(SitterProfileSummary::fromEntity)
                 .collect(Collectors.toList());
-
-        // 6. Ensamblar y devolver el DTO principal
-        return new MainDashboardDTO(userProfile, nextAppointment, petSummaries, recentSitters, stats);
-    }*/
+    }
 }
