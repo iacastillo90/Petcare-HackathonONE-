@@ -1,6 +1,9 @@
 package com.Petcare.Petcare.Exception;
 
 import com.Petcare.Petcare.DTOs.GlobalException.ErrorResponseDTO;
+import com.Petcare.Petcare.Exception.Business.EmailAlreadyExistsException;
+import com.Petcare.Petcare.Exception.Business.UserNotFoundException;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -108,5 +111,55 @@ public class GlobalExceptionHandler {
 
         logger.error("An unexpected error occurred", ex);
         return new ResponseEntity<>(errorResponse, HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+
+    /**
+     * Maneja la excepción cuando un recurso solicitado no se encuentra.
+     * Devuelve un error 404 Not Found.
+     */
+    @ExceptionHandler(UserNotFoundException.class)
+    public ResponseEntity<ErrorResponseDTO> handleUserNotFoundException(UserNotFoundException ex) {
+        ErrorResponseDTO errorResponse = new ErrorResponseDTO(
+                HttpStatus.NOT_FOUND.value(),
+                ex.getMessage(),
+                LocalDateTime.now(),
+                null
+        );
+        logger.warn("Resource not found: {}", ex.getMessage());
+        return new ResponseEntity<>(errorResponse, HttpStatus.NOT_FOUND);
+    }
+
+    /**
+     * Maneja la excepción cuando se intenta crear o actualizar un recurso con un
+     * atributo que debe ser único y ya existe (ej. email duplicado).
+     * Devuelve un error 409 Conflict.
+     */
+    @ExceptionHandler(EmailAlreadyExistsException.class)
+    public ResponseEntity<ErrorResponseDTO> handleEmailAlreadyExistsException(EmailAlreadyExistsException ex) {
+        ErrorResponseDTO errorResponse = new ErrorResponseDTO(
+                HttpStatus.CONFLICT.value(),
+                ex.getMessage(),
+                LocalDateTime.now(),
+                null
+        );
+        logger.warn("Data conflict: {}", ex.getMessage());
+        return new ResponseEntity<>(errorResponse, HttpStatus.CONFLICT);
+    }
+
+    /**
+     * Maneja excepciones de violación de integridad de la base de datos.
+     * Ocurre cuando una operación (ej. DELETE) viola una restricción de clave foránea.
+     * Devuelve un error 409 Conflict con un mensaje amigable.
+     */
+    @ExceptionHandler(DataIntegrityViolationException.class)
+    public ResponseEntity<ErrorResponseDTO> handleDataIntegrityViolation(DataIntegrityViolationException ex) {
+        ErrorResponseDTO errorResponse = new ErrorResponseDTO(
+                HttpStatus.CONFLICT.value(),
+                "No se puede eliminar el recurso: existen registros dependientes (ej. facturas o reservas). Considere desactivar la cuenta en su lugar.",
+                LocalDateTime.now(),
+                null
+        );
+        logger.warn("Data integrity violation: {}. Causa: {}", ex.getMessage(), ex.getRootCause() != null ? ex.getRootCause().getMessage() : "N/A");
+        return new ResponseEntity<>(errorResponse, HttpStatus.CONFLICT);
     }
 }

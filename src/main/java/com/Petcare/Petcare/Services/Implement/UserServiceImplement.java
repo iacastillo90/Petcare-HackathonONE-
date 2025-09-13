@@ -7,6 +7,8 @@ import com.Petcare.Petcare.DTOs.Booking.BookingSummaryResponse;
 import com.Petcare.Petcare.DTOs.Pet.PetSummaryResponse;
 import com.Petcare.Petcare.DTOs.Sitter.SitterProfileSummary;
 import com.Petcare.Petcare.DTOs.User.*;
+import com.Petcare.Petcare.Exception.Business.EmailAlreadyExistsException;
+import com.Petcare.Petcare.Exception.Business.UserNotFoundException;
 import com.Petcare.Petcare.Models.Account.Account;
 import com.Petcare.Petcare.Models.Account.AccountUser;
 import com.Petcare.Petcare.Models.Booking.BookingStatus;
@@ -21,6 +23,7 @@ import io.jsonwebtoken.JwtException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
@@ -345,10 +348,12 @@ public class UserServiceImplement implements UserService {
      */
     @Override
     @Transactional(readOnly = true)
-    public Optional<UserResponse> getUserById(Long id) {
+    public UserResponse getUserById(Long id) {
         log.debug("Buscando usuario por ID: {}", id);
-        return userRepository.findById(id)
-                .map(UserResponse::fromEntity);
+        User user = userRepository.findById(id)
+                .orElseThrow(() -> new UserNotFoundException("Usuario no encontrado con el ID " + id));
+
+        return UserResponse.fromEntity(user);
     }
 
     /**
@@ -359,10 +364,11 @@ public class UserServiceImplement implements UserService {
      */
     @Override
     @Transactional(readOnly = true)
-    public Optional<UserResponse> getUserByEmail(String email) {
+    public UserResponse getUserByEmail(String email) {
         log.debug("Buscando usuario por email: {}", email);
-        return userRepository.findByEmail(email)
-                .map(UserResponse::fromEntity);
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new UsernameNotFoundException("Usuario no encontrado con el email " + email));
+        return UserResponse.fromEntity(user);
     }
 
     /**
@@ -385,7 +391,7 @@ public class UserServiceImplement implements UserService {
         User existingUser = userRepository.findById(id)
                 .orElseThrow(() -> {
                     log.error("Usuario no encontrado para actualizar con ID: {}", id);
-                    return new RuntimeException("Usuario no encontrado con id " + id);
+                    return new UserNotFoundException("Usuario no encontrado con id " + id);
                 });
 
         // Actualizar campos básicos
@@ -398,7 +404,7 @@ public class UserServiceImplement implements UserService {
         if (!request.getEmail().equals(existingUser.getEmail())) {
             if (userRepository.findByEmail(request.getEmail()).isPresent()) {
                 log.warn("Intento de actualizar a email duplicado: {}", request.getEmail());
-                throw new IllegalArgumentException("El nuevo email ya está registrado: " + request.getEmail());
+                throw new EmailAlreadyExistsException("El nuevo email ya está registrado: " + request.getEmail());
             }
             existingUser.setEmail(request.getEmail());
             // Reset verificación de email si cambió
@@ -430,7 +436,7 @@ public class UserServiceImplement implements UserService {
 
         if (!userRepository.existsById(id)) {
             log.error("Usuario no encontrado para eliminar con ID: {}", id);
-            throw new RuntimeException("Usuario no encontrado con id " + id);
+            throw new DataIntegrityViolationException("Usuario no encontrado con id " + id);
         }
 
         userRepository.deleteById(id);
@@ -637,6 +643,28 @@ public class UserServiceImplement implements UserService {
         return accountNumber;
     }
 
+    /**
+     * Verifica un token de confirmación de correo electrónico y activa la cuenta del usuario.
+     * <p>
+     * Este método es el punto final del flujo de verificación de email. Es invocado cuando un
+     * usuario hace clic en el enlace enviado a su correo. El proceso valida la integridad y
+     * la vigencia del token antes de actualizar el estado del usuario.
+     * </p>
+     * <p><strong>Flujo de Proceso:</strong></p>
+     * <ul>
+     * <li>Válida la firma y la fecha de expiración del token JWT de verificación.</li>
+     * <li>Extrae el correo electrónico del "subject" del token.</li>
+     * <li>Busca al usuario correspondiente en la base de datos.</li>
+     * <li>Comprueba si el email ya fue verificado para evitar operaciones redundantes.</li>
+     * <li>Si no está verificado, actualiza el campo {@code emailVerifiedAt} con el timestamp actual.</li>
+     * <li>Persiste el cambio en la base de datos.</li>
+     * </ul>
+     *
+     * @param token El token JWT de verificación recibido, generalmente como un parámetro en una URL.
+     * @return Un mensaje de estado legible para el usuario, indicando el resultado del proceso.
+     * @throws RuntimeException si el token es inválido (malformado, firma incorrecta), ha expirado,
+     * o si el usuario asociado al token no se encuentra en la base de datos.
+     */
     @Override
     @Transactional
     public String verifyEmailToken(String token) {
@@ -669,6 +697,28 @@ public class UserServiceImplement implements UserService {
     }
 
 
+    /**
+     * Obtiene y agrega las estadísticas clave para el dashboard principal de un usuario específico.
+     * <p>
+     * Este método consolida información crítica de diferentes partes de la aplicación (mascotas,
+     * reservas) en un único DTO optimizado. Está diseñado para proporcionar una vista rápida
+     * del estado de la cuenta del usuario, sus próximas actividades y elementos que requieren su atención.
+     * </p>
+     * <p><strong>Desglose del Proceso de Agregación:</strong></p>
+     * <ul>
+     * <li>Localiza al usuario y su cuenta principal para contextualizar las consultas.</li>
+     * <li>Calcula el número de mascotas activas registradas en la cuenta.</li>
+     * <li>Cuenta las citas futuras que no han sido canceladas ni completadas.</li>
+     * <li>Evalúa el estado de vacunación de las mascotas (basado en una lógica simplificada).</li>
+     * <li>Cuenta los recordatorios pendientes, definidos como citas confirmadas en los próximos 7 días.</li>
+     * <li>Ensambla todos los datos en un DTO {@link DashboardStatsDTO} para la respuesta.</li>
+     * </ul>
+     *
+     * @param userId El ID del usuario para el cual se generarán las estadísticas.
+     * @return Un objeto {@link DashboardStatsDTO} con las métricas consolidadas del dashboard.
+     * @throws IllegalArgumentException si el usuario con el ID proporcionado no existe.
+     * @throws IllegalStateException si no se encuentra una cuenta principal asociada al usuario, indicando una inconsistencia de datos.
+     */
     @Override
     @Transactional(readOnly = true)
     public DashboardStatsDTO getDashboardStatsForUser(Long userId) {
@@ -744,6 +794,7 @@ public class UserServiceImplement implements UserService {
     }
 
 
+    // --- MÉTODOS en construcción ---
     /**
      * Calcula el estado de vacunación de las mascotas.
      * Nota: Esta implementación es básica - ajustar según tu modelo de vacunas real.
@@ -834,21 +885,56 @@ public class UserServiceImplement implements UserService {
 
 // --- MÉTODOS PRIVADOS DE AYUDA (HELPERS) ---
 
+    /**
+     * Busca y recupera una entidad {@link User} por su ID, lanzando una excepción estandarizada si no se encuentra.
+     * <p>
+     * Este método de ayuda centraliza la lógica de búsqueda de usuarios para asegurar que
+     * se utilice una excepción consistente ({@link UsernameNotFoundException}) en todo el servicio
+     * cuando un usuario no es localizado, simplificando el manejo de errores.
+     * </p>
+     *
+     * @param userId El identificador único del usuario a buscar.
+     * @return La entidad {@link User} encontrada.
+     * @throws UsernameNotFoundException si no se encuentra ningún usuario con el ID proporcionado.
+     */
     private User findUserById(Long userId) {
         return userRepository.findById(userId)
                 .orElseThrow(() -> new UsernameNotFoundException("Usuario no encontrado con ID: " + userId));
     }
 
+    /**
+     * Busca y recupera la entidad {@link Account} principal asociada a un usuario.
+     * <p>
+     * Cada usuario propietario tiene una cuenta principal. Este método encapsula la lógica para
+     * encontrar esa cuenta, lanzando una excepción específica si la relación no existe,
+     * lo cual indicaría una inconsistencia en los datos.
+     * </p>
+     *
+     * @param user La entidad {@link User} propietaria de la cuenta.
+     * @return La entidad {@link Account} encontrada.
+     * @throws AccountNotFoundException si el usuario no tiene una cuenta principal asociada.
+     */
     private Account findAccountByUser(User user) throws AccountNotFoundException {
         return accountRepository.findByOwnerUser(user)
                 .orElseThrow(() -> new AccountNotFoundException("No se encontró cuenta para el usuario ID: " + user.getId()));
     }
 
+    /**
+     * Construye el DTO de perfil de usuario ({@link UserProfileDTO}) a partir de una entidad {@link User}.
+     * <p>
+     * Este método se encarga de la transformación de datos desde el modelo de persistencia
+     * hacia un DTO seguro para ser expuesto en la API, incluyendo la generación de datos derivados
+     * como las iniciales del usuario y la obtención del ID de su cuenta.
+     * </p>
+     *
+     * @param user La entidad {@link User} de la cual se creará el DTO.
+     * @return Un nuevo objeto {@link UserProfileDTO} con los datos del perfil.
+     */
     private UserProfileDTO buildUserProfile(User user) {
-
         Optional<Account> account = accountRepository.findByOwnerUser(user);
 
         String initials = String.format("%c%c", user.getFirstName().charAt(0), user.getLastName().charAt(0)).toUpperCase();
+
         return new UserProfileDTO(
                 user.getId(),
                 user.getFirstName(),
@@ -856,10 +942,20 @@ public class UserServiceImplement implements UserService {
                 user.getEmail(),
                 user.getRole().name(),
                 initials,
-                account.get().getId()
+                account.orElseThrow(() -> new IllegalStateException("El usuario no tiene una cuenta asociada.")).getId()
         );
     }
 
+    /**
+     * Obtiene una lista de resúmenes de mascotas ({@link PetSummaryResponse}) para una cuenta específica.
+     * <p>
+     * Realiza una consulta al repositorio de mascotas y mapea los resultados a su
+     * DTO de resumen, optimizando la carga de datos para el dashboard.
+     * </p>
+     *
+     * @param accountId El ID de la cuenta cuyas mascotas se quieren obtener.
+     * @return Una lista de {@link PetSummaryResponse}.
+     */
     private List<PetSummaryResponse> getPetSummaries(Long accountId) {
         return petRepository.findByAccountId(accountId)
                 .stream()
@@ -867,6 +963,16 @@ public class UserServiceImplement implements UserService {
                 .collect(Collectors.toList());
     }
 
+    /**
+     * Busca y devuelve la próxima cita programada para una cuenta.
+     * <p>
+     * Realiza una consulta específica que filtra las reservas futuras, las ordena por fecha de inicio
+     * y devuelve solo la más próxima. Es un componente clave para el dashboard del cliente.
+     * </p>
+     *
+     * @param accountId El ID de la cuenta para la cual se busca la próxima cita.
+     * @return Un {@link BookingSummaryResponse} de la próxima cita, o {@code null} si no hay citas futuras.
+     */
     private BookingSummaryResponse getNextAppointment(Long accountId) {
         return bookingRepository
                 .findFirstByAccountIdAndStartTimeAfterOrderByStartTimeAsc(accountId, LocalDateTime.now())
@@ -874,10 +980,19 @@ public class UserServiceImplement implements UserService {
                 .orElse(null);
     }
 
+    /**
+     * Obtiene una lista de los perfiles de cuidadores (sitters) actualizados más recientemente.
+     * <p>
+     * Este método se utiliza para poblar secciones como "cuidadores destacados" en el dashboard.
+     * Usa paginación para limitar el resultado a un número pequeño (los 3 más recientes)
+     * y así mantener la consulta ligera y rápida.
+     * </p>
+     *
+     * @return Una lista limitada de {@link SitterProfileSummary}.
+     */
     private List<SitterProfileSummary> getRecentSitters() {
         // Creamos un objeto Pageable para pedir la primera página (índice 0) con 3 elementos.
         Pageable pageable = PageRequest.of(0, 3);
-
 
         // Llamamos al método del repositorio corregido, pasando el Pageable.
         return sitterProfileRepository.findRecentWithUser(pageable)
@@ -885,4 +1000,21 @@ public class UserServiceImplement implements UserService {
                 .map(SitterProfileSummary::fromEntity)
                 .collect(Collectors.toList());
     }
+
+    /**
+     * Verifica si una dirección de correo electrónico ya está registrada en el sistema.
+     * <p>
+     * Este método de utilidad es consumido principalmente por el endpoint `GET /api/users/email-available`
+     * para permitir validaciones en tiempo real desde el frontend, por ejemplo, en un formulario de registro.
+     * </p>
+     *
+     * @param email La dirección de correo electrónico a verificar.
+     * @return {@code true} si el email está disponible para ser registrado, {@code false} si ya está en uso.
+     */
+    @Override
+    @Transactional(readOnly = true)
+    public boolean isEmailAvailable(String email) {
+        return !userRepository.existsByEmail(email);
+    }
+
 }

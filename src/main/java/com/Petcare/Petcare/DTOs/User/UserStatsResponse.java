@@ -1,238 +1,118 @@
 package com.Petcare.Petcare.DTOs.User;
 
+import com.Petcare.Petcare.Models.User.User;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.Builder;
 import lombok.Data;
 
 /**
- * DTO para estadísticas generales de usuarios del sistema.
- *
- * <p>Proporciona métricas agregadas sobre la base de usuarios, útil para
- * dashboards administrativos y reportes de gestión.</p>
- *
- * <p><strong>Métricas incluidas:</strong></p>
+ * DTO para agregar y presentar estadísticas clave sobre la base de usuarios del sistema.
+ * <p>
+ * Este objeto está diseñado para ser una respuesta de solo lectura que proporciona una instantánea
+ * del estado y la salud del ecosistema de usuarios en la plataforma Petcare. Su propósito principal
+ * es alimentar dashboards administrativos, generar reportes de negocio y facilitar el monitoreo
+ * del crecimiento y la actividad de los usuarios.
+ * </p>
+ * <p>
+ * <strong>Contenido y Métricas:</strong>
+ * </p>
  * <ul>
- *   <li>Conteo total y activo de usuarios</li>
- *   <li>Distribución por roles del sistema</li>
- *   <li>Estado de verificación de emails</li>
- *   <li>Cálculos de porcentajes para análisis</li>
- * </ul>
- *
- * <p><strong>Casos de uso principales:</strong></p>
- * <ul>
- *   <li>Dashboards administrativos</li>
- *   <li>Reportes ejecutivos de crecimiento</li>
- *   <li>Métricas de engagement de usuarios</li>
- *   <li>Análisis de adopción por roles</li>
+ * <li><b>Conteos Totales:</b> Ofrece una visión general del tamaño de la base de usuarios.</li>
+ * <li><b>Distribución por Rol:</b> Desglosa la composición de la comunidad (clientes, cuidadores, administradores).</li>
+ * <li><b>Indicadores de Salud:</b> Mide la actividad y el compromiso a través de métricas como usuarios activos y verificados.</li>
  * </ul>
  *
  * @author Equipo Petcare 10
- * @version 1.0
+ * @version 1.1
  * @since 1.0
+ * @see User
+ * @see com.Petcare.Petcare.Controllers.UserController#getUserStats()
  */
 @Data
 @Builder
+@Schema(description = "Agregado de métricas y estadísticas clave sobre la base de usuarios, diseñado para dashboards y reportes administrativos.")
 public class UserStatsResponse {
 
     /**
-     * Total de usuarios registrados en el sistema.
+     * Conteo total de usuarios registrados en el sistema, sin importar su estado (activos o inactivos).
      */
+    @Schema(description = "Conteo total de usuarios registrados en el sistema, sin importar su estado.", example = "1520")
     private long totalUsers;
 
     /**
-     * Número de usuarios con cuenta activa.
+     * Número de usuarios cuya cuenta está marcada como activa (`isActive = true`) y pueden iniciar sesión.
      */
+    @Schema(description = "Número de usuarios cuya cuenta está marcada como activa y pueden iniciar sesión.", example = "1450")
     private long activeUsers;
 
     /**
-     * Número de usuarios con rol CLIENT.
+     * Conteo de usuarios con el rol específico de CLIENTE.
      */
+    @Schema(description = "Conteo de usuarios con el rol específico de CLIENTE.", example = "1200")
     private long clientCount;
 
     /**
-     * Número de usuarios con rol SITTER.
+     * Conteo de usuarios con el rol específico de CUIDADOR (SITTER).
      */
+    @Schema(description = "Conteo de usuarios con el rol específico de CUIDADOR (SITTER).", example = "245")
     private long sitterCount;
 
     /**
-     * Número de usuarios con rol ADMIN.
+     * Conteo de usuarios con el rol específico de ADMINISTRADOR.
      */
+    @Schema(description = "Conteo de usuarios con el rol específico de ADMINISTRADOR.", example = "5")
     private long adminCount;
 
     /**
-     * Número de usuarios con email verificado.
+     * Número de usuarios que han verificado su dirección de correo electrónico (`emailVerifiedAt` no es nulo).
      */
+    @Schema(description = "Número de usuarios que han verificado su dirección de correo electrónico.", example = "1380")
     private long verifiedUsers;
 
-    // ========== MÉTODOS DE CÁLCULO DE PORCENTAJES ==========
+    // ========== MÉTODOS DE CÁLCULO (NO SERIALIZADOS) ==========
 
     /**
-     * Calcula el porcentaje de usuarios activos.
-     *
-     * @return porcentaje de usuarios activos (0-100)
+     * Calcula y devuelve el porcentaje de usuarios activos sobre el total.
+     * <p>
+     * Este método es una utilidad de lógica de negocio y no forma parte del contrato JSON de la API.
+     * </p>
+     * @return Porcentaje de usuarios activos (de 0 a 100).
      */
+    @JsonIgnore
     public double getActiveUsersPercentage() {
-        return totalUsers == 0 ? 0 : (double) activeUsers / totalUsers * 100;
+        if (totalUsers == 0) return 0;
+        return (double) activeUsers / totalUsers * 100;
     }
 
     /**
-     * Calcula el porcentaje de emails verificados.
-     *
-     * @return porcentaje de emails verificados (0-100)
+     * Calcula y devuelve el porcentaje de usuarios que han verificado su email sobre el total.
+     * <p>
+     * Este método es una utilidad de lógica de negocio y no forma parte del contrato JSON de la API.
+     * </p>
+     * @return Porcentaje de usuarios verificados (de 0 a 100).
      */
+    @JsonIgnore
     public double getVerifiedUsersPercentage() {
-        return totalUsers == 0 ? 0 : (double) verifiedUsers / totalUsers * 100;
+        if (totalUsers == 0) return 0;
+        return (double) verifiedUsers / totalUsers * 100;
     }
 
     /**
-     * Calcula el porcentaje de usuarios con rol CLIENT.
-     *
-     * @return porcentaje de clientes (0-100)
+     * Genera un resumen textual de las estadísticas principales para visualización rápida o logs.
+     * <p>
+     * Este método es una utilidad de lógica de negocio y no forma parte del contrato JSON de la API.
+     * </p>
+     * @return Una cadena con el resumen ejecutivo de las métricas.
      */
-    public double getClientPercentage() {
-        return totalUsers == 0 ? 0 : (double) clientCount / totalUsers * 100;
-    }
-
-    /**
-     * Calcula el porcentaje de usuarios con rol SITTER.
-     *
-     * @return porcentaje de cuidadores (0-100)
-     */
-    public double getSitterPercentage() {
-        return totalUsers == 0 ? 0 : (double) sitterCount / totalUsers * 100;
-    }
-
-    /**
-     * Calcula el porcentaje de usuarios con rol ADMIN.
-     *
-     * @return porcentaje de administradores (0-100)
-     */
-    public double getAdminPercentage() {
-        return totalUsers == 0 ? 0 : (double) adminCount / totalUsers * 100;
-    }
-
-    // ========== MÉTODOS DE ANÁLISIS ==========
-
-    /**
-     * Determina si el sistema tiene una distribución saludable de roles.
-     * Se considera saludable si hay al menos 1 admin y la proporción de
-     * sitters vs clients está entre 10% y 90%.
-     *
-     * @return true si la distribución de roles es saludable
-     */
-    public boolean hasHealthyRoleDistribution() {
-        if (adminCount == 0) return false;
-
-        long serviceUsers = clientCount + sitterCount;
-        if (serviceUsers == 0) return totalUsers <= 1; // Solo admins
-
-        double sitterRatio = (double) sitterCount / serviceUsers;
-        return sitterRatio >= 0.1 && sitterRatio <= 0.9;
-    }
-
-    /**
-     * Calcula la tasa de verificación de email como indicador de engagement.
-     *
-     * @return descripción textual de la tasa de verificación
-     */
-    public String getVerificationStatus() {
-        double percentage = getVerifiedUsersPercentage();
-
-        if (percentage >= 90) return "Excelente";
-        if (percentage >= 75) return "Buena";
-        if (percentage >= 50) return "Regular";
-        if (percentage >= 25) return "Baja";
-        return "Crítica";
-    }
-
-    /**
-     * Identifica el rol más común en el sistema.
-     *
-     * @return string con el rol predominante
-     */
-    public String getDominantRole() {
-        if (clientCount > sitterCount && clientCount > adminCount) {
-            return "Cliente";
-        } else if (sitterCount > clientCount && sitterCount > adminCount) {
-            return "Cuidador";
-        } else if (adminCount > clientCount && adminCount > sitterCount) {
-            return "Administrador";
-        } else {
-            return "Equilibrado";
-        }
-    }
-
-    /**
-     * Calcula el número de usuarios inactivos.
-     *
-     * @return número de usuarios inactivos
-     */
-    public long getInactiveUsers() {
-        return Math.max(0, totalUsers - activeUsers);
-    }
-
-    /**
-     * Calcula el número de usuarios con email sin verificar.
-     *
-     * @return número de usuarios sin verificar email
-     */
-    public long getUnverifiedUsers() {
-        return Math.max(0, totalUsers - verifiedUsers);
-    }
-
-    // ========== MÉTODOS DE UTILIDAD PARA UI ==========
-
-    /**
-     * Genera un resumen textual de las estadísticas principales.
-     *
-     * @return string con resumen ejecutivo
-     */
+    @JsonIgnore
     public String getExecutiveSummary() {
         return String.format(
-                "Total: %d usuarios | Activos: %d (%.1f%%) | Verificados: %d (%.1f%%) | Rol dominante: %s",
+                "Total: %d usuarios | Activos: %d (%.1f%%) | Verificados: %d (%.1f%%)",
                 totalUsers,
                 activeUsers, getActiveUsersPercentage(),
-                verifiedUsers, getVerifiedUsersPercentage(),
-                getDominantRole()
+                verifiedUsers, getVerifiedUsersPercentage()
         );
-    }
-
-    /**
-     * Proporciona recomendaciones basadas en las métricas actuales.
-     *
-     * @return lista de recomendaciones para mejorar métricas
-     */
-    public String getRecommendations() {
-        StringBuilder recommendations = new StringBuilder();
-
-        if (getVerifiedUsersPercentage() < 50) {
-            recommendations.append("• Implementar campañas de verificación de email. ");
-        }
-
-        if (getActiveUsersPercentage() < 70) {
-            recommendations.append("• Revisar estrategias de retención de usuarios. ");
-        }
-
-        if (!hasHealthyRoleDistribution() && totalUsers > 1) {
-            recommendations.append("• Balancear la adquisición de clientes y cuidadores. ");
-        }
-
-        if (adminCount == 0) {
-            recommendations.append("• Asignar al menos un administrador al sistema. ");
-        }
-
-        return recommendations.length() > 0 ? recommendations.toString() : "Las métricas están dentro de rangos saludables.";
-    }
-
-    @Override
-    public String toString() {
-        return "UserStatsResponse{" +
-                "totalUsers=" + totalUsers +
-                ", activeUsers=" + activeUsers + " (" + String.format("%.1f", getActiveUsersPercentage()) + "%)" +
-                ", clientCount=" + clientCount +
-                ", sitterCount=" + sitterCount +
-                ", adminCount=" + adminCount +
-                ", verifiedUsers=" + verifiedUsers + " (" + String.format("%.1f", getVerifiedUsersPercentage()) + "%)" +
-                ", dominantRole='" + getDominantRole() + '\'' +
-                '}';
     }
 }

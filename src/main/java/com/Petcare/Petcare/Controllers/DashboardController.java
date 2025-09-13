@@ -42,8 +42,7 @@ public class DashboardController {
     @GetMapping("/main")
     public ResponseEntity<MainDashboardDTO> getMainDashboardData(Authentication authentication) throws AccountNotFoundException {
         String email = authentication.getName();
-        UserResponse user = userService.getUserByEmail(email)
-                .orElseThrow(() -> new UsernameNotFoundException("Usuario no encontrado con email: " + email));
+        UserResponse user = userService.getUserByEmail(email);
 
         Long userId = user.getId();
         MainDashboardDTO dashboardData = userService.getMainDashboardData(userId);
@@ -53,8 +52,7 @@ public class DashboardController {
     @GetMapping("/stats")
     public ResponseEntity<DashboardStatsDTO> getDashboardStats(Authentication authentication) {
         String email = authentication.getName();
-        UserResponse user = userService.getUserByEmail(email)
-                .orElseThrow(() -> new UsernameNotFoundException("Usuario no encontrado con email: " + email));
+        UserResponse user = userService.getUserByEmail(email);
 
         Long userId = user.getId();
 
@@ -67,8 +65,7 @@ public class DashboardController {
     public ResponseEntity<UserProfileDTO> getUserProfile(Authentication authentication) {
         String userEmail = authentication.getName();
 
-        UserResponse user = userService.getUserByEmail(userEmail)
-                .orElseThrow(() -> new UsernameNotFoundException("Usuario no encontrado con email: " + userEmail));
+        UserResponse user = userService.getUserByEmail(userEmail);
 
 
         Optional<Account> account = accountRepository.findByOwnerUserId(user.getId());

@@ -131,7 +131,7 @@ public class InvoiceController {
      *
      * <p>Este endpoint implementa el flujo completo de facturación automatizada que se integra
      * perfectamente con el sistema de reservas. Se invoca típicamente cuando una reserva
-     * cambia a estado COMPLETED, generando automáticamente la factura correspondiente,
+     * cambia ha estado COMPLETED, generando automáticamente la factura correspondiente,
      * calculando todos los montos, creando el PDF y enviándolo por correo electrónico.</p>
      *
      * <p><strong>Proceso automático ejecutado:</strong></p>
@@ -180,10 +180,10 @@ public class InvoiceController {
      *                - items: Items personalizados de facturación (opcional)
      *                - autoSendEmail: Flag para envío automático (por defecto true)
      *
-     * @return ResponseEntity<InvoiceDetailResponse> con estado HTTP 201 Created y conteniendo:
+     * @return ResponseEntity InvoiceDetailResponse con estado HTTP 201 Created y conteniendo:
      *         - Datos completos de la factura generada con todos los campos
      *         - Información denormalizada de la reserva, cuenta y servicio
-     *         - URLs de descarga del PDF generado
+     *         - URL's de descarga del PDF generado
      *         - Estado de envío del correo electrónico
      *         - Metadatos de auditoría y seguimiento
      *         - Información de tarifas de plataforma calculadas
@@ -282,7 +282,7 @@ public class InvoiceController {
      *           Debe ser un valor numérico positivo correspondiente
      *           a una factura existente en el sistema.
      *
-     * @return ResponseEntity<InvoiceDetailResponse> con estado HTTP 200 OK y conteniendo:
+     * @return ResponseEntity InvoiceDetailResponse con estado HTTP 200 OK y conteniendo:
      *         - Toda la información detallada de la factura
      *         - Datos denormalizados de entidades relacionadas
      *         - URLs temporales para descarga de PDFs (válidas por 1 hora)
@@ -293,7 +293,7 @@ public class InvoiceController {
      * @throws SecurityException si el usuario no tiene permisos para ver la factura
      * @throws DataAccessException si ocurre error al consultar la base de datos
      *
-     * @apiNote Las URLs de descarga de PDF incluidas en la respuesta expiran
+     * @apiNote Las URL's de descarga de PDF incluidas en la respuesta expiran
      *          después de 1 hora por seguridad. Para descargas posteriores,
      *          usar el endpoint específico de descarga de PDF.
      *
@@ -387,7 +387,7 @@ public class InvoiceController {
      *                 - sort: Criterios de ordenamiento múltiple
      *                 - direction: Dirección de ordenamiento (ASC/DESC)
      *
-     * @return ResponseEntity<Page<InvoiceSummaryResponse>> con estado HTTP 200 OK y conteniendo:
+     * @return ResponseEntity Page InvoiceSummaryResponse con estado HTTP 200 OK y conteniendo:
      *         - content: Lista de facturas en formato resumido optimizado
      *         - pageable: Información de la página actual solicitada
      *         - totalElements: Número total de facturas que cumplen los criterios
@@ -502,10 +502,10 @@ public class InvoiceController {
      *                - regeneratePdf: Flag para forzar regeneración de PDF
      *                - notifyStakeholders: Flag para envío de notificaciones
      *
-     * @return ResponseEntity<InvoiceDetailResponse> con estado HTTP 200 OK y conteniendo:
+     * @return ResponseEntity InvoiceDetailResponse con estado HTTP 200 OK y conteniendo:
      *         - Todos los datos actualizados de la factura
      *         - Nueva información de auditoría con timestamps actualizados
-     *         - URLs de documentos regenerados si corresponde
+     *         - URL's de documentos regenerados si corresponde
      *         - Estado de notificaciones enviadas automáticamente
      *         - Metadatos de la operación de actualización
      *
@@ -602,11 +602,11 @@ public class InvoiceController {
      * @param id Identificador único de la factura para generar/descargar PDF.
      *                  La factura debe existir y ser accesible por el usuario.
      *
-     * @return ResponseEntity<byte[]> con estado HTTP 200 OK y conteniendo:
+     * @return ResponseEntity byte[] con estado HTTP 200 OK y conteniendo:
      *         - Content-Type: application/pdf
      *         - Content-Disposition: inline con nombre de archivo sugerido
      *         - Content-Length: Tamaño del archivo en bytes
-     *         - Cache-Control: Configuración de cache apropiada
+     *         - Cache-Control: Configuración de caché apropiada
      *         - Contenido binario del PDF listo para visualización/descarga
      *
      * @throws IllegalArgumentException si la factura no existe
@@ -720,7 +720,7 @@ public class InvoiceController {
      * @param id Identificador único de la factura a enviar por email.
      *                  La factura debe existir y estar en estado apropiado para envío.
      *
-     * @return ResponseEntity<InvoiceDetailResponse> con estado HTTP 200 OK y conteniendo:
+     * @return ResponseEntity InvoiceDetailResponse con estado HTTP 200 OK y conteniendo:
      *         - Factura actualizada con estado SENT
      *         - Información del envío realizado (fecha, destinatario)
      *         - Estado de la operación de email
@@ -837,7 +837,7 @@ public class InvoiceController {
      *               Debe ser descriptivo, profesional y explicar claramente
      *               las razones para facilitar seguimiento y mejoras del servicio.
      *
-     * @return ResponseEntity<InvoiceDetailResponse> con estado HTTP 200 OK y conteniendo:
+     * @return ResponseEntity InvoiceDetailResponse con estado HTTP 200 OK y conteniendo:
      *         - Factura actualizada con estado CANCELLED
      *         - Motivo de cancelación registrado en las notas de auditoría
      *         - Información detallada de reembolsos procesados o programados
@@ -921,7 +921,7 @@ public class InvoiceController {
      * <p><strong>Flujo automático ejecutado:</strong></p>
      * <ol>
      *   <li>Recibe evento de reserva completada desde BookingService</li>
-     *   <li>Valida que la reserva cumple criterios para facturación</li>
+     *   <li>Válida que la reserva cumple criterios para facturación</li>
      *   <li>Genera factura con datos automáticos de la reserva</li>
      *   <li>Calcula montos basándose en el precio de la reserva</li>
      *   <li>Crea PDF profesional con información del servicio</li>
@@ -945,7 +945,7 @@ public class InvoiceController {
      *                  Debe corresponder a una reserva en estado COMPLETED
      *                  que no tenga factura previa generada.
      *
-     * @return ResponseEntity<InvoiceDetailResponse> con estado HTTP 201 Created y conteniendo:
+     * @return ResponseEntity InvoiceDetailResponse con estado HTTP 201 Created y conteniendo:
      *         - Factura generada automáticamente con todos los datos
      *         - Información sincronizada de la reserva original
      *         - Estado de PDF generado y email enviado

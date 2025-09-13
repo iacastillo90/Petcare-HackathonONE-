@@ -28,18 +28,18 @@ import java.util.Set;
  *
  * <p><strong>Roles principales:</strong></p>
  * <ul>
- *   <li>CLIENT: Usuario propietario de mascotas que solicita servicios</li>
- *   <li>SITTER: Usuario cuidador que ofrece servicios de cuidado</li>
- *   <li>ADMIN: Usuario administrador del sistema</li>
+ * <li>CLIENT: Usuario propietario de mascotas que solicita servicios</li>
+ * <li>SITTER: Usuario cuidador que ofrece servicios de cuidado</li>
+ * <li>ADMIN: Usuario administrador del sistema</li>
  * </ul>
  *
  * <p><strong>Características de seguridad:</strong></p>
  * <ul>
- *   <li>Integración completa con Spring Security</li>
- *   <li>Control de estado de cuenta (activo/inactivo)</li>
- *   <li>Verificación de email obligatoria</li>
- *   <li>Seguimiento de actividad y último login</li>
- *   <li>Contraseñas hasheadas con bcrypt</li>
+ * <li>Integración completa con Spring Security</li>
+ * <li>Control de estado de cuenta (activo/inactivo)</li>
+ * <li>Verificación de email obligatoria</li>
+ * <li>Seguimiento de actividad y último login</li>
+ * <li>Contraseñas hasheadas con bcrypt</li>
  * </ul>
  *
  * <p><strong>Membresías multi-cuenta:</strong></p>
@@ -56,7 +56,7 @@ import java.util.Set;
  * de contraseñas y lógica de autenticación se manejan en el service layer.</p>
  *
  * @author Equipo Petcare 10
- * @version 1.0
+ * @version 1.1
  * @since 1.0
  * @see UserDetails
  * @see Role
@@ -276,7 +276,6 @@ public class User implements UserDetails {
         this.phoneNumber = phoneNumber;
         this.address = address;
         this.role = role;
-        this.permissionLevel = PermissionLevel.BASIC;
     }
 
     /**
@@ -305,130 +304,263 @@ public class User implements UserDetails {
 
     // ========== GETTERS Y SETTERS ==========
 
+    /**
+     * Obtiene el identificador único del usuario.
+     * @return el ID único del usuario.
+     */
     public Long getId() {
         return id;
     }
 
+    /**
+     * Establece el identificador único del usuario.
+     * <p>Nota: Normalmente gestionado por JPA.</p>
+     * @param id el nuevo ID para el usuario.
+     */
     public void setId(Long id) {
         this.id = id;
     }
 
+    /**
+     * Obtiene el nombre del usuario.
+     * @return el nombre del usuario.
+     */
     public String getFirstName() {
         return firstName;
     }
 
+    /**
+     * Establece el nombre del usuario.
+     * @param firstName el nuevo nombre para el usuario.
+     */
     public void setFirstName(String firstName) {
         this.firstName = firstName;
     }
 
+    /**
+     * Obtiene el apellido del usuario.
+     * @return el apellido del usuario.
+     */
     public String getLastName() {
         return lastName;
     }
 
+    /**
+     * Establece el apellido del usuario.
+     * @param lastName el nuevo apellido para el usuario.
+     */
     public void setLastName(String lastName) {
         this.lastName = lastName;
     }
 
+    /**
+     * Obtiene la dirección de correo electrónico del usuario.
+     * @return la dirección de email.
+     */
     public String getEmail() {
         return email;
     }
 
+    /**
+     * Establece la dirección de correo electrónico del usuario.
+     * @param email la nueva dirección de email.
+     */
     public void setEmail(String email) {
         this.email = email;
     }
 
+    /**
+     * Obtiene la contraseña cifrada del usuario.
+     * @return la contraseña cifrada.
+     */
     public String getPassword() {
         return password;
     }
 
+    /**
+     * Establece la contraseña cifrada del usuario.
+     * @param password la nueva contraseña cifrada.
+     */
     public void setPassword(String password) {
         this.password = password;
     }
 
+    /**
+     * Obtiene el número de teléfono del usuario.
+     * @return el número de teléfono.
+     */
     public String getPhoneNumber() {
         return phoneNumber;
     }
 
+    /**
+     * Establece el número de teléfono del usuario.
+     * @param phoneNumber el nuevo número de teléfono.
+     */
     public void setPhoneNumber(String phoneNumber) {
         this.phoneNumber = phoneNumber;
     }
 
+    /**
+     * Obtiene la dirección física del usuario.
+     * @return la dirección del usuario.
+     */
     public String getAddress() {
         return address;
     }
 
+    /**
+     * Establece la dirección física del usuario.
+     * @param address la nueva dirección del usuario.
+     */
     public void setAddress(String address) {
         this.address = address;
     }
 
+    /**
+     * Obtiene el rol principal del usuario en el sistema.
+     * @return el rol del usuario.
+     */
     public Role getRole() {
         return role;
     }
 
+    /**
+     * Establece el rol principal del usuario en el sistema.
+     * @param role el nuevo rol para el usuario.
+     */
     public void setRole(Role role) {
         this.role = role;
     }
 
+    /**
+     * Obtiene el nivel de permisos granular del usuario.
+     * @return el nivel de permiso.
+     */
     public PermissionLevel getPermissionLevel() {
         return permissionLevel;
     }
 
+    /**
+     * Establece el nivel de permisos granular del usuario.
+     * @param permissionLevel el nuevo nivel de permiso.
+     */
     public void setPermissionLevel(PermissionLevel permissionLevel) {
         this.permissionLevel = permissionLevel;
     }
 
+    /**
+     * Verifica si la cuenta del usuario está activa.
+     * @return {@code true} si está activa, {@code false} en caso contrario.
+     */
     public boolean isActive() {
         return isActive;
     }
 
+    /**
+     * Establece el estado de activación de la cuenta del usuario.
+     * @param active {@code true} para activar, {@code false} para desactivar.
+     */
     public void setActive(boolean active) {
         isActive = active;
     }
 
+    /**
+     * Obtiene la fecha y hora en que se verificó el email del usuario.
+     * @return el timestamp de verificación, o {@code null} si no ha sido verificado.
+     */
     public LocalDateTime getEmailVerifiedAt() {
         return emailVerifiedAt;
     }
 
+    /**
+     * Establece la fecha y hora de verificación del email.
+     * @param emailVerifiedAt el timestamp de verificación.
+     */
     public void setEmailVerifiedAt(LocalDateTime emailVerifiedAt) {
         this.emailVerifiedAt = emailVerifiedAt;
     }
 
+    /**
+     * Obtiene la fecha y hora del último inicio de sesión exitoso.
+     * @return el timestamp del último login.
+     */
     public LocalDateTime getLastLoginAt() {
         return lastLoginAt;
     }
 
+    /**
+     * Establece la fecha y hora del último inicio de sesión exitoso.
+     * @param lastLoginAt el timestamp del último login.
+     */
     public void setLastLoginAt(LocalDateTime lastLoginAt) {
         this.lastLoginAt = lastLoginAt;
     }
 
+    /**
+     * Obtiene la fecha y hora de creación del registro del usuario.
+     * <p>Nota: Gestionado automáticamente por JPA Auditing.</p>
+     * @return el timestamp de creación.
+     */
     public LocalDateTime getCreatedAt() {
         return createdAt;
     }
 
+    /**
+     * Establece la fecha y hora de creación del registro del usuario.
+     * <p>Nota: Usar solo en casos específicos como migraciones de datos.</p>
+     * @param createdAt el timestamp de creación.
+     */
     public void setCreatedAt(LocalDateTime createdAt) {
         this.createdAt = createdAt;
     }
 
+    /**
+     * Obtiene la fecha y hora de la última actualización del registro.
+     * <p>Nota: Gestionado automáticamente por JPA Auditing.</p>
+     * @return el timestamp de la última actualización.
+     */
     public LocalDateTime getUpdatedAt() {
         return updatedAt;
     }
 
+    /**
+     * Establece la fecha y hora de la última actualización del registro.
+     * <p>Nota: Usar solo en casos específicos como migraciones de datos.</p>
+     * @param updatedAt el timestamp de la última actualización.
+     */
     public void setUpdatedAt(LocalDateTime updatedAt) {
         this.updatedAt = updatedAt;
     }
 
+    /**
+     * Obtiene el conjunto de membresías de cuenta a las que pertenece este usuario.
+     * @return un {@code Set} de {@link AccountUser}.
+     */
     public Set<AccountUser> getAccountMemberships() {
         return accountMemberships;
     }
 
+    /**
+     * Establece el conjunto de membresías de cuenta para este usuario.
+     * @param accountMemberships el nuevo conjunto de membresías.
+     */
     public void setAccountMemberships(Set<AccountUser> accountMemberships) {
         this.accountMemberships = accountMemberships;
     }
 
+    /**
+     * Obtiene el perfil de cuidador asociado a este usuario.
+     * @return el {@link SitterProfile}, o {@code null} si el usuario no es cuidador.
+     */
     public SitterProfile getSitterProfile() {
         return sitterProfile;
     }
 
+    /**
+     * Establece o asocia un perfil de cuidador a este usuario.
+     * @param sitterProfile el perfil de cuidador a asociar.
+     */
     public void setSitterProfile(SitterProfile sitterProfile) {
         this.sitterProfile = sitterProfile;
     }
@@ -436,7 +568,10 @@ public class User implements UserDetails {
     // ========== MÉTODOS DE UTILIDAD PARA RELACIONES BIDIRECCIONALES ==========
 
     /**
-     * Agrega una membresía de cuenta manteniendo la consistencia bidireccional.
+     * Agrega una membresía de cuenta a este usuario, asegurando la consistencia
+     * de la relación bidireccional.
+     *
+     * @param accountUser la membresía {@link AccountUser} a agregar.
      */
     public void addAccountMembership(AccountUser accountUser) {
         accountMemberships.add(accountUser);
@@ -444,7 +579,10 @@ public class User implements UserDetails {
     }
 
     /**
-     * Remueve una membresía de cuenta manteniendo la consistencia bidireccional.
+     * Remueve una membresía de cuenta de este usuario, asegurando la consistencia
+     * de la relación bidireccional.
+     *
+     * @param accountUser la membresía {@link AccountUser} a remover.
      */
     public void removeAccountMembership(AccountUser accountUser) {
         accountMemberships.remove(accountUser);
@@ -529,9 +667,9 @@ public class User implements UserDetails {
     // ========== MÉTODOS DE UTILIDAD DE NEGOCIO ==========
 
     /**
-     * Retorna el nombre completo del usuario.
+     * Retorna el nombre completo del usuario concatenando nombre y apellido.
      *
-     * @return nombre y apellido concatenados
+     * @return una cadena con el nombre completo del usuario.
      */
     public String getFullName() {
         return firstName + " " + lastName;
@@ -540,21 +678,23 @@ public class User implements UserDetails {
     /**
      * Verifica si el email del usuario ha sido verificado.
      *
-     * @return true si el email está verificado, false en caso contrario
+     * @return {@code true} si el email está verificado (timestamp no es nulo), {@code false} en caso contrario.
      */
     public boolean isEmailVerified() {
         return emailVerifiedAt != null;
     }
 
     /**
-     * Marca el email como verificado estableciendo la fecha actual.
+     * Marca el email como verificado estableciendo el timestamp actual.
+     * Este método debe ser llamado por el servicio de negocio tras una verificación exitosa.
      */
     public void markEmailAsVerified() {
         this.emailVerifiedAt = LocalDateTime.now();
     }
 
     /**
-     * Actualiza la fecha de último login a la fecha actual.
+     * Actualiza la fecha de último login al timestamp actual.
+     * Este método es llamado por el servicio de autenticación tras un login exitoso.
      */
     public void updateLastLogin() {
         this.lastLoginAt = LocalDateTime.now();
@@ -563,7 +703,7 @@ public class User implements UserDetails {
     /**
      * Verifica si el usuario es un cuidador.
      *
-     * @return true si el usuario tiene rol SITTER
+     * @return {@code true} si el usuario tiene el rol {@code SITTER}.
      */
     public boolean isSitter() {
         return Role.SITTER.equals(this.role);
@@ -572,7 +712,7 @@ public class User implements UserDetails {
     /**
      * Verifica si el usuario es un cliente.
      *
-     * @return true si el usuario tiene rol CLIENT
+     * @return {@code true} si el usuario tiene el rol {@code CLIENT}.
      */
     public boolean isClient() {
         return Role.CLIENT.equals(this.role);
@@ -581,16 +721,16 @@ public class User implements UserDetails {
     /**
      * Verifica si el usuario es un administrador.
      *
-     * @return true si el usuario tiene rol ADMIN
+     * @return {@code true} si el usuario tiene el rol {@code ADMIN}.
      */
     public boolean isAdmin() {
         return Role.ADMIN.equals(this.role);
     }
 
     /**
-     * Verifica si el usuario tiene un perfil de cuidador activo.
+     * Verifica si el usuario tiene un perfil de cuidador asociado.
      *
-     * @return true si tiene perfil de cuidador, false en caso contrario
+     * @return {@code true} si el campo {@code sitterProfile} no es nulo.
      */
     public boolean hasSitterProfile() {
         return sitterProfile != null;
@@ -599,7 +739,7 @@ public class User implements UserDetails {
     /**
      * Verifica si el usuario puede realizar operaciones como cuidador.
      *
-     * @return true si es SITTER y tiene perfil activo
+     * @return {@code true} si es {@code SITTER}, tiene perfil activo y la cuenta está activa.
      */
     public boolean canProvideSitterServices() {
         return isSitter() && hasSitterProfile() && isActive;

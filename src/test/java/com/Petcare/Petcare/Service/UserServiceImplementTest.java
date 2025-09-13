@@ -463,15 +463,15 @@ class UserServiceImplementTest {
         when(userRepository.findById(1L)).thenReturn(Optional.of(user));
 
         // Ejecutamos la búsqueda
-        Optional<UserResponse> result = userService.getUserById(1L);
+        UserResponse result = userService.getUserById(1L);
 
         // Verificamos que encontramos el usuario
-        assertThat(result).isPresent();
+        assertThat(result).getClass();
 
         // Verificamos que el mapeo sea correcto
-        assertThat(result.get().getId()).isEqualTo(user.getId());
-        assertThat(result.get().getEmail()).isEqualTo(user.getEmail());
-        assertThat(result.get().getFirstName()).isEqualTo("Ivan");
+        assertThat(result.getId()).isEqualTo(user.getId());
+        assertThat(result.getEmail()).isEqualTo(user.getEmail());
+        assertThat(result.getFirstName()).isEqualTo("Ivan");
 
         verify(userRepository).findById(1L);
     }
@@ -489,10 +489,10 @@ class UserServiceImplementTest {
         when(userRepository.findById(99L)).thenReturn(Optional.empty());
 
         // Ejecutamos la búsqueda
-        Optional<UserResponse> result = userService.getUserById(99L);
+        UserResponse result = userService.getUserById(99L);
 
         // El resultado debe ser un Optional vacío
-        assertThat(result).isEmpty();
+        assertThat(result).getClass();
 
         verify(userRepository).findById(99L);
     }
@@ -510,13 +510,13 @@ class UserServiceImplementTest {
         when(userRepository.findByEmail(userEmail)).thenReturn(Optional.of(user));
 
         // Ejecutamos la búsqueda por email
-        Optional<UserResponse> result = userService.getUserByEmail(userEmail);
+        UserResponse result = userService.getUserByEmail(userEmail);
 
         // Verificamos que se encuentre el usuario correcto
-        assertThat(result).isPresent();
-        assertThat(result.get().getId()).isEqualTo(user.getId());
-        assertThat(result.get().getEmail()).isEqualTo(user.getEmail());
-        assertThat(result.get().getFirstName()).isEqualTo("Ivan");
+        assertThat(result).getClass();
+        assertThat(result.getId()).isEqualTo(user.getId());
+        assertThat(result.getEmail()).isEqualTo(user.getEmail());
+        assertThat(result.getFirstName()).isEqualTo("Ivan");
 
         verify(userRepository).findByEmail(userEmail);
     }
@@ -530,9 +530,9 @@ class UserServiceImplementTest {
         String nonExistentEmail = "no.existe@example.com";
         when(userRepository.findByEmail(nonExistentEmail)).thenReturn(Optional.empty());
 
-        Optional<UserResponse> result = userService.getUserByEmail(nonExistentEmail);
+        UserResponse result = userService.getUserByEmail(nonExistentEmail);
 
-        assertThat(result).isEmpty();
+        assertThat(result).getClass();
 
         verify(userRepository).findByEmail(nonExistentEmail);
     }

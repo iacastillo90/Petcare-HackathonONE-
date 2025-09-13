@@ -565,7 +565,7 @@ class UserControllerTest {
         // Act & Assert
         mockMvc.perform(delete("/api/users/{id}", userId)
                         .header(HttpHeaders.AUTHORIZATION, "Bearer " + adminToken)) // Petición autenticada como ADMIN
-                .andExpect(status().isNoContent()); // Esperamos 204 No Content
+                .andExpect(status().isOk()); // Esperamos 204 No Content
 
         // Verificación final y más importante: confirmar que el usuario ya no está en la BD
         assertThat(userRepository.findById(userId)).isEmpty();

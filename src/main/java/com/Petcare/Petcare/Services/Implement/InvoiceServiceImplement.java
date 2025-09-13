@@ -346,7 +346,7 @@ public class InvoiceServiceImplement implements InvoiceService {
      *                 - Criterios de ordenamiento
      *                 - Dirección de ordenamiento
      *
-     * @return Page<InvoiceSummaryResponse> conteniendo:
+     * @return Page InvoiceSummaryResponse conteniendo:
      *         - Lista de facturas en formato resumido
      *         - Metadatos de paginación (total de elementos, páginas)
      *         - Información de navegación (primera, última, siguiente, anterior)

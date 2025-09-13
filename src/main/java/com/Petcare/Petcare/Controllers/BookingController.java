@@ -96,7 +96,7 @@ public class BookingController {
      *
      * @param request DTO con los datos necesarios para crear la reserva.
      *                Incluye petId, sitterId, serviceOfferingId, startTime y notes opcionales.
-     * @param currentUser Usuario autenticado obtenido del contexto de seguridad.
+     * @param authentication Usuario autenticado obtenido del contexto de seguridad.
      *                    Se inyecta automáticamente desde el token JWT.
      *
      * @return ResponseEntity con BookingDetailResponse conteniendo todos los detalles

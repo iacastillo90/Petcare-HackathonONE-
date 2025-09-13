@@ -35,7 +35,7 @@ public interface BookingService {
      * y coordinación con otros servicios del sistema.</p>
      *
      * @param createBookingRequest DTO con los datos de entrada para la nueva reserva
-     * @param currentUser El usuario autenticado que está realizando la reserva
+     * @param authentication El usuario autenticado que está realizando la reserva
      *
      * @return BookingDetailResponse con los detalles de la reserva recién creada
      *

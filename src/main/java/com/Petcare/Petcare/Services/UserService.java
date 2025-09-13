@@ -109,7 +109,7 @@ public interface UserService {
      * @param id identificador único del usuario
      * @return respuesta completa del usuario o vacío si no existe
      */
-    Optional<UserResponse> getUserById(Long id);
+    UserResponse getUserById(Long id);
 
     /**
      * Busca un usuario por email con información completa.
@@ -117,7 +117,7 @@ public interface UserService {
      * @param email dirección de correo electrónico
      * @return respuesta completa del usuario o vacío si no existe
      */
-    Optional<UserResponse> getUserByEmail(String email);
+    UserResponse getUserByEmail(String email);
 
     // ========== MÉTODOS DE ACTUALIZACIÓN ==========
 
@@ -237,4 +237,11 @@ public interface UserService {
 
     MainDashboardDTO getMainDashboardData(Long id) throws AccountNotFoundException;
 
+    /**
+     * Verifica si un email está disponible para un nuevo registro.
+     *
+     * @param email El email a verificar.
+     * @return true si el email no está registrado, false en caso contrario.
+     */
+    boolean isEmailAvailable(String email);
 }
