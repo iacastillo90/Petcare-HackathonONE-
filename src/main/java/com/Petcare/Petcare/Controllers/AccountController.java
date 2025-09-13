@@ -33,7 +33,7 @@ public class AccountController {
             @RequestParam Long ownerUserId // Pasamos el owner por query param
     ) {
         // Aquí idealmente traeríamos el User desde la base de datos usando un service o repo
-        // Por simplicidad, suponemos que ya tenemos un objeto User dummy o pre-cargado
+
         User ownerUser = new User();
         ownerUser.setId(ownerUserId);
 
