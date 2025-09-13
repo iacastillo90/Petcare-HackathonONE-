@@ -2,10 +2,18 @@ package com.Petcare.Petcare.Controllers;
 
 import com.Petcare.Petcare.DTOs.Auth.Request.LoginRequest;
 import com.Petcare.Petcare.DTOs.Auth.Respone.AuthResponse;
+import com.Petcare.Petcare.DTOs.GlobalException.ErrorResponseDTO;
 import com.Petcare.Petcare.DTOs.User.*;
 import com.Petcare.Petcare.Models.User.Role;
 import com.Petcare.Petcare.Services.UserService;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.ExampleObject;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -66,6 +74,7 @@ import java.util.Optional;
 @RestController
 @RequestMapping("/api/users")
 @RequiredArgsConstructor
+@Tag(name = "Usuario", description = "Endpoints para la gestión de autenticación de usuarios")
 public class UserController {
 
     private final UserService userService;
@@ -97,9 +106,87 @@ public class UserController {
      * @throws org.springframework.security.authentication.BadCredentialsException si las credenciales son inválidas
      * @throws IllegalStateException si el usuario no existe después de autenticación exitosa
      */
+    @Operation(
+            summary = "Autentica un usuario en el sistema",
+            description = "Este endpoint permite iniciar sesión con email y contraseña."
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Autenticación exitosa...",
+                    content = @Content(mediaType = "application/json",
+                            schema = @Schema(implementation = AuthResponse.class),
+                            examples = @ExampleObject(
+                                    name = "Ejemplo de Autenticación Exitosa",
+                                    value = """
+                                            {
+                                            "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c",
+                                            "role": "CLIENT",
+                                            "userProfile": {
+                                                "id": "1",
+                                                "firstName": "Abdon",
+                                                "lastName": "Migliaccio",
+                                                "email": "abdon.migliaccio@gmail.com",
+                                                "role": "CLIENT",
+                                                "initials": "AM",
+                                                "accountId": 1
+                                                }
+                                            }
+                                            """))),
+
+            @ApiResponse(responseCode = "401", description = "Las credenciales proporcionadas son incorrectas...",
+                    content = @Content(mediaType = "application/json",
+                            schema = @Schema(implementation = ErrorResponseDTO.class),
+                            examples = @ExampleObject(
+                                    name = "Ejemplo de Error 401",
+                                    value = """
+                                            {
+                                              "status": 401,
+                                              "message": "Las credenciales proporcionadas son incorrectas.",
+                                              "timestamp": "2025-09-12T23:22:29.479Z",
+                                              "validationErrors": null
+                                            }
+                                            """
+                            ))),
+
+            @ApiResponse(responseCode = "403", description = "La cuenta de usuario está desactivada...",
+                    content = @Content(mediaType = "application/json",
+                            schema = @Schema(implementation = ErrorResponseDTO.class),
+                            examples = @ExampleObject(
+                                    name = "Ejemplo de Error 403",
+                                    value = """
+                                            {
+                                              "status": 403,
+                                              "message": "La cuenta de usuario está desactivada.",
+                                              "timestamp": "2025-09-12T23:22:29.479Z",
+                                              "validationErrors": null
+                                            }
+                                            """
+                            ))),
+
+            @ApiResponse(responseCode = "400", description = "Los datos enviados no cumplen con el formato requerido...",
+                    content = @Content(mediaType = "application/json",
+                            schema = @Schema(implementation = ErrorResponseDTO.class),
+                            examples = @ExampleObject(
+                                    name = "Ejemplo de Error 400",
+                                    value = """
+                                            {
+                                              "status": 400,
+                                              "message": "Validation failed",
+                                              "timestamp": "2025-09-12T23:22:29.479Z",
+                                              "validationErrors": {
+                                                "email": "El email no es válido.",
+                                                "password": "La contraseña debe tener al menos 8 caracteres."
+                                              }
+                                            }
+                                            """
+                            )))
+    })
     @PostMapping("/login")
-    public ResponseEntity<AuthResponse> login(@Valid @RequestBody LoginRequest request,
-                                              @RequestHeader(value = "X-Session-Id", required = false) String sessionId) {
+    public ResponseEntity<AuthResponse> login(
+            @Parameter(description = "Credenciales de acceso del usuario", required = true)
+            @Valid @RequestBody LoginRequest request,
+            @Parameter(description = "Identificador único de sesión para trazabilidad")
+            @RequestHeader(value = "X-Session-Id", required = false) String sessionId) {
+
         log.info("Solicitud de login para email: {} [Session: {}]", request.getEmail(), sessionId);
 
         AuthResponse authResponse = userService.login(request);
@@ -127,6 +214,55 @@ public class UserController {
      * @return ResponseEntity con token JWT y rol del usuario registrado
      * @throws IllegalArgumentException si el email ya está registrado
      */
+    @Operation(
+            summary = "Registra un nuevo usuario cliente",
+            description = "Permite a cualquier persona crear una cuenta con rol de cliente en el sistema. El proceso incluye validación de email único, cifrado de contraseña y generación automática de token de acceso. El usuario queda inmediatamente autenticado tras completar el registro."
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "201",
+                    description = "Usuario registrado exitosamente. El cliente puede comenzar a usar el sistema inmediatamente con el token proporcionado.",
+                        content = @Content(mediaType = "application/json",
+                        schema = @Schema(implementation = AuthResponse.class),
+                            examples = @ExampleObject(
+                                    name = "Ejemplo de un registro exitoso",
+                                    value = """
+                                            {
+                                            "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c",
+                                            "role": "CLIENT",
+                                            "userProfile": {
+                                                "id": 2,
+                                                "firstName: "Ivan",
+                                                "lastName": "Castillo",
+                                                "email": "ivan"example.com",
+                                                "role": "CLIENT",
+                                                "initials": "IC",
+                                                "accountID": 2
+                                                }
+                                            }
+                                            """
+                            ))),
+            @ApiResponse(responseCode = "400", description = "Error en los datos proporcionados. El email ya existe en el sistema o algún campo no cumple con los requisitos de validación.",
+            content = @Content(mediaType = "application/json",
+            schema = @Schema(implementation = ErrorResponseDTO.class),
+            examples = @ExampleObject(
+                    name = "Ejemplo de un error en los datos proporcionados",
+                    value = """
+                            {
+                            "status": 400,
+                            "message": "Validation failed",
+                            "timestamp": "2025-09-12T23:22:29.479Z",
+                            "validationErrors": {
+                                "email": "El email no es válido.",
+                                "password": "La contraseña debe tener al menos 8 caracteres.",
+                                "firstName": "El nombre debe tener al menos 2 caracteres.",
+                                "lastName": "El apellido debe tener al menos 2 caracteres."
+                                }
+                            }
+                            """
+
+            ))),
+            @ApiResponse(responseCode = "500", description = "Error interno durante el proceso de registro. Por favor intenta nuevamente o contacta soporte técnico.")
+    })
     @PostMapping("/register")
     public ResponseEntity<AuthResponse> registerUser(@Valid @RequestBody CreateUserRequest request) {
         log.info("Solicitud de registro público para email: {}", request.getEmail());

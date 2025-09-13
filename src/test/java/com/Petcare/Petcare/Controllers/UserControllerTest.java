@@ -15,6 +15,7 @@ import com.Petcare.Petcare.Repositories.UserRepository;
 import com.Petcare.Petcare.Services.UserService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.DisplayName;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -38,13 +39,38 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 /**
- * Pruebas de integración para los endpoints de autenticación en {@link UserController}.
- * Valida el flujo completo desde la petición HTTP hasta la base de datos en memoria (H2).
+ * Suite completa de pruebas de integración para el controlador de usuarios.
+ *
+ * <p>Esta clase valida el funcionamiento integral del sistema de usuarios desde la perspectiva
+ * del protocolo HTTP, cubriendo todo el ciclo de vida desde el registro hasta la eliminación.
+ * Cada prueba simula peticiones reales de un cliente frontend y verifica tanto las respuestas
+ * HTTP como los cambios persistidos en la base de datos.</p>
+ *
+ * <p><strong>Filosofía de testing:</strong></p>
+ * <ul>
+ *   <li>Pruebas end-to-end que cubren el flujo completo HTTP → BD</li>
+ *   <li>Estados de BD independientes gracias a @Transactional</li>
+ *   <li>Validación tanto de códigos HTTP como de contenido JSON</li>
+ *   <li>Verificación de efectos secundarios en la persistencia</li>
+ * </ul>
+ *
+ * <p><strong>Cobertura de escenarios:</strong></p>
+ * <ul>
+ *   <li>Casos de éxito con diferentes roles de usuario</li>
+ *   <li>Validaciones de entrada y manejo de errores</li>
+ *   <li>Controles de autorización y seguridad</li>
+ *   <li>Operaciones CRUD completas con verificación de persistencia</li>
+ * </ul>
+ *
+ * @author Equipo Petcare 10
+ * @version 1.0
+ * @see UserController
  */
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.MOCK)
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
 @Transactional
+@Tag(name = "UserControllerTest", description = "Pruebas de integración para el controlador de usuarios")
 class UserControllerTest {
 
     @Autowired private MockMvc mockMvc;
@@ -57,36 +83,81 @@ class UserControllerTest {
     @Autowired
     private JwtService jwtService;
 
-
+    /**
+     * Verifica el flujo completo de registro exitoso para un usuario cliente.
+     *
+     * <p>Simula el proceso que seguiría un usuario real al crear su cuenta desde
+     * el frontend. Confirma que el sistema responde con credenciales válidas y
+     * asigna automáticamente el rol correcto.</p>
+     *
+     * @throws Exception Sí ocurre algún error durante la creación o autenticación
+     * @see CreateUserRequest
+     * @see User
+     *
+     */
     @Test
     @DisplayName("POST /register | Éxito | Debería registrar un cliente y retornar 201 Created")
     void registerUser_WithValidData_ShouldReturnCreated() throws Exception {
-        CreateUserRequest registerRequest = new CreateUserRequest("Ivan", "Test", "ivan.test@gmails.com", "ValidPassword123", "Calle Falsa 123", "987654321");
+        // Preparamos datos que un usuario real ingresaría en el formulario web
+        CreateUserRequest registerRequest = new CreateUserRequest(
+                "Ivan", "Test", "ivan.test@gmails.com",
+                "ValidPassword123", "Calle Falsa 123", "987654321"
+        );
 
+        // Simulamos la petición HTTP exacta que haría el frontend
         mockMvc.perform(post("/api/users/register")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(registerRequest)))
+                        .contentType(MediaType.APPLICATION_JSON) // Indicamos que el contenido es JSON
+                        .content(objectMapper.writeValueAsString(registerRequest))) // Convertimos el objeto a JSON RegisterRequest
+                // Verificamos que el registro fue exitoso con código 201
                 .andExpect(status().isCreated())
+                // Confirmamos que recibimos un token para autenticación inmediata
                 .andExpect(jsonPath("$.token").isNotEmpty())
+                // Validamos que se asignó el rol correcto automáticamente
                 .andExpect(jsonPath("$.role").value("CLIENT"));
     }
 
+    /**
+     * Prueba el manejo de duplicación de email durante el registro.
+     *
+     * <p>Válida que el sistema protege la unicidad de emails y responde
+     * adecuadamente cuando un usuario intenta registrarse con un email
+     * que ya existe en la base de datos.</p>
+     *
+     * @throws Exception Sí ocurre algún error durante la creación o autenticación
+     */
     @Test
     @DisplayName("POST /register | Falla | Debería retornar 400 Bad Request si el email ya existe")
     void registerUser_WhenEmailExists_ShouldReturnBadRequest() throws Exception {
-        // Arrange: Creamos un usuario existente primero.
-        User existingUser = new User("Existing", "User", "ivan.test@example.com", "pass", "addr", "phone", Role.CLIENT);
+        // Simulamos que ya existe un usuario con este email en el sistema
+        User existingUser = new User("Existing", "User", "ivan.test@example.com",
+                "pass", "addr", "phone", Role.CLIENT);
         userRepository.save(existingUser);
 
-        CreateUserRequest registerRequest = new CreateUserRequest("Ivan", "Test", "ivan.test@example.com", "ValidPassword123", "Calle Falsa 123", "987654321");
+        // Intentamos registrar otro usuario con el mismo email
+        CreateUserRequest registerRequest = new CreateUserRequest(
+                "Ivan", "Test", "ivan.test@example.com",
+                "ValidPassword123", "Calle Falsa 123", "987654321"
+        );
 
-        // Act & Assert
+        // Act & Assert: El sistema debe rechazar la petición y explicar el problema
         mockMvc.perform(post("/api/users/register")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(registerRequest)))
-                .andExpect(status().isBadRequest());
+                        .contentType(MediaType.APPLICATION_JSON) // Indicamos que el contenido es JSON
+                        .content(objectMapper.writeValueAsString(registerRequest))) // Convertimos el objeto a JSON RegisterRequest
+                .andExpect(status().isBadRequest()); // Verificamos que el sistema responde con 400 Bad Request
     }
 
+    /**
+     * Válida el proceso completo de autenticación exitosa.
+     *
+     * <p>Crea un escenario realista donde un usuario existente intenta hacer login.
+     * Incluye la preparación completa del estado de BD necesario para representar
+     * un usuario completamente configurado en el sistema.</p>
+     *
+     * @throws Exception Sí ocurre algún error durante la creación o autenticación
+     * @see LoginRequest
+     * @see AuthResponse
+     *
+     */
     @Test
     @DisplayName("POST /login | Éxito | Debería autenticar y retornar 200 OK con AuthResponse")
     void login_WithValidCredentials_ShouldReturnOk() throws Exception {
@@ -96,42 +167,61 @@ class UserControllerTest {
         testUser.setEmailVerifiedAt(LocalDateTime.now());
         User savedUser = userRepository.save(testUser);
 
+        // Creamos una cuenta para el usuario
         Account account = new Account(savedUser, "Cuenta de Login", "ACC-LOGIN");
         Account savedAccount = accountRepository.save(account);
 
+        // Creamos la relación entre el usuario y la cuenta
         AccountUser accountUser = new AccountUser(savedAccount, savedUser, Role.CLIENT);
         accountUserRepository.save(accountUser);
 
         LoginRequest loginRequest = new LoginRequest("login.test@example.com", "password123");
 
-        // Act & Assert
+        // Act & Assert: Ejecutamos la petición y verificamos la respuesta.
         mockMvc.perform(post("/api/users/login")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(loginRequest)))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.token").isNotEmpty())
-                .andExpect(jsonPath("$.userProfile.email").value("login.test@example.com"));
-    }
-
-    @Test
-    @DisplayName("POST /login | Falla | Debería retornar 401 Unauthorized con credenciales incorrectas")
-    void login_WithInvalidCredentials_ShouldReturnUnauthorized() throws Exception {
-        // Arrange
-        LoginRequest loginRequest = new LoginRequest("no.existe@example.com", "wrongpassword");
-
-        // Act & Assert
-        mockMvc.perform(post("/api/users/login")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(loginRequest)))
-                .andExpect(status().isUnauthorized());
+                        .contentType(MediaType.APPLICATION_JSON) // Indicamos que el contenido es JSON
+                        .content(objectMapper.writeValueAsString(loginRequest))) // Convertimos el objeto a JSON LoginRequest
+                .andExpect(status().isOk()) // Verificamos que el login fue exitoso con código 200
+                .andExpect(jsonPath("$.token").isNotEmpty()) // Verificamos que el token no está vacío
+                .andExpect(jsonPath("$.userProfile.email").value("login.test@example.com")); // Verificamos que el email del usuario es el esperado
     }
 
     /**
-     * Prueba el endpoint de registro para una nueva cuidadora (sitter).
-     * Verifica que la API responda con 201 Created y que el rol asignado sea 'SITTER'.
+     * Prueba el manejo de credenciales incorrectas durante el login.
+     *
+     * <p>Simula un intento de login con credenciales que no existen en la base de datos.
+     * Verifica que el sistema responde con 401 Unauthorized y que el mensaje de error
+     * indica que las credenciales son incorrectas.</p>
+     *
+     * @throws Exception Sí ocurre algún error durante la creación o autenticación
      */
     @Test
-    @DisplayName("POST /api/users/register-sitter | Debería registrar una nueva cuidadora y retornar 201 Created")
+    @DisplayName("POST /login | Falla | Debería retornar 401 Unauthorized con credenciales incorrectas")
+    void login_WithInvalidCredentials_ShouldReturnUnauthorized() throws Exception {
+        // Arrange: Simulamos un intento de login con credenciales que no existen en la base de datos.
+        LoginRequest loginRequest = new LoginRequest("no.existe@example.com", "wrong-password");
+
+        // Act & Assert: Ejecutamos la petición y verificamos la respuesta.
+        mockMvc.perform(post("/api/users/login")
+                        .contentType(MediaType.APPLICATION_JSON) // Indicamos que el contenido es JSON
+                        .content(objectMapper.writeValueAsString(loginRequest))) // Convertimos el objeto a JSON LoginRequest
+                .andExpect(status().isUnauthorized()); // Verificamos que el login fue exitoso con código 200
+    }
+
+    /**
+     * Prueba el endpoint específico para registro de cuidadores.
+     *
+     * <p>Válida que el sistema puede manejar diferentes tipos de usuarios
+     * desde el registro, asignando automáticamente el rol apropiado para
+     * proveedores de servicios de cuidado.</p>
+     *
+     * @throws Exception Sí ocurre algún error durante la creación o autenticación
+     * @see CreateUserRequest
+     * @see User
+     *
+     */
+    @Test
+    @DisplayName("POST /api/users/register-sitter | Éxito | Debería registrar una nueva cuidadora y retornar 201 Created")
     void registerUserSitter_WithValidData_ShouldReturnCreatedAndSitterRole() throws Exception {
         // Arrange: Preparamos el DTO con los datos de la cuidadora a registrar.
         CreateUserRequest sitterRequest = new CreateUserRequest(
@@ -145,8 +235,8 @@ class UserControllerTest {
 
         // Act & Assert: Ejecutamos la petición y verificamos la respuesta.
         mockMvc.perform(post("/api/users/register-sitter")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(sitterRequest)))
+                        .contentType(MediaType.APPLICATION_JSON) // Indicamos que el contenido es JSON
+                        .content(objectMapper.writeValueAsString(sitterRequest))) // Convertimos el objeto a JSON SitterRequest
                 .andExpect(status().isCreated()) // Verificar que el código de estado es 201 Created
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON)) // Verificar que la respuesta es JSON
                 .andExpect(jsonPath("$.token").isNotEmpty()) // Verificar que la respuesta contiene un token
@@ -154,7 +244,16 @@ class UserControllerTest {
     }
 
     /**
-     * Prueba el escenario de éxito donde un ADMIN crea un nuevo usuario con rol SITTER.
+     * Válida el flujo de creación administrativa exitosa con privilegios ADMIN.
+     *
+     * <p>Simula el escenario donde un administrador crea usuarios con roles específicos.
+     * Esta funcionalidad es crítica para la gestión interna del sistema.</p>
+     *
+     * @throws Exception Sí ocurre algún error durante la creación o autenticación
+     * @see Role
+     * @see CreateUserRequest
+     * @see User
+     *
      */
     @Test
     @DisplayName("POST /admin | Éxito | Un ADMIN debería poder crear un nuevo usuario con un rol específico")
@@ -169,19 +268,25 @@ class UserControllerTest {
                 "Password123#", "Admin Complex", "555-ADMIN"
         );
 
-        // Act & Assert
+        // Act & Assert: Simulamos la petición HTTP exacta que haría el frontend
         mockMvc.perform(post("/api/users/admin")
                         .header(HttpHeaders.AUTHORIZATION, "Bearer " + adminToken) // Usamos el token de ADMIN
                         .param("role", "SITTER") // Especificamos el rol a crear
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(newUserRequest)))
-                .andExpect(status().isCreated())
+                        .contentType(MediaType.APPLICATION_JSON) // Indicamos que el contenido es JSON
+                        .content(objectMapper.writeValueAsString(newUserRequest))) // Convertimos el objeto a JSON NewUserRequest
+                .andExpect(status().isCreated()) // Verificar que el código de estado es 201 Created
                 .andExpect(jsonPath("$.email").value("sitter.admin@example.com"))
                 .andExpect(jsonPath("$.role").value("SITTER")); // Verificamos que se creó con el rol correcto
     }
 
     /**
-     * Prueba el escenario de fallo donde un usuario CLIENT intenta usar un endpoint de ADMIN.
+     * Prueba las restricciones de seguridad para operaciones administrativas.
+     *
+     * <p>Confirma que usuarios sin privilegios no pueden acceder a funciones
+     * administrativas, manteniendo la integridad del sistema de permisos.</p>
+     *
+     * @throws Exception Sí ocurre algún error durante la creación o autenticación
+     *
      */
     @Test
     @DisplayName("POST /admin | Falla | Un CLIENT no debería poder crear un usuario y debe recibir 403 Forbidden")
@@ -196,23 +301,30 @@ class UserControllerTest {
                 "Password123#", "Admin Complex", "555-ADMIN"
         );
 
-        // Act & Assert
+        // Act & Assert: Si el usuario no tiene privilegios de ADMIN, debe recibir 403 Forbidden
         mockMvc.perform(post("/api/users/admin")
                         .header(HttpHeaders.AUTHORIZATION, "Bearer " + clientToken) // Usamos el token de CLIENT
-                        .param("role", "SITTER")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(newUserRequest)))
+                        .param("role", "SITTER") // Especificamos el rol a crear
+                        .contentType(MediaType.APPLICATION_JSON) // Indicamos que el contenido es JSON
+                        .content(objectMapper.writeValueAsString(newUserRequest))) // Convertimos el objeto a JSON NewUserRequest
                 .andExpect(status().isForbidden()); // Esperamos un 403 Forbidden
     }
 
 
     /**
-     * Método de ayuda para crear un usuario con un rol específico, hacer login y devolver su token.
-     * Esto nos ayuda a no repetir el código de creación y login en cada test que requiera autenticación.
-     * @param role El rol del usuario a crear.
-     * @return Un token JWT válido para el usuario creado.
+     * Crea y autentica usuarios con roles específicos para pruebas.
+     *
+     * <p>Este método helper evita duplicación de código y garantiza que cada prueba
+     * tenga acceso a tokens JWT válidos con los permisos correctos. Simula el
+     * proceso completo de registro y autenticación que seguiría un usuario real.</p>
+     *
+     * @param role El rol específico que necesita el usuario para la prueba
+     * @return Token JWT válido para realizar peticiones autenticadas
+     * @throws Exception Sí ocurre algún error durante la creación o autenticación
+     *
      */
     private String getAuthTokenForRole(Role role) throws Exception {
+        // Crear un usuario con el rol especificado
         String email = role.name().toLowerCase() + "@example.com";
         User user = new User(
                 "Test", role.name(), email,
@@ -222,27 +334,39 @@ class UserControllerTest {
         user.setEmailVerifiedAt(LocalDateTime.now());
         User savedUser = userRepository.save(user);
 
+        // Crear una cuenta para el usuario
         Account account = new Account(savedUser, "Cuenta de " + role.name(), "ACC-" + role.name());
         accountRepository.save(account);
 
+        // Asignar el rol al usuario
         AccountUser accountUser = new AccountUser(account, savedUser, role);
         accountUserRepository.save(accountUser);
 
+        // Realizar login para obtener el token
         LoginRequest loginRequest = new LoginRequest(email, "password123");
 
+        // Ejecutar la petición de login y obtener el token
         MvcResult result = mockMvc.perform(post("/api/users/login")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(loginRequest)))
-                .andExpect(status().isOk())
-                .andReturn();
+                        .contentType(MediaType.APPLICATION_JSON) // Indicamos que el contenido es JSON
+                        .content(objectMapper.writeValueAsString(loginRequest))) // Convertimos el objeto a JSON LoginRequest
+                .andExpect(status().isOk()) // Esperamos un 200 OK
+                .andReturn(); // Devolvemos el resultado de la petición
 
+        // Obtenemos el token de la respuesta
         String responseBody = result.getResponse().getContentAsString();
+        // Convertimos el JSON de la respuesta a un objeto AuthResponse
         AuthResponse authResponse = objectMapper.readValue(responseBody, AuthResponse.class);
+        // Devolvemos el token
         return authResponse.getToken();
     }
 
     /**
-     * Prueba el escenario de éxito donde un ADMIN actualiza los datos de un usuario existente.
+     * Verifica la actualización exitosa de datos de usuario por administradores.
+     *
+     * <p>Válida tanto la respuesta HTTP como la persistencia real de los cambios
+     * en la base de datos, asegurando que las actualizaciones se apliquen correctamente.</p>
+     *
+     * @throws Exception Sí ocurre algún error durante la creación o autenticación
      */
     @Test
     @DisplayName("PUT /api/users/{id} | Éxito | Un ADMIN debería poder actualizar un usuario")
@@ -265,25 +389,30 @@ class UserControllerTest {
         // Act & Assert
         mockMvc.perform(put("/api/users/{id}", savedUser.getId())
                         .header(HttpHeaders.AUTHORIZATION, "Bearer " + adminToken) // Petición autenticada como ADMIN
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(updateRequest)))
+                        .contentType(MediaType.APPLICATION_JSON) // Indicamos que el contenido es JSON
+                        .content(objectMapper.writeValueAsString(updateRequest))) // Convertimos el objeto a JSON UpdateUserRequest
                 .andExpect(status().isOk()) // Esperamos 200 OK para una actualización exitosa
-                .andExpect(jsonPath("$.firstName").value("Nombre"))
-                .andExpect(jsonPath("$.lastName").value("Actualizado"))
-                .andExpect(jsonPath("$.email").value("nuevo.email@example.com"));
+                .andExpect(jsonPath("$.firstName").value("Nombre")) // Verificamos que el nombre se actualizó correctamente
+                .andExpect(jsonPath("$.lastName").value("Actualizado")) // Verificamos que el apellido se actualizó correctamente
+                .andExpect(jsonPath("$.email").value("nuevo.email@example.com")); // Verificamos que el email se actualizó correctamente
 
-        // Verificación extra (opcional pero recomendada): Comprobar el estado en la BD
+        // Verificación extra: Comprobar el estado en la BD
         User updatedUserFromDb = userRepository.findById(savedUser.getId()).orElseThrow();
+        // Verificamos que el usuario se actualizó correctamente en la BD
         assertThat(updatedUserFromDb.getFirstName()).isEqualTo("Nombre");
+        // Verificamos que la dirección se actualizó correctamente en la BD
         assertThat(updatedUserFromDb.getAddress()).isEqualTo("Dirección Actualizada");
     }
 
     /**
      * Prueba el escenario de fallo donde un CLIENT intenta actualizar un usuario.
+     *
+     * @throws Exception Sí ocurre algún error durante la creación o autenticación
      */
     @Test
     @DisplayName("PUT /api/users/{id} | Falla | Un CLIENT no debería poder actualizar y debe recibir 403 Forbidden")
     void updateUser_AsClient_ShouldReturnForbidden() throws Exception {
+        // Arrange: Si el usuario no tiene privilegios de ADMIN, debe recibir 403 Forbidden
         String clientToken = getAuthTokenForRole(Role.CLIENT);
         User targetUser = new User("Target", "User", "target@example.com", "pass", "addr", "phone", Role.CLIENT);
         userRepository.save(targetUser);
@@ -295,15 +424,22 @@ class UserControllerTest {
                 "Dirección Actualizada", "111222333");
         updateRequest.setFirstName("Hack Attempt");
 
+        // Act & Assert: Si el usuario no tiene privilegios de ADMIN, debe recibir 403 Forbidden
         mockMvc.perform(put("/api/users/{id}", targetUser.getId())
-                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + clientToken)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(updateRequest)))
-                .andExpect(status().isForbidden());
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + clientToken) // Petición autenticada como CLIENT
+                        .contentType(MediaType.APPLICATION_JSON) // Indicamos que el contenido es JSON
+                        .content(objectMapper.writeValueAsString(updateRequest))) // Convertimos el objeto a JSON UpdateUserRequest
+                .andExpect(status().isForbidden()); // Esperamos 403 Forbidden para un cliente intentando actualizar
     }
 
     /**
-     * Prueba el escenario de éxito donde un ADMIN desactiva a un usuario existente.
+     * Verifica la funcionalidad de activación/desactivación de cuentas.
+     *
+     * <p>Prueba una operación crítica que permite a administradores controlar
+     * el acceso al sistema sin eliminar datos del usuario.</p>
+     *
+     * @throws Exception Sí ocurre algún error durante la creación o autenticación
+     *
      */
     @Test
     @DisplayName("PATCH /api/users/{id}/toggle-active | Éxito | Un ADMIN debería poder desactivar un usuario")
@@ -317,21 +453,24 @@ class UserControllerTest {
         userToToggle.setActive(true); // Nos aseguramos de que su estado inicial sea activo
         User savedUser = userRepository.save(userToToggle);
 
-        // Act & Assert
+        // Act & Assert: Si el usuario tiene privilegios de ADMIN, debe recibir 200 OK
         mockMvc.perform(patch("/api/users/{id}/toggle-active", savedUser.getId())
                         .header(HttpHeaders.AUTHORIZATION, "Bearer " + adminToken) // Petición autenticada como ADMIN
                         .param("active", "false")) // El parámetro para desactivar
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.id").value(savedUser.getId()))
+                .andExpect(status().isOk()) // Esperamos 200 OK para una desactivación exitosa
+                .andExpect(jsonPath("$.id").value(savedUser.getId())) // Verificamos que el ID coincide
                 .andExpect(jsonPath("$.active").value(false)); // Verificamos que la respuesta refleje el nuevo estado
 
         // Verificación extra contra la BD
         User toggledUserFromDb = userRepository.findById(savedUser.getId()).orElseThrow();
+        // Verificamos que el usuario se desactivó correctamente en la BD
         assertThat(toggledUserFromDb.isActive()).isFalse();
     }
 
     /**
      * Prueba el escenario de fallo donde un CLIENT intenta usar el endpoint.
+     *
+     * @throws Exception Sí
      */
     @Test
     @DisplayName("PATCH /api/users/{id}/toggle-active | Falla | Un CLIENT no debería poder cambiar el estado y debe recibir 403 Forbidden")
@@ -349,7 +488,10 @@ class UserControllerTest {
     }
 
     /**
-     * Prueba el escenario de éxito donde un ADMIN verifica el email de un usuario.
+     * Prueba la verificación manual de email por administradores.
+     *
+     * <p>Válida la funcionalidad que permite a administradores marcar emails
+     * como verificados, útil para soporte técnico y resolución de problemas.</p>
      */
     @Test
     @DisplayName("PATCH /api/users/{id}/verify-email | Éxito | Un ADMIN debería poder verificar un email")
@@ -366,21 +508,24 @@ class UserControllerTest {
         // Verificación previa para asegurar el estado inicial
         assertThat(savedUser.getEmailVerifiedAt()).isNull();
 
-        // Act & Assert
+        // Act & Assert: Si el usuario tiene privilegios de ADMIN, debe recibir 200 OK
         mockMvc.perform(patch("/api/users/{id}/verify-email", savedUser.getId())
                         .header(HttpHeaders.AUTHORIZATION, "Bearer " + adminToken)) // Petición como ADMIN
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.id").value(savedUser.getId()))
+                .andExpect(status().isOk()) // Esperamos 200 OK para una verificación exitosa
+                .andExpect(jsonPath("$.id").value(savedUser.getId())) // Verificamos que el ID coincide
                 .andExpect(jsonPath("$.emailVerifiedAt").exists()) // Verificamos que el campo ahora existe (no es nulo)
-                .andExpect(jsonPath("$.emailVerifiedAt").isNotEmpty());
+                .andExpect(jsonPath("$.emailVerifiedAt").isNotEmpty()); // Verificamos que el campo no está vacío
 
         // Verificación final contra la BD para confirmar la persistencia del cambio
         User verifiedUserFromDb = userRepository.findById(savedUser.getId()).orElseThrow();
+        // Verificamos que el usuario se verificó correctamente en la BD
         assertThat(verifiedUserFromDb.getEmailVerifiedAt()).isNotNull();
     }
 
     /**
      * Prueba el escenario de fallo donde un CLIENT intenta usar el endpoint.
+     *
+     *
      */
     @Test
     @DisplayName("PATCH /api/users/{id}/verify-email | Falla | Un CLIENT no debería poder verificar un email y debe recibir 403 Forbidden")
@@ -397,7 +542,10 @@ class UserControllerTest {
     }
 
     /**
-     * Prueba el escenario de éxito donde un ADMIN elimina a un usuario existente.
+     * Verifica la eliminación permanente de usuarios por administradores.
+     *
+     * <p>Prueba la operación más destructiva del sistema, validando tanto
+     * la respuesta como la eliminación real de datos de la base de datos.</p>
      */
     @Test
     @DisplayName("DELETE /api/users/{id} | Éxito | Un ADMIN debería poder eliminar un usuario")
@@ -483,8 +631,11 @@ class UserControllerTest {
     }
 
     /**
-     * Prueba el endpoint de resumen paginado. Verifica la paginación, el ordenamiento
-     * y la estructura de la respuesta de la página.
+     * Válida la funcionalidad completa de paginación y ordenamiento.
+     *
+     * <p>Prueba características avanzadas que son críticas para interfaces
+     * de usuario con grandes volúmenes de datos, verificando tanto la
+     * estructura de respuesta como la lógica de ordenamiento.</p>
      */
     @Test
     @DisplayName("GET /summary | Éxito | Un ADMIN debería obtener una lista paginada y ordenada de usuarios")
@@ -555,7 +706,10 @@ class UserControllerTest {
     }
 
     /**
-     * Prueba el escenario de éxito donde un CLIENTE obtiene sus PROPIOS datos.
+     * Válida qué usuarios pueden acceder a su propio perfil.
+     *
+     * <p>Prueba el control de acceso que permite a usuarios consultar sus
+     * propios datos sin necesidad de privilegios administrativos.</p>
      */
     @Test
     @DisplayName("GET /api/users/{id} | Éxito | Un CLIENT debería poder obtener su propio perfil por ID")
@@ -700,7 +854,7 @@ class UserControllerTest {
         // 1. Obtenemos el token de ADMIN. Este usuario es ACTIVO por defecto.
         String adminToken = getAuthTokenForRole(Role.ADMIN);
 
-        // 2. Creamos un conjunto de datos mixto en la BD H2.
+        // 2. Creamos un conjunto de datos mixto en la BD
         // Usuario activo
         User activeClient = new User("Active", "Client", "active.client@example.com", "pass", "addr", "phone", Role.CLIENT);
         activeClient.setActive(true);
@@ -787,8 +941,10 @@ class UserControllerTest {
     }
 
     /**
-     * Prueba el escenario de éxito donde un ADMIN obtiene las estadísticas de usuarios.
-     * Verifica que los cálculos de agregación sean correctos.
+     * Verifica generación correcta de estadísticas de usuarios.
+     *
+     * <p>Válida los cálculos agregados que alimentan dashboards administrativos,
+     * asegurando que las métricas reflejen correctamente el estado real de la BD.</p>
      */
     @Test
     @DisplayName("GET /api/users/stats | Éxito | Un ADMIN debería obtener las estadísticas correctas de usuarios")
@@ -797,7 +953,7 @@ class UserControllerTest {
         // 1. Obtenemos un token de ADMIN. Este usuario ya es 1 ADMIN, activo y verificado.
         String adminToken = getAuthTokenForRole(Role.ADMIN);
 
-        // 2. Creamos un conjunto de datos específico en la BD H2.
+        // 2. Creamos un conjunto de datos específico en la BD
         // Cliente 1: Activo y verificado
         User client1 = new User("C1", "ActiveVerified", "c1@e.com", "p", "a", "p", Role.CLIENT);
         client1.setActive(true);
@@ -817,11 +973,11 @@ class UserControllerTest {
         userRepository.save(sitter1);
 
         // Estado esperado de la BD:
-        // - Total Usuarios: 4 (1 ADMIN + 2 CLIENTs + 1 SITTER)
+        // - Total Usuario: 4 (1 ADMIN + 2 CLIENT + 1 SITTER)
         // - Usuarios Activos: 3 (ADMIN, client1, client2)
-        // - Total Clientes: 2
-        // - Total Cuidadores: 1
-        // - Total Admins: 1
+        // - Total cliente: 2
+        // - Total cuidadores: 1
+        // - Total admins: 1
         // - Usuarios Verificados: 3 (ADMIN, client1, sitter1)
 
         // Act & Assert
@@ -878,8 +1034,15 @@ class UserControllerTest {
     @DisplayName("GET /api/users/email-available | Éxito | Debería retornar false si el email NO está disponible")
     void isEmailAvailable_WhenEmailIsTaken_ShouldReturnFalse() throws Exception {
         // Arrange
-        // Creamos un usuario en la BD H2 con un email específico.
-        userRepository.save(new User("Existing", "User", "email.ocupado@example.com", "pass", "addr", "phone", Role.CLIENT));
+        // Creamos un usuario en la BD con un email específico.
+        userRepository.save(new User(
+                "Existing",
+                "User",
+                "email.ocupado@example.com",
+                "pass",
+                "addr",
+                "phone",
+                Role.CLIENT));
 
         // Act & Assert
         mockMvc.perform(get("/api/users/email-available")
@@ -889,12 +1052,22 @@ class UserControllerTest {
                 .andExpect(content().string("false")); // Verificamos que la respuesta sea el booleano 'false'
     }
 
+    /**
+     * Válida endpoint de verificación de salud del servicio, cuantos Usuarios hay realmente (int).
+     *
+     */
     @Test
     @DisplayName("GET /api/users/health | Éxito | Debería retornar 200 OK si el servicio funciona")
     void healthCheck_WhenServiceIsUp_ShouldReturnOk() throws Exception {
         // Arrange: Creamos un usuario para que el conteo no sea cero.
-        // El usuario del helper getAuthTokenForRole() también funciona, pero ser explícito es bueno.
-        userRepository.save(new User("Health", "Check", "health@example.com", "pass", "addr", "phone", Role.CLIENT));
+        userRepository.save(new User("Health",
+                "Check",
+                "health@example.com",
+                "pass",
+                "addr",
+                "phone",
+                Role.CLIENT));
+
         long userCount = userRepository.count(); // Contamos cuántos usuarios hay realmente.
 
         // Act & Assert
@@ -904,11 +1077,15 @@ class UserControllerTest {
     }
 
     /**
-     * Prueba el escenario de éxito donde se usa un token de verificación válido.
-     * Utiliza H2 y el JwtService real.
+     * Válida proceso de verificación de email con token válido.
+     *
+     * <p>Prueba el flujo completo de verificación por email utilizando el JWT real
+     * y validando tanto la redirección como la persistencia del cambio.</p>
+     *
+     * @throws Exception Sí ocurre un error po que el token es inválido o malformado
      */
     @Test
-    @DisplayName("GET /verify | Éxito (con H2) | Debería verificar el email y redirigir a éxito")
+    @DisplayName("GET /verify | Éxito | Debería verificar el email y redirigir a éxito")
     void verifyEmail_WithValidTokenAndH2_ShouldVerifyUserAndRedirectToSuccess() throws Exception {
         // Arrange
         // 1. Creamos un usuario en H2 con el email sin verificar.
@@ -925,8 +1102,9 @@ class UserControllerTest {
                 .andExpect(status().isFound()) // Esperamos un redirect 302
                 .andExpect(redirectedUrl("/verification-success.html"));
 
-        // Verificación final y crucial: comprobar que el usuario fue actualizado en H2.
+        // Verificación final: comprobar que el usuario fue actualizado
         User verifiedUser = userRepository.findById(savedUser.getId()).orElseThrow();
+        // Verificar que el usuario tenga en true la verificación de email
         assertThat(verifiedUser.isEmailVerified()).isTrue();
         assertThat(verifiedUser.getEmailVerifiedAt()).isNotNull();
     }
@@ -934,9 +1112,11 @@ class UserControllerTest {
     /**
      * Prueba el escenario de fallo donde se usa un token inválido/malformado.
      * Utiliza H2 y el JwtService real.
+     *
+     * @throws Exception Sí ocurre un error po que el token es inválido o malformado
      */
     @Test
-    @DisplayName("GET /verify | Falla (con H2) | Debería redirigir a error con un token inválido")
+    @DisplayName("GET /verify | Falla | Debería redirigir a error con un token inválido")
     void verifyEmail_WithInvalidTokenAndH2_ShouldRedirectToError() throws Exception {
         // Arrange
         String invalidToken = "este-token-no-es-valido";
@@ -947,7 +1127,7 @@ class UserControllerTest {
         // Construimos la URL de redirección esperada completa
         String expectedRedirectUrl = "http://localhost:8080/verification-error?message=" + errorMessage;
 
-        // Act & Assert
+        // Act & Assert: Si el token es inválido, debe redirigir a la URL de error
         mockMvc.perform(get("/api/users/verify")
                         .param("token", invalidToken))
                 .andExpect(status().isFound()) // Sigue siendo un redirect
