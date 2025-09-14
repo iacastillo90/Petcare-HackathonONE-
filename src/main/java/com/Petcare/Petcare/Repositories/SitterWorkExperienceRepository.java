@@ -2,6 +2,7 @@ package com.Petcare.Petcare.Repositories;
 
 import com.Petcare.Petcare.Models.SitterProfile;
 import com.Petcare.Petcare.Models.SitterWorkExperience;
+import com.Petcare.Petcare.Services.SitterWorkExperienceService;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
@@ -17,7 +18,7 @@ import java.util.List;
  * específica de la plataforma.
  *
  * @see SitterWorkExperience
- * @see com.Petcare.Petcare.Services.SitterWorkExperienceService
+ * @see SitterWorkExperienceService
  * @author Equipo Petcare 10
  * @version 1.0
  * @since 1.0

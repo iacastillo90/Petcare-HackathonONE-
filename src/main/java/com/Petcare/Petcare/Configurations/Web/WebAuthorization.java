@@ -46,7 +46,10 @@ public class WebAuthorization {
                         authRequest
                                 .requestMatchers(HttpMethod.POST, "/api/users/login").permitAll()
                                 .requestMatchers(HttpMethod.POST, "/api/users/register").permitAll()
+                                .requestMatchers(HttpMethod.POST, "/api/users/register-sitter").permitAll()
                                 .requestMatchers(HttpMethod.GET, "/api/users/verify").permitAll()
+                                .requestMatchers(HttpMethod.GET, "/api/users/email-available").permitAll()
+                                .requestMatchers(HttpMethod.GET, "/api/users/health").permitAll()
                                 .requestMatchers(HttpMethod.GET, "/verification-success.html").permitAll()
                                 .requestMatchers(HttpMethod.GET, "/api/users/summary").hasRole("ADMIN")
                                 .requestMatchers(HttpMethod.GET, "/swagger-ui/**").permitAll()

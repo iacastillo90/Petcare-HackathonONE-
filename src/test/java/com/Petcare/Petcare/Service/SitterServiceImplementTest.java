@@ -3,6 +3,7 @@ package com.Petcare.Petcare.Service;
 import com.Petcare.Petcare.DTOs.Sitter.SitterProfileDTO;
 import com.Petcare.Petcare.DTOs.Sitter.SitterProfileMapper;
 import com.Petcare.Petcare.DTOs.Sitter.SitterProfileSummary;
+import com.Petcare.Petcare.Exception.Business.SitterProfileAlreadyExistsException;
 import com.Petcare.Petcare.Exception.Business.SitterProfileNotFoundException;
 import com.Petcare.Petcare.Models.SitterProfile;
 import com.Petcare.Petcare.Models.User.Role;
@@ -168,18 +169,18 @@ class SitterServiceImplementTest {
          * Prueba el caso de fallo cuando el usuario ya tiene un perfil existente.
          *
          * <p><strong>Escenario:</strong> Usuario válido pero ya posee un SitterProfile</p>
-         * <p><strong>Resultado esperado:</strong> Lanza SitterProfileNotFoundException</p>
+         * <p><strong>Resultado esperado:</strong> Lanza SitterProfileAlreadyExistsException</p>
          */
         @Test
-        @DisplayName("Fallo: Debería lanzar excepción cuando usuario ya tiene perfil")
-        void createSitterProfile_WhenUserAlreadyHasProfile_ShouldThrowSitterProfileNotFoundException() {
+        @DisplayName("Fallo: Debería lanzar SitterProfileAlreadyExistsException cuando usuario ya tiene perfil")
+        void createSitterProfile_WhenUserAlreadyHasProfile_ShouldThrowSitterProfileAlreadyExistsException() {
             // Arrange
             when(userRepository.findById(VALID_USER_ID)).thenReturn(Optional.of(testUser));
             when(sitterProfileRepository.findByUserId(VALID_USER_ID)).thenReturn(Optional.of(testSitterProfile));
 
             // Act & Assert
             assertThatThrownBy(() -> sitterService.createSitterProfile(VALID_USER_ID, testSitterProfileDTO))
-                    .isInstanceOf(SitterProfileNotFoundException.class)
+                    .isInstanceOf(SitterProfileAlreadyExistsException.class)
                     .hasMessageContaining("Cuidador ya tiene un perfil");
 
             // Assert - Verificación de que no se intentó guardar un nuevo perfil
@@ -188,6 +189,7 @@ class SitterServiceImplementTest {
             verify(sitterProfileRepository, never()).save(any());
         }
     }
+
 
     /**
      * Pruebas para el método {@code getSitterProfile}.

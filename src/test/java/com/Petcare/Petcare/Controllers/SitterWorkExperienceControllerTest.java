@@ -2,7 +2,6 @@ package com.Petcare.Petcare.Controllers;
 
 import com.Petcare.Petcare.DTOs.SitterWorkExperience.SitterWorkExperienceMapper;
 import com.Petcare.Petcare.DTOs.SitterWorkExperience.SitterWorkExperienceRequestDTO;
-import com.Petcare.Petcare.DTOs.SitterWorkExperience.SitterWorkExperienceResponseDTO;
 import com.Petcare.Petcare.Models.SitterProfile;
 import com.Petcare.Petcare.Models.SitterWorkExperience;
 import com.Petcare.Petcare.Models.User.Role;
@@ -256,6 +255,12 @@ class SitterWorkExperienceControllerTest {
          *
          * @throws Exception Si ocurre un error en la petición MockMvc.
          */
+        /**
+         * Verifica el caso de éxito donde se solicitan las experiencias de un perfil que sí tiene registros.
+         * Se asegura de que cualquier usuario autenticado pueda ver esta información pública.
+         *
+         * @throws Exception Si ocurre un error en la petición MockMvc.
+         */
         @Test
         @DisplayName("✅ Éxito: Debería devolver la lista de experiencias para un perfil válido")
         void shouldReturnExperienceList_whenProfileExistsAndHasExperiences() throws Exception {
@@ -278,6 +283,7 @@ class SitterWorkExperienceControllerTest {
                     .andExpect(jsonPath("$[0].companyName").value("Clínica Veterinaria Amigos Fieles"))
                     .andExpect(jsonPath("$[1].jobTitle").value("Voluntario de Cuidados"));
         }
+
 
         /**
          * Verifica el caso de borde donde un perfil de cuidador existe pero aún no ha añadido ninguna
@@ -433,6 +439,8 @@ class SitterWorkExperienceControllerTest {
 
     /**
      * Método de ayuda para añadir y persistir una experiencia laboral a un perfil.
+     * Este método ha sido CORREGIDO para manejar adecuadamente la relación bidireccional.
+     *
      * @param profile El perfil al que se añadirá la experiencia.
      * @param companyName El nombre de la empresa.
      * @param jobTitle El título del puesto.
@@ -443,12 +451,21 @@ class SitterWorkExperienceControllerTest {
         dto.setSitterProfileId(profile.getId());
         dto.setCompanyName(companyName);
         dto.setJobTitle(jobTitle);
-        dto.setResponsibilities("Paseos diarios y entrenamiento básico."); // Añadimos responsabilidades para el test de GET por ID
+        dto.setResponsibilities("Paseos diarios y entrenamiento básico.");
         dto.setStartDate(LocalDate.now().minusYears(2));
         dto.setEndDate(LocalDate.now().minusYears(1));
 
-        // Guardamos y retornamos la entidad persistida
-        return workExperienceRepository.saveAndFlush(SitterWorkExperienceMapper.toEntity(dto, profile));
+        // Mapeamos el DTO a la entidad, lo que establece la relación desde la experiencia hacia el perfil.
+        SitterWorkExperience experience = SitterWorkExperienceMapper.toEntity(dto, profile);
+
+        // *** LA CORRECCIÓN CLAVE ***
+        // Añadimos la experiencia a la colección en memoria del perfil.
+        // Esto mantiene la consistencia para la sesión de Hibernate.
+        profile.getWorkExperiences().add(experience);
+
+        // Guardamos y flusheamos la experiencia.
+        // Como la relación está establecida, el FK se persistirá correctamente.
+        return workExperienceRepository.saveAndFlush(experience);
     }
 
 

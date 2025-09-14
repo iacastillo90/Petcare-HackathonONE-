@@ -7,6 +7,8 @@ import com.Petcare.Petcare.DTOs.User.CreateUserRequest;
 import com.Petcare.Petcare.DTOs.User.UpdateUserRequest;
 import com.Petcare.Petcare.DTOs.User.UserResponse;
 import com.Petcare.Petcare.DTOs.User.UserSummaryResponse;
+import com.Petcare.Petcare.Exception.Business.EmailAlreadyExistsException;
+import com.Petcare.Petcare.Exception.Business.UserNotFoundException;
 import com.Petcare.Petcare.Models.Account.Account;
 import com.Petcare.Petcare.Models.User.Role;
 import com.Petcare.Petcare.Models.User.User;
@@ -28,6 +30,7 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.DisabledException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.time.LocalDateTime;
@@ -483,18 +486,14 @@ class UserServiceImplementTest {
      * permitiendo que el código cliente maneje la ausencia del usuario apropiadamente.
      */
     @Test
-    @DisplayName("getUserById | Debería retornar Optional vacío cuando el usuario no existe")
-    void getUserById_WhenUserDoesNotExist_ShouldReturnEmptyOptional() {
-        // El repositorio no encuentra ningún usuario con ese ID
-        when(userRepository.findById(99L)).thenReturn(Optional.empty());
-
-        // Ejecutamos la búsqueda
-        UserResponse result = userService.getUserById(99L);
-
-        // El resultado debe ser un Optional vacío
-        assertThat(result).getClass();
-
-        verify(userRepository).findById(99L);
+    @DisplayName("getUserById | Debería lanzar UserNotFoundException cuando el usuario no existe")
+    void getUserById_WhenUserDoesNotExist_ShouldThrowUserNotFoundException() {
+        long nonExistentId = 99L;
+        when(userRepository.findById(nonExistentId)).thenReturn(Optional.empty());
+        assertThatThrownBy(() -> userService.getUserById(nonExistentId))
+                .isInstanceOf(UserNotFoundException.class)
+                .hasMessage("Usuario no encontrado con el ID " + nonExistentId);
+        verify(userRepository).findById(nonExistentId);
     }
 
     /**
@@ -530,9 +529,10 @@ class UserServiceImplementTest {
         String nonExistentEmail = "no.existe@example.com";
         when(userRepository.findByEmail(nonExistentEmail)).thenReturn(Optional.empty());
 
-        UserResponse result = userService.getUserByEmail(nonExistentEmail);
-
-        assertThat(result).getClass();
+        // Act & Assert: Verificamos que se lanza la excepción correcta
+        assertThatThrownBy(() -> userService.getUserByEmail(nonExistentEmail))
+                .isInstanceOf(UsernameNotFoundException.class)
+                .hasMessage("Usuario no encontrado con el email " + nonExistentEmail);
 
         verify(userRepository).findByEmail(nonExistentEmail);
     }
@@ -684,7 +684,7 @@ class UserServiceImplementTest {
 
         // La operación debe fallar porque el email ya está tomado
         assertThatThrownBy(() -> userService.updateUser(userId, updateRequest))
-                .isInstanceOf(IllegalArgumentException.class)
+                .isInstanceOf(EmailAlreadyExistsException.class)
                 .hasMessage("El nuevo email ya está registrado: " + takenEmail);
 
         // No debe realizarse ningún guardado

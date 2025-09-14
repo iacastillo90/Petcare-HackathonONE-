@@ -12,6 +12,7 @@ import com.Petcare.Petcare.Models.User.User;
 import com.Petcare.Petcare.Repositories.AccountRepository;
 import com.Petcare.Petcare.Repositories.AccountUserRepository;
 import com.Petcare.Petcare.Repositories.UserRepository;
+import com.Petcare.Petcare.Services.EmailService;
 import com.Petcare.Petcare.Services.UserService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.DisplayName;
@@ -20,10 +21,12 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 
@@ -35,6 +38,9 @@ import java.time.LocalDateTime;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.is;
+import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.doNothing;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
@@ -82,6 +88,8 @@ class UserControllerTest {
     @Autowired private UserService userService;
     @Autowired
     private JwtService jwtService;
+    @MockitoBean
+    private EmailService emailService;
 
     /**
      * Verifica el flujo completo de registro exitoso para un usuario cliente.
@@ -224,6 +232,8 @@ class UserControllerTest {
     @DisplayName("POST /api/users/register-sitter | Éxito | Debería registrar una nueva cuidadora y retornar 201 Created")
     void registerUserSitter_WithValidData_ShouldReturnCreatedAndSitterRole() throws Exception {
         // Arrange: Preparamos el DTO con los datos de la cuidadora a registrar.
+        doNothing().when(emailService).sendVerificationEmail(anyString(), anyString(), anyString(), anyInt());
+
         CreateUserRequest sitterRequest = new CreateUserRequest(
                 "Juana",
                 "Arcos",
@@ -233,14 +243,13 @@ class UserControllerTest {
                 "555-8765432"
         );
 
-        // Act & Assert: Ejecutamos la petición y verificamos la respuesta.
         mockMvc.perform(post("/api/users/register-sitter")
-                        .contentType(MediaType.APPLICATION_JSON) // Indicamos que el contenido es JSON
-                        .content(objectMapper.writeValueAsString(sitterRequest))) // Convertimos el objeto a JSON SitterRequest
-                .andExpect(status().isOk()) // Verificar que el código de estado es 201 Created
-                .andExpect(content().contentType(MediaType.APPLICATION_JSON)) // Verificar que la respuesta es JSON
-                .andExpect(jsonPath("$.token").isNotEmpty()) // Verificar que la respuesta contiene un token
-                .andExpect(jsonPath("$.role").value("SITTER")); // ¡La aserción clave! Verificar que se asignó el rol correcto.
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(sitterRequest)))
+                .andExpect(status().isCreated()) // *** CORRECCIÓN CLAVE 2: Esperar 201 Created
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$.token").isNotEmpty())
+                .andExpect(jsonPath("$.role").value("SITTER"));
     }
 
     /**
