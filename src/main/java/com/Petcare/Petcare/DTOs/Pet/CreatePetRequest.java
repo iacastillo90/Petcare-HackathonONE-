@@ -100,6 +100,14 @@ public class CreatePetRequest {
     private String allergies;
 
     /**
+     * Información sobre vacunas aplicadas a la mascota.
+
+     */
+    @Size(max = 2000, message = "La información de vacunas no puede exceder los 2000 caracteres")
+    private String vaccinations;
+
+
+    /**
      * Notas especiales para cuidadores.
      */
     @Size(max = 2000, message = "Las notas especiales no pueden exceder los 2000 caracteres")
@@ -217,6 +225,14 @@ public class CreatePetRequest {
 
     public void setAllergies(String allergies) {
         this.allergies = allergies;
+    }
+
+    public String getVaccinations() {
+        return vaccinations;
+    }
+
+    public void setVaccinations(String vaccinations) {
+        this.vaccinations = vaccinations;
     }
 
     public String getSpecialNotes() {

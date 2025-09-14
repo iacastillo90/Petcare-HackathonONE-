@@ -600,6 +600,7 @@ public class PetServiceImplement implements PetService {
         pet.setPhysicalDescription(request.getPhysicalDescription());
         pet.setMedications(request.getMedications());
         pet.setAllergies(request.getAllergies());
+        pet.setVaccinations(request.getVaccinations());
         pet.setSpecialNotes(request.getSpecialNotes());
     }
 

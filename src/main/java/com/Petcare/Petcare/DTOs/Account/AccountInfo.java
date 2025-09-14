@@ -4,9 +4,7 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-/**
- * Información resumida de la cuenta.
- */
+
 @Data
 @NoArgsConstructor
 @AllArgsConstructor

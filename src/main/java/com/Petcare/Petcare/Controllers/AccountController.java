@@ -1,47 +1,61 @@
 package com.Petcare.Petcare.Controllers;
 
-import com.Petcare.Petcare.DTOs.Account.SelectPermissionLevelRequest;
+import com.Petcare.Petcare.DTOs.Account.AccountResponse;
+import com.Petcare.Petcare.DTOs.Account.CreateAccountRequest;
 import com.Petcare.Petcare.Models.User.User;
-import com.Petcare.Petcare.Repositories.UserRepository;
 import com.Petcare.Petcare.Services.AccountService;
-import io.swagger.v3.oas.annotations.tags.Tag;
-import jakarta.validation.Valid;
-import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
+/**
+ * Controlador REST para la gestión de cuentas.
+ */
 @RestController
 @RequestMapping("/api/accounts")
-@RequiredArgsConstructor
-@Tag(name = "Cuentas", description = "Operaciones relacionadas con la cuenta del usuario")
 public class AccountController {
 
-    private final AccountService accountService;
+    @Autowired
+    private AccountService accountService;
 
-    private final UserRepository userRepository;
-
-    @PostMapping("/my-account/permissions")
-    @PreAuthorize("isAuthenticated()")
-    public ResponseEntity<Void> selectPermissionLevel(
-            @Valid @RequestBody SelectPermissionLevelRequest request,
-            Authentication authentication // <-- 2. Recibes el objeto Authentication
+    /**
+     * Crear una nueva cuenta.
+     *
+     * @param request datos de la cuenta a crear
+     * @param ownerUserId usuario propietario de la cuenta
+     * @return la cuenta creada
+     */
+    @PostMapping
+    public ResponseEntity<AccountResponse> createAccount(
+            @RequestBody CreateAccountRequest request,
+            @RequestParam Long ownerUserId // Pasamos el owner por query param
     ) {
-        // 3. Obtén el email (username) del usuario autenticado
-        String userEmail = authentication.getName();
+        // Aquí idealmente traeríamos el User desde la base de datos usando un service o repo
 
-        // 4. Busca la entidad User completa en la base de datos
-        User currentUser = userRepository.findByEmail(userEmail)
-                .orElseThrow(() -> new RuntimeException("Usuario autenticado no encontrado en la base de datos."));
+        User ownerUser = new User();
+        ownerUser.setId(ownerUserId);
 
-        // 5. Llama al servicio con la entidad User recuperada
-        accountService.updateUserPermissions(currentUser, request.level());
+        AccountResponse response = accountService.createAccount(request, ownerUser);
+        return ResponseEntity.ok(response);
+    }
 
-        return ResponseEntity.ok().build();
+    /**
+     * Obtener cuenta por ID.
+     */
+    @GetMapping("/{id}")
+    public ResponseEntity<AccountResponse> getAccountById(@PathVariable Long id) {
+        AccountResponse response = accountService.getAccountById(id);
+        return ResponseEntity.ok(response);
+    }
+
+    /**
+     * Obtener todas las cuentas.
+     */
+    @GetMapping
+    public ResponseEntity<List<AccountResponse>> getAllAccounts() {
+        List<AccountResponse> accounts = accountService.getAllAccounts();
+        return ResponseEntity.ok(accounts);
     }
 }

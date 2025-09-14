@@ -172,6 +172,17 @@ public class Pet {
     @Size(max = 1000, message = "La información de alergias no puede exceder los 1000 caracteres")
     private String allergies;
 
+
+    /**
+     * Información sobre vacunas aplicadas a la mascota.
+     */
+    @Column(columnDefinition = "TEXT")
+    @Size(max = 2000, message = "La información de vacunas no puede exceder los 2000 caracteres")
+    private String vaccinations;
+
+
+
+
     /**
      * Notas especiales para cuidadores.
      */
@@ -231,7 +242,7 @@ public class Pet {
      */
     public Pet(Account account, String name, String species, String breed, Integer age,
                BigDecimal weight, String gender, String color, String physicalDescription,
-               String medications, String allergies, String specialNotes) {
+               String medications, String allergies, String vaccinations, String specialNotes) {
         this.account = account;
         this.name = name;
         this.species = species;
@@ -243,6 +254,7 @@ public class Pet {
         this.physicalDescription = physicalDescription;
         this.medications = medications;
         this.allergies = allergies;
+        this.vaccinations = vaccinations;
         this.specialNotes = specialNotes;
         this.bookings = new HashSet<>();
     }
@@ -385,6 +397,18 @@ public class Pet {
         this.updatedAt = updatedAt;
     }
 
+
+
+    public String getVaccinations() {
+        return vaccinations;
+    }
+
+    public void setVaccinations(String vaccinations) {
+        this.vaccinations = vaccinations;
+    }
+
+
+
     // ========== MÉTODOS DE UTILIDAD PARA RELACIONES BIDIRECCIONALES ==========
 
     /**
@@ -510,6 +534,16 @@ public class Pet {
 
         return notes.toString().trim();
     }
+
+    /**
+     * Verifica si la mascota tiene información de vacunas registrada.
+     *
+     * @return true si tiene al menos una vacuna registrada
+     */
+    public boolean hasVaccinationInfo() {
+        return vaccinations != null && !vaccinations.trim().isEmpty();
+    }
+
 
     // ========== EQUALS, HASHCODE Y TOSTRING ==========
 
