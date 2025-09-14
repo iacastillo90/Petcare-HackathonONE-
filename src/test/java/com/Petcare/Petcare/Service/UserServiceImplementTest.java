@@ -56,7 +56,7 @@ import static org.testng.Assert.assertThrows;
  * - Operaciones CRUD con validaciones de negocio
  * - Manejo de excepciones y casos edge
  *
- * @author Equipo de Desarrollo Petcare
+ * @author Equipo Petcare 10
  * @version 1.0
  * @since 2025
  */

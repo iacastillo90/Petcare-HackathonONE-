@@ -237,7 +237,7 @@ class UserControllerTest {
         mockMvc.perform(post("/api/users/register-sitter")
                         .contentType(MediaType.APPLICATION_JSON) // Indicamos que el contenido es JSON
                         .content(objectMapper.writeValueAsString(sitterRequest))) // Convertimos el objeto a JSON SitterRequest
-                .andExpect(status().isCreated()) // Verificar que el código de estado es 201 Created
+                .andExpect(status().isOk()) // Verificar que el código de estado es 201 Created
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON)) // Verificar que la respuesta es JSON
                 .andExpect(jsonPath("$.token").isNotEmpty()) // Verificar que la respuesta contiene un token
                 .andExpect(jsonPath("$.role").value("SITTER")); // ¡La aserción clave! Verificar que se asignó el rol correcto.

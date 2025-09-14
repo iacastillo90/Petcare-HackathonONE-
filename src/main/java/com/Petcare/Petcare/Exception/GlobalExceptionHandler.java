@@ -1,10 +1,7 @@
 package com.Petcare.Petcare.Exception;
 
 import com.Petcare.Petcare.DTOs.GlobalException.ErrorResponseDTO;
-import com.Petcare.Petcare.Exception.Business.EmailAlreadyExistsException;
-import com.Petcare.Petcare.Exception.Business.SitterProfileAlreadyExistsException;
-import com.Petcare.Petcare.Exception.Business.SitterProfileNotFoundException;
-import com.Petcare.Petcare.Exception.Business.UserNotFoundException;
+import com.Petcare.Petcare.Exception.Business.*;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -174,7 +171,11 @@ public class GlobalExceptionHandler {
      * @param ex La excepción SitterProfileNotFoundException capturada.
      * @return Un ResponseEntity con el código 404 y un mensaje de error claro.
      */
-    @ExceptionHandler(SitterProfileNotFoundException.class)
+    @ExceptionHandler({
+            UserNotFoundException.class,
+            SitterProfileNotFoundException.class,
+            WorkExperienceNotFoundException.class
+    })
     @ResponseStatus(HttpStatus.NOT_FOUND)
     public ResponseEntity<ErrorResponseDTO> handleSitterProfileNotFoundException(SitterProfileNotFoundException ex) {
         ErrorResponseDTO errorResponse = new ErrorResponseDTO(
@@ -203,6 +204,61 @@ public class GlobalExceptionHandler {
         );
         logger.warn("Conflict error: {}", ex.getMessage());
         return new ResponseEntity<>(errorResponse, HttpStatus.CONFLICT);
+    }
+
+    /**
+     * Maneja la excepción cuando se intenta crear una experiencia laboral que ya existe
+     * para el mismo perfil de cuidador, evitando duplicados.
+     * Devuelve un error 409 Conflict.
+     *
+     * @param ex La excepción WorkExperienceConflictException capturada.
+     * @return ResponseEntity con el DTO de error y estado 409.
+     */
+    @ExceptionHandler(WorkExperienceConflictException.class)
+    public ResponseEntity<ErrorResponseDTO> handleWorkExperienceConflictException(WorkExperienceConflictException ex) {
+        ErrorResponseDTO errorResponse = new ErrorResponseDTO(
+                HttpStatus.CONFLICT.value(),
+                "Conflicto: " + ex.getMessage(),
+                LocalDateTime.now(),
+                null
+        );
+        logger.warn("Data conflict: {}", ex.getMessage());
+        return new ResponseEntity<>(errorResponse, HttpStatus.CONFLICT);
+    }
+
+    /**
+     * Maneja excepciones de negocio cuando un recurso específico no se encuentra.
+     * <p>
+     * Este método centraliza el manejo para todas las excepciones que heredan de
+     * {@link RuntimeException} y están anotadas con {@code @ResponseStatus(HttpStatus.NOT_FOUND)}.
+     * Devuelve una respuesta HTTP 404 Not Found estandarizada.
+     * </p>
+     * <b>Excepciones Cubiertas:</b>
+     * <ul>
+     * <li>{@link UserNotFoundException}</li>
+     * <li>{@link SitterProfileNotFoundException}</li>
+     * <li>{@link WorkExperienceNotFoundException}</li>
+     * <li>Cualquier otra excepción de negocio marcada como NOT_FOUND.</li>
+     * </ul>
+     *
+     * @param ex La excepción de negocio capturada.
+     * @return Un {@link ResponseEntity} con el DTO de error y el estado 404.
+     */
+    @ExceptionHandler({
+            UserNotFoundException.class,
+            SitterProfileNotFoundException.class,
+            WorkExperienceNotFoundException.class
+            // Puedes añadir aquí cualquier otra excepción futura que deba devolver un 404
+    })
+    public ResponseEntity<ErrorResponseDTO> handleResourceNotFoundException(RuntimeException ex) {
+        ErrorResponseDTO errorResponse = new ErrorResponseDTO(
+                HttpStatus.NOT_FOUND.value(),
+                ex.getMessage(),
+                LocalDateTime.now(),
+                null
+        );
+        logger.warn("Recurso no encontrado: {}", ex.getMessage());
+        return new ResponseEntity<>(errorResponse, HttpStatus.NOT_FOUND);
     }
 
 }
