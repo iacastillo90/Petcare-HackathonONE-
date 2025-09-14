@@ -83,7 +83,8 @@ public class GlobalExceptionHandler {
     @ExceptionHandler({
             UserNotFoundException.class,
             SitterProfileNotFoundException.class,
-            WorkExperienceNotFoundException.class
+            WorkExperienceNotFoundException.class,
+            ServiceOfferingNotFoundException.class
     })
     public ResponseEntity<ErrorResponseDTO> handleResourceNotFoundExceptions(RuntimeException ex) {
         ErrorResponseDTO errorResponse = new ErrorResponseDTO(
@@ -194,5 +195,17 @@ public class GlobalExceptionHandler {
         );
         logger.error("An unexpected error occurred", ex);
         return new ResponseEntity<>(errorResponse, HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+
+    @ExceptionHandler(ServiceOfferingConflictException.class)
+    public ResponseEntity<ErrorResponseDTO> handleServiceOfferingConflict(ServiceOfferingConflictException ex) {
+        ErrorResponseDTO errorResponse = new ErrorResponseDTO(
+                HttpStatus.CONFLICT.value(),
+                "Conflicto: " + ex.getMessage(),
+                LocalDateTime.now(),
+                null
+        );
+        logger.warn("Conflicto al crear oferta de servicio: {}", ex.getMessage());
+        return new ResponseEntity<>(errorResponse, HttpStatus.CONFLICT);
     }
 }

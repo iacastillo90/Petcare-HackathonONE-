@@ -1,14 +1,17 @@
 package com.Petcare.Petcare.Models.ServiceOffering;
 
+import com.Petcare.Petcare.DTOs.ServiceOffering.CreateServiceOfferingDTO;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.math.BigDecimal;
 import java.sql.Time;
 import java.sql.Timestamp;
+import java.time.LocalDateTime;
 
 /**
  * Entidad que representa una oferta de servicio en la plataforma Petcare.
@@ -27,6 +30,7 @@ import java.sql.Timestamp;
 @Setter
 @Entity
 @Table(name = "service_offering")
+@EntityListeners(AuditingEntityListener.class)
 public class ServiceOffering {
     
     /**
@@ -83,5 +87,15 @@ public class ServiceOffering {
      * Timestamp de creación del registro.
      * Se establece automáticamente al crear la oferta.
      */
-    private Timestamp createdAt;
+    private LocalDateTime createdAt;
+
+    public ServiceOffering(Long sitterId, CreateServiceOfferingDTO dto) {
+        this.sitterId = sitterId;
+        this.serviceType = dto.serviceType();
+        this.name = dto.name();
+        this.description = dto.description();
+        this.durationInMinutes = dto.durationInMinutes();
+        this.price = dto.price();
+        this.isActive = true;
+    }
 }

@@ -51,6 +51,8 @@ public class WebAuthorization {
                                 .requestMatchers(HttpMethod.GET, "/api/users/email-available").permitAll()
                                 .requestMatchers(HttpMethod.GET, "/api/users/health").permitAll()
                                 .requestMatchers(HttpMethod.GET, "/verification-success.html").permitAll()
+                                .requestMatchers(HttpMethod.GET, "/api/services").permitAll()
+                                .requestMatchers(HttpMethod.GET, "/api/services/test").permitAll()
                                 .requestMatchers(HttpMethod.GET, "/api/users/summary").hasRole("ADMIN")
                                 .requestMatchers(HttpMethod.GET, "/swagger-ui/**").permitAll()
                                 .requestMatchers(HttpMethod.GET, "/v3/api-docs/**").permitAll()

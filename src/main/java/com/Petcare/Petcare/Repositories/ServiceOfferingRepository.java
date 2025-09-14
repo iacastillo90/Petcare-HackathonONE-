@@ -8,6 +8,7 @@ import jakarta.validation.constraints.Size;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
+import java.util.Collection;
 import java.util.List;
 
 /**
@@ -20,7 +21,7 @@ import java.util.List;
  * <p><strong>Métodos personalizados:</strong></p>
  * <ul>
  *   <li>findBySitterId - Busca servicios por ID del cuidador</li>
- *   <li>existsBySitterIdAndName - Valida duplicados por cuidador y nombre</li>
+ *   <li>existsBySitterIdAndName - Válida duplicados por cuidador y nombre</li>
  * </ul>
  * 
  * @author Equipo Petcare
@@ -51,4 +52,15 @@ public interface ServiceOfferingRepository extends JpaRepository< ServiceOfferin
                                       Long Id, @NotBlank(message = "El nombre del servicio es obligatorio") @Size(min = 3, max = 100, message = "El nombre debe tener entre 3 y 100 caracteres")
                                       String name );
     boolean existsByName( String name );
+
+    /**
+     * Busca todas las ofertas de servicio que están marcadas como activas.
+     * <p>
+     * Este es el método principal utilizado para poblar el catálogo público de servicios
+     * que se muestra a los clientes. Asegura que solo las ofertas disponibles y listas
+     * para ser reservadas sean recuperadas.
+     * </p>
+     * @return Una {@link List} de {@link ServiceOffering} activas. Si no hay ninguna, devuelve una lista vacía.
+     */
+    List<ServiceOffering> findAllByIsActiveTrue();
 }
