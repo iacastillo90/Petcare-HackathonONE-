@@ -2,13 +2,16 @@ package com.Petcare.Petcare.Controllers;
 
 import com.Petcare.Petcare.DTOs.Auth.Request.LoginRequest;
 import com.Petcare.Petcare.DTOs.Auth.Respone.AuthResponse;
+import com.Petcare.Petcare.DTOs.SitterWorkExperience.SitterWorkExperienceRequestDTO;
 import com.Petcare.Petcare.DTOs.User.*;
 import com.Petcare.Petcare.Models.User.Role;
+import com.Petcare.Petcare.Services.SitterWorkExperienceService;
 import com.Petcare.Petcare.Services.UserService;
 import io.swagger.v3.oas.annotations.Operation;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -69,6 +72,9 @@ import java.util.Optional;
 public class UserController {
 
     private final UserService userService;
+    @Autowired
+    private SitterWorkExperienceService sitterWorkExperienceService;
+
 
     @Value("${petcare.frontend.base-url:http://localhost:8080}")
     private String frontendBaseUrl;
@@ -144,6 +150,9 @@ public class UserController {
         AuthResponse authResponse = userService.registerUserSitter(request);
 
         log.info("Cuidadora registrado exitosamente para email: {}", request.getEmail());
+
+
+
         return ResponseEntity.status(HttpStatus.CREATED).body(authResponse);
     }
 

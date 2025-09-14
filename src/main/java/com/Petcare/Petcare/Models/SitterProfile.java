@@ -11,6 +11,9 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.Objects;
 
+import java.util.ArrayList;
+import java.util.List;
+
 /**
  * Entidad que representa el perfil profesional de un cuidador de mascotas.
  *
@@ -183,6 +186,35 @@ public class SitterProfile {
     @LastModifiedDate
     @Column(name = "updated_at", nullable = false)
     private LocalDateTime updatedAt;
+
+
+    // ========== RELACIÓN CON EXPERIENCIA DE TRABAJO ==========
+    @OneToMany(mappedBy = "sitterProfile", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<SitterWorkExperience> workExperiences = new ArrayList<>();
+
+    // ========== MÉTODOS PARA MANEJAR EXPERIENCIAS ==========
+    public void addExperience(SitterWorkExperience experience) {
+        if (experience != null) {
+            workExperiences.add(experience);
+            experience.setSitterProfile(this);
+        }
+    }
+
+    public void removeExperience(SitterWorkExperience experience) {
+        if (experience != null && workExperiences.remove(experience)) {
+            experience.setSitterProfile(null);
+        }
+    }
+
+    public List<SitterWorkExperience> getWorkExperiences() {
+        return workExperiences;
+    }
+
+    public void setWorkExperiences(List<SitterWorkExperience> workExperiences) {
+        this.workExperiences = workExperiences;
+    }
+
+
 
     // ========== CONSTRUCTORES ==========
 

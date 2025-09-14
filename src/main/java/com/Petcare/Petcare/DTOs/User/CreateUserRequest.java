@@ -1,5 +1,6 @@
 package com.Petcare.Petcare.DTOs.User;
 
+import com.Petcare.Petcare.DTOs.SitterWorkExperience.SitterWorkExperienceRequestDTO;
 import jakarta.validation.constraints.*;
 
 /**
@@ -100,6 +101,20 @@ public class CreateUserRequest {
     @NotBlank(message = "El número de teléfono es obligatorio")
     @Size(max = 20, message = "El número de teléfono no puede exceder 20 caracteres")
     private String phoneNumber;
+
+    // Experiencia inicial (solo para registro de sitter)
+    private SitterWorkExperienceRequestDTO initialWorkExperience;
+
+    public SitterWorkExperienceRequestDTO getInitialWorkExperience() {
+        return initialWorkExperience;
+    }
+
+    public void setInitialWorkExperience(SitterWorkExperienceRequestDTO initialWorkExperience) {
+        this.initialWorkExperience = initialWorkExperience;
+    }
+
+
+
 
     // ========== CONSTRUCTORES ==========
 
