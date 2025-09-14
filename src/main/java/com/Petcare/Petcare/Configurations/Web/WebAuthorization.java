@@ -52,7 +52,7 @@ public class WebAuthorization {
                                 .requestMatchers(HttpMethod.GET, "/swagger-ui/**").permitAll()
                                 .requestMatchers(HttpMethod.GET, "/v3/api-docs/**").permitAll()
                                 .requestMatchers(HttpMethod.GET, "/api-docs", "/api-docs/**", "/swagger-ui/**", "/v3/api-docs/**").permitAll()
-                                .requestMatchers("/api/**").permitAll()
+                                //.requestMatchers("/api/**").permitAll()
                                 .requestMatchers("/actuator/**").permitAll()
                                 .anyRequest().authenticated()
                 )

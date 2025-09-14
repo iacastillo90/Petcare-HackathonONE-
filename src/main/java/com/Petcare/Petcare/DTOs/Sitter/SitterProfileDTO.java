@@ -2,6 +2,8 @@ package com.Petcare.Petcare.DTOs.Sitter;
 
 import com.Petcare.Petcare.Models.SitterProfile;
 import com.Petcare.Petcare.Models.User.User;
+import jakarta.validation.constraints.*;
+
 import java.math.BigDecimal;
 
 /**
@@ -35,21 +37,30 @@ public class SitterProfileDTO {
     /**
      * El ID del {@link User} al que está asociado este perfil.
      */
+    @NotNull(message = "El ID del usuario es obligatorio.")
     private Long userId;
 
     /**
      * La biografía profesional del cuidador, donde describe su experiencia y servicios.
      */
+    @NotBlank(message = "La biografía no puede estar vacía.")
+    @Size(min = 10, max = 2000, message = "La biografía debe tener entre 10 y 2000 caracteres.")
     private String bio;
 
     /**
      * La tarifa por hora que el cuidador cobra por sus servicios básicos.
      */
+    @NotNull(message = "La tarifa por hora es obligatoria.")
+    @DecimalMin(value = "0.01", message = "La tarifa por hora debe ser mayor que cero.")
+    @Digits(integer = 6, fraction = 2, message = "Formato de tarifa inválido.")
     private BigDecimal hourlyRate;
 
     /**
      * El radio de servicio en kilómetros que el cuidador está dispuesto a cubrir.
      */
+    @NotNull(message = "El radio de servicio es obligatorio.")
+    @Min(value = 1, message = "El radio de servicio debe ser de al menos 1 km.")
+    @Max(value = 100, message = "El radio de servicio no puede exceder los 100 km.")
     private Integer servicingRadius;
 
     /**

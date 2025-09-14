@@ -3,6 +3,7 @@ package com.Petcare.Petcare.Services.Implement;
 import com.Petcare.Petcare.DTOs.Sitter.SitterProfileDTO;
 import com.Petcare.Petcare.DTOs.Sitter.SitterProfileMapper;
 import com.Petcare.Petcare.DTOs.Sitter.SitterProfileSummary;
+import com.Petcare.Petcare.Exception.Business.SitterProfileAlreadyExistsException;
 import com.Petcare.Petcare.Exception.Business.SitterProfileNotFoundException;
 import com.Petcare.Petcare.Models.SitterProfile;
 import com.Petcare.Petcare.Models.User.User;
@@ -83,7 +84,7 @@ public class SitterServiceImplement implements SitterService {
      * @param userId El ID del usuario para el cual se va a crear el perfil de cuidador.
      * @param sitterProfileDTO El DTO que contiene toda la información del nuevo perfil.
      * @return Un DTO que representa el perfil del cuidador recién creado y guardado.
-     * @throws RuntimeException Si el usuario no se encuentra o si ya tiene un perfil.
+     * @throws SitterProfileAlreadyExistsException Si el usuario no se encuentra o si ya tiene un perfil.
      */
     @Override
     @Transactional
@@ -96,7 +97,7 @@ public class SitterServiceImplement implements SitterService {
 
         // Verificamos que no estemos creando un perfil para un usuario que ya tiene uno.
         if (sitterProfileRepository.findByUserId(user.getId()).isPresent()) {
-            throw new SitterProfileNotFoundException("Cuidador ya tiene un perfil");
+            throw new SitterProfileAlreadyExistsException("Cuidador ya tiene un perfil");
         }
 
         // --- Lógica de Negocio ---
