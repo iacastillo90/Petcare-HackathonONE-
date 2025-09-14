@@ -236,90 +236,190 @@ public class SitterProfile {
 
     // ========== GETTERS Y SETTERS ==========
 
+    /**
+     * Obtiene el identificador único del perfil de cuidador.
+     * @return el ID único del perfil.
+     */
     public Long getId() {
         return id;
     }
 
+    /**
+     * Establece el identificador único del perfil de cuidador.
+     * <p>Este método es utilizado principalmente por el framework de persistencia (JPA).
+     * No se recomienda su uso manual para evitar inconsistencias en los datos.</p>
+     * @param id el nuevo identificador para el perfil.
+     */
     public void setId(Long id) {
         this.id = id;
     }
 
+    /**
+     * Obtiene la entidad User asociada a este perfil de cuidador.
+     * @return el usuario {@link User} propietario de este perfil.
+     */
     public User getUser() {
         return user;
     }
 
+    /**
+     * Establece el usuario propietario de este perfil de cuidador.
+     * <p>Es crucial que el usuario asignado tenga el rol 'SITTER' para mantener la
+     * coherencia del modelo de negocio.</p>
+     * @param user el nuevo usuario {@link User} a asociar con el perfil.
+     */
     public void setUser(User user) {
         this.user = user;
     }
 
+    /**
+     * Obtiene la biografía profesional del cuidador.
+     * @return la cadena de texto con la biografía del cuidador.
+     */
     public String getBio() {
         return bio;
     }
 
+    /**
+     * Establece la biografía profesional del cuidador.
+     * @param bio la nueva biografía profesional.
+     */
     public void setBio(String bio) {
         this.bio = bio;
     }
 
+    /**
+     * Obtiene la tarifa por hora del cuidador.
+     * @return un {@link BigDecimal} que representa la tarifa por hora.
+     */
     public BigDecimal getHourlyRate() {
         return hourlyRate;
     }
 
+    /**
+     * Establece la tarifa por hora del cuidador.
+     * @param hourlyRate la nueva tarifa por hora.
+     */
     public void setHourlyRate(BigDecimal hourlyRate) {
         this.hourlyRate = hourlyRate;
     }
 
+    /**
+     * Obtiene el radio de servicio en kilómetros.
+     * @return un {@link Integer} que representa la distancia máxima de servicio.
+     */
     public Integer getServicingRadius() {
         return servicingRadius;
     }
 
+    /**
+     * Establece el radio de servicio en kilómetros.
+     * @param servicingRadius el nuevo radio de servicio.
+     */
     public void setServicingRadius(Integer servicingRadius) {
         this.servicingRadius = servicingRadius;
     }
 
+    /**
+     * Obtiene la URL de la imagen de perfil del cuidador.
+     * @return la cadena de texto con la URL de la imagen.
+     */
     public String getProfileImageUrl() {
         return profileImageUrl;
     }
 
+    /**
+     * Establece la URL de la imagen de perfil del cuidador.
+     * @param profileImageUrl la nueva URL de la imagen.
+     */
     public void setProfileImageUrl(String profileImageUrl) {
         this.profileImageUrl = profileImageUrl;
     }
 
+    /**
+     * Verifica si el perfil del cuidador ha sido verificado por la plataforma.
+     * @return {@code true} si el perfil está verificado, {@code false} en caso contrario.
+     */
     public boolean isVerified() {
         return isVerified;
     }
 
+    /**
+     * Establece el estado de verificación del perfil.
+     * <p>Esta operación debe ser realizada por un administrador o un proceso
+     * automático de verificación, no directamente por el usuario.</p>
+     * @param verified el nuevo estado de verificación.
+     */
     public void setVerified(boolean verified) {
         isVerified = verified;
     }
 
+    /**
+     * Obtiene la calificación promedio del cuidador.
+     * @return un {@link BigDecimal} con la calificación promedio, o null si aún no tiene calificaciones.
+     */
     public BigDecimal getAverageRating() {
         return averageRating;
     }
 
+    /**
+     * Establece la calificación promedio del cuidador.
+     * <p>Este valor se calcula automáticamente a partir de las reseñas de los clientes
+     * y no debe establecerse manualmente, excepto para fines de testing o migración.</p>
+     * @param averageRating la nueva calificación promedio.
+     */
     public void setAverageRating(BigDecimal averageRating) {
         this.averageRating = averageRating;
     }
 
+    /**
+     * Verifica si el cuidador está actualmente disponible para aceptar nuevas reservas.
+     * @return {@code true} si el cuidador está disponible, {@code false} si ha desactivado
+     * temporalmente su disponibilidad.
+     */
     public boolean isAvailableForBookings() {
         return isAvailableForBookings;
     }
 
+    /**
+     * Establece el estado de disponibilidad del cuidador para nuevas reservas.
+     * @param availableForBookings el nuevo estado de disponibilidad.
+     */
     public void setAvailableForBookings(boolean availableForBookings) {
         isAvailableForBookings = availableForBookings;
     }
 
+    /**
+     * Obtiene la fecha y hora de creación del perfil.
+     * @return un {@link LocalDateTime} con el momento exacto de la creación.
+     */
     public LocalDateTime getCreatedAt() {
         return createdAt;
     }
 
+    /**
+     * Establece la fecha y hora de creación del perfil.
+     * <p>Gestionado automáticamente por JPA Auditing. Solo debe usarse manualmente
+     * en escenarios de migración de datos o testing.</p>
+     * @param createdAt la fecha de creación a establecer.
+     */
     public void setCreatedAt(LocalDateTime createdAt) {
         this.createdAt = createdAt;
     }
 
+    /**
+     * Obtiene la fecha y hora de la última actualización del perfil.
+     * @return un {@link LocalDateTime} con el momento exacto de la última modificación.
+     */
     public LocalDateTime getUpdatedAt() {
         return updatedAt;
     }
 
+    /**
+     * Establece la fecha y hora de la última actualización del perfil.
+     * <p>Gestionado automáticamente por JPA Auditing.</p>
+     * @param updatedAt la fecha de actualización a establecer.
+     */
     public void setUpdatedAt(LocalDateTime updatedAt) {
         this.updatedAt = updatedAt;
     }

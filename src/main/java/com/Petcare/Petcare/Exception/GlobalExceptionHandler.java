@@ -2,8 +2,11 @@ package com.Petcare.Petcare.Exception;
 
 import com.Petcare.Petcare.DTOs.GlobalException.ErrorResponseDTO;
 import com.Petcare.Petcare.Exception.Business.EmailAlreadyExistsException;
+import com.Petcare.Petcare.Exception.Business.SitterProfileAlreadyExistsException;
+import com.Petcare.Petcare.Exception.Business.SitterProfileNotFoundException;
 import com.Petcare.Petcare.Exception.Business.UserNotFoundException;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -162,4 +165,44 @@ public class GlobalExceptionHandler {
         logger.warn("Data integrity violation: {}. Causa: {}", ex.getMessage(), ex.getRootCause() != null ? ex.getRootCause().getMessage() : "N/A");
         return new ResponseEntity<>(errorResponse, HttpStatus.CONFLICT);
     }
+
+    /**
+     * Maneja la excepción específica cuando un perfil de cuidador no se encuentra.
+     * Devuelve un código de estado 404 Not Found, que es el estándar REST para
+     * recursos no encontrados.
+     *
+     * @param ex La excepción SitterProfileNotFoundException capturada.
+     * @return Un ResponseEntity con el código 404 y un mensaje de error claro.
+     */
+    @ExceptionHandler(SitterProfileNotFoundException.class)
+    @ResponseStatus(HttpStatus.NOT_FOUND)
+    public ResponseEntity<ErrorResponseDTO> handleSitterProfileNotFoundException(SitterProfileNotFoundException ex) {
+        ErrorResponseDTO errorResponse = new ErrorResponseDTO(
+                HttpStatus.NOT_FOUND.value(),
+                ex.getMessage(), // El mensaje viene de la excepción que lanzamos
+                LocalDateTime.now(),
+                null
+        );
+        logger.warn("Recurso no encontrado: {}", ex.getMessage());
+        return new ResponseEntity<>(errorResponse, HttpStatus.NOT_FOUND);
+    }
+
+    /**
+     * Maneja excepciones cuando se intenta crear un recurso que ya existe.
+     * Devuelve un error 409 Conflict.
+     * @param ex La excepción de conflicto, como SitterProfileAlreadyExistsException.
+     * @return ResponseEntity con el DTO de error y estado 409.
+     */
+    @ExceptionHandler(SitterProfileAlreadyExistsException.class)
+    public ResponseEntity<ErrorResponseDTO> handleConflictException(RuntimeException ex) {
+        ErrorResponseDTO errorResponse = new ErrorResponseDTO(
+                HttpStatus.CONFLICT.value(),
+                "Conflicto: " + ex.getMessage(),
+                LocalDateTime.now(),
+                null
+        );
+        logger.warn("Conflict error: {}", ex.getMessage());
+        return new ResponseEntity<>(errorResponse, HttpStatus.CONFLICT);
+    }
+
 }
