@@ -322,7 +322,7 @@ public class SitterProfileController {
      * perfiles completos de todos los cuidadores y un estado HTTP 200 (OK).
      */
     @GetMapping
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("isAuthenticated()")
     @Operation(
             summary = "Obtener todos los perfiles de cuidadores (Admin)",
             description = "Endpoint administrativo que devuelve una lista completa de todos los perfiles de cuidadores registrados en la plataforma. Requiere rol de 'ADMIN'.",

@@ -84,7 +84,9 @@ public class GlobalExceptionHandler {
             UserNotFoundException.class,
             SitterProfileNotFoundException.class,
             WorkExperienceNotFoundException.class,
-            ServiceOfferingNotFoundException.class
+            ServiceOfferingNotFoundException.class,
+            PetNotFoundException.class,
+            ReviewNotFoundException.class
     })
     public ResponseEntity<ErrorResponseDTO> handleResourceNotFoundExceptions(RuntimeException ex) {
         ErrorResponseDTO errorResponse = new ErrorResponseDTO(
@@ -108,7 +110,8 @@ public class GlobalExceptionHandler {
     @ExceptionHandler({
             EmailAlreadyExistsException.class,
             SitterProfileAlreadyExistsException.class,
-            WorkExperienceConflictException.class
+            WorkExperienceConflictException.class,
+            ReviewAlreadyExistsException.class
     })
     public ResponseEntity<ErrorResponseDTO> handleConflictExceptions(RuntimeException ex) {
         ErrorResponseDTO errorResponse = new ErrorResponseDTO(
@@ -207,5 +210,24 @@ public class GlobalExceptionHandler {
         );
         logger.warn("Conflicto al crear oferta de servicio: {}", ex.getMessage());
         return new ResponseEntity<>(errorResponse, HttpStatus.CONFLICT);
+    }
+
+    /**
+     * Handles business logic exceptions where the request is well-formed
+     * but cannot be processed due to a business rule violation.
+     *
+     * @param ex The exception indicating a business rule failure.
+     * @return A ResponseEntity with a standardized error DTO and 422 status.
+     */
+    @ExceptionHandler(InvalidReviewException.class)
+    public ResponseEntity<ErrorResponseDTO> handleUnprocessableEntityExceptions(RuntimeException ex) {
+        ErrorResponseDTO errorResponse = new ErrorResponseDTO(
+                HttpStatus.UNPROCESSABLE_ENTITY.value(),
+                ex.getMessage(),
+                LocalDateTime.now(),
+                null
+        );
+        logger.warn("Unprocessable entity error: {}", ex.getMessage());
+        return new ResponseEntity<>(errorResponse, HttpStatus.UNPROCESSABLE_ENTITY);
     }
 }

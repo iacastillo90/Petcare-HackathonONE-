@@ -87,7 +87,7 @@ public class UserServiceImplement implements UserService {
     private final JwtService jwtService;
     private final AuthenticationManager authenticationManager;
     private final EmailService emailService;
-    @Value("${petcare.api.base-url:http://localhost:8088}")
+    @Value("${petcare.api.base-url=http://44.207.65.254:8088}")
     private String apiBaseUrl;
     private final AccountRepository accountRepository;
     private final AccountUserRepository accountUserRepository;
@@ -219,10 +219,22 @@ public class UserServiceImplement implements UserService {
 
         log.info("Usuario registrado exitosamente: {} con ID: {}", savedUser.getEmail(), savedUser.getId());
 
-        // 4. Devolver la respuesta de autenticación
+        // ✅ PASO 4: Construir el UserProfileDTO con los datos del usuario y la cuenta
+        UserProfileDTO userProfile = new UserProfileDTO(
+                savedUser.getId(),
+                savedUser.getFirstName(),
+                savedUser.getLastName(),
+                savedUser.getEmail(),
+                savedUser.getRole().name(),
+                String.format("%c%c", savedUser.getFirstName().charAt(0), savedUser.getLastName().charAt(0)).toUpperCase(),
+                savedAccount.getId() // Usamos el ID de la cuenta que acabamos de crear
+        );
+
+        // ✅ PASO 5: Devolver la respuesta de autenticación COMPLETA
         return AuthResponse.builder()
                 .token(token)
                 .role(savedUser.getRole().name())
+                .userProfile(userProfile) // <-- Añadimos el perfil del usuario
                 .build();
     }
     /**
@@ -295,10 +307,22 @@ public class UserServiceImplement implements UserService {
 
         log.info("Usuario registrado exitosamente: {} con ID: {}", savedUser.getEmail(), savedUser.getId());
 
-        // 4. Devolver la respuesta de autenticación
+        // ✅ PASO 4: Construir el UserProfileDTO con los datos del usuario y la cuenta
+        UserProfileDTO userProfile = new UserProfileDTO(
+                savedUser.getId(),
+                savedUser.getFirstName(),
+                savedUser.getLastName(),
+                savedUser.getEmail(),
+                savedUser.getRole().name(),
+                String.format("%c%c", savedUser.getFirstName().charAt(0), savedUser.getLastName().charAt(0)).toUpperCase(),
+                savedAccount.getId() // Usamos el ID de la cuenta que acabamos de crear
+        );
+
+        // ✅ PASO 5: Devolver la respuesta de autenticación COMPLETA
         return AuthResponse.builder()
                 .token(token)
                 .role(savedUser.getRole().name())
+                .userProfile(userProfile) // <-- Añadimos el perfil del usuario
                 .build();
     }
 

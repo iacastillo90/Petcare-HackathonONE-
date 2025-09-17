@@ -1,5 +1,5 @@
 FROM openjdk:21-jdk
 WORKDIR /app
-COPY build/libs/Petcare-0.0.1-SNAPSHOT.jar app.jar
-EXPOSE 8080
+COPY build/libs/Petcare.jar app.jar
+EXPOSE 8088
 ENTRYPOINT ["java", "-jar", "app.jar"]
