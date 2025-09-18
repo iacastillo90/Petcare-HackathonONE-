@@ -5,10 +5,13 @@ import com.Petcare.Petcare.DTOs.ServiceOffering.ServiceOfferingDTO;
 import com.Petcare.Petcare.DTOs.ServiceOffering.UpdateServiceOfferingDTO;
 import com.Petcare.Petcare.Exception.Business.ServiceOfferingConflictException;
 import com.Petcare.Petcare.Exception.Business.ServiceOfferingNotFoundException;
+import com.Petcare.Petcare.Exception.Business.SitterProfileNotFoundException;
 import com.Petcare.Petcare.Exception.Business.UserNotFoundException;
 import com.Petcare.Petcare.Models.ServiceOffering.ServiceOffering;
+import com.Petcare.Petcare.Models.SitterProfile;
 import com.Petcare.Petcare.Models.User.User;
 import com.Petcare.Petcare.Repositories.ServiceOfferingRepository;
+import com.Petcare.Petcare.Repositories.SitterProfileRepository;
 import com.Petcare.Petcare.Repositories.UserRepository;
 import com.Petcare.Petcare.Services.ServiceOfferingService;
 import org.springframework.security.access.AccessDeniedException;
@@ -48,6 +51,7 @@ import java.util.stream.Collectors;
 public class ServiceOfferingServiceImplement implements ServiceOfferingService {
     private final ServiceOfferingRepository serviceOfferingRepository;
     private final UserRepository userRepository;
+    private final SitterProfileRepository sitterProfileRepository;
 
 
     /**
@@ -155,12 +159,15 @@ public class ServiceOfferingServiceImplement implements ServiceOfferingService {
     @Override
     @Transactional(readOnly = true)
     public List<ServiceOfferingDTO> getAllServicesByUserId(Long sitterId) {
-        // 1. Validar que el usuario (cuidador) exista. Si no, lanzar una excepción de negocio específica.
-        User sitter = userRepository.findById(sitterId)
-                .orElseThrow(() -> new UserNotFoundException("Usuario cuidador no encontrado con ID: " + sitterId));
+        // 1. Primero, busca el SitterProfile usando el ID que viene del frontend.
+        SitterProfile sitterProfile = sitterProfileRepository.findById(sitterId)
+                .orElseThrow(() -> new SitterProfileNotFoundException("Perfil de cuidador no encontrado con ID: " + sitterId));
 
-        // 2. Recuperar y mapear los servicios del cuidador encontrado.
-        return serviceOfferingRepository.findBySitterId(sitter.getId())
+        // 2. Del perfil, obtén el ID del usuario asociado.
+        Long userId = sitterProfile.getUser().getId();
+
+        // 3. Ahora, usa el ID de usuario correcto para buscar los servicios.
+        return serviceOfferingRepository.findBySitterId(userId)
                 .stream()
                 .map(ServiceOfferingDTO::new)
                 .collect(Collectors.toList());

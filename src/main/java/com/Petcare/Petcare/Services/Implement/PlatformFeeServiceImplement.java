@@ -8,6 +8,7 @@ import com.Petcare.Petcare.Models.PlatformFee;
 import com.Petcare.Petcare.Repositories.BookingRepository;
 import com.Petcare.Petcare.Repositories.PlatformFeeRepository;
 import com.Petcare.Petcare.Services.PlatformFeeService;
+import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -64,6 +65,12 @@ public class PlatformFeeServiceImplement implements PlatformFeeService {
     @Override
     public void calculateAndCreateFee(Invoice savedInvoice) {
         
+    }
+
+    @Override
+    public PlatformFee getLatestActiveFee() {
+        return platformFeeRepository.findTopByIsActiveOrderByIdDesc(true)
+                .orElseThrow(() -> new EntityNotFoundException("No se encontró una tarifa de plataforma activa."));
     }
 
 

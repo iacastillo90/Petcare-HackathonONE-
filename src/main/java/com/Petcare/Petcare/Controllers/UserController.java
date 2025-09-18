@@ -84,7 +84,7 @@ public class UserController {
 
     private final UserService userService;
 
-    @Value("${petcare.frontend.base-url:http://localhost:8080}")
+    @Value("${petcare.frontend.base-url:http://44.207.65.254:8088/}")
     private String frontendBaseUrl;
 
 

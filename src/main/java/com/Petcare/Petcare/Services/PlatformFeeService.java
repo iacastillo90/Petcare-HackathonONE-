@@ -27,4 +27,12 @@ public interface PlatformFeeService {
     void recalculatePlatformFee(Booking booking);
 
     void calculateAndCreateFee(Invoice savedInvoice);
+
+    /**
+     * Obtiene la tarifa de plataforma activa más reciente.
+     * Este método no depende de ninguna reserva y puede ser llamado
+     * en cualquier momento para saber cuál es la tarifa actual.
+     * @return La entidad PlatformFee activa.
+     */
+    PlatformFee getLatestActiveFee();
 }

@@ -4,11 +4,13 @@ import com.Petcare.Petcare.DTOs.Booking.BookingDetailResponse;
 import com.Petcare.Petcare.DTOs.Booking.BookingSummaryResponse;
 import com.Petcare.Petcare.DTOs.Booking.CreateBookingRequest;
 import com.Petcare.Petcare.DTOs.Booking.UpdateBookingRequest;
+import com.Petcare.Petcare.Exception.Business.SitterProfileNotFoundException;
 import com.Petcare.Petcare.Models.Account.Account;
 import com.Petcare.Petcare.Models.Booking.Booking;
 import com.Petcare.Petcare.Models.Booking.BookingStatus;
 import com.Petcare.Petcare.Models.Pet;
 import com.Petcare.Petcare.Models.ServiceOffering.ServiceOffering;
+import com.Petcare.Petcare.Models.SitterProfile;
 import com.Petcare.Petcare.Models.User.Role;
 import com.Petcare.Petcare.Models.User.User;
 import com.Petcare.Petcare.Repositories.*;
@@ -116,6 +118,8 @@ public class BookingServiceImplement implements BookingService {
 
     private final InvoiceService invoiceService;
 
+    private final SitterProfileRepository sitterProfileRepository;
+
 
     // ========== IMPLEMENTACIÓN DE MÉTODOS DE SERVICIO ==========
 
@@ -169,15 +173,14 @@ public class BookingServiceImplement implements BookingService {
     @Transactional
     public BookingDetailResponse createBooking(CreateBookingRequest createBookingRequest, Authentication authentication) {
 
-        String userEmail = authentication.getName();
+        SitterProfile sitterProfile = sitterProfileRepository.findById(createBookingRequest.getSitterId())
+                .orElseThrow(() -> new SitterProfileNotFoundException("No se encontró un perfil de cuidador con el ID: " + createBookingRequest.getSitterId()));
 
-        // 4. Busca la entidad User completa en la base de datos
-        User currentUser = userRepository.findByEmail(userEmail)
-                .orElseThrow(() -> new RuntimeException("Usuario autenticado no encontrado en la base de datos."));
 
+        User sitterUser = sitterProfile.getUser();
 
         // 1. Validación inicial (sin cambios)
-        validateCreateBookingRequest(createBookingRequest, currentUser);
+        validateCreateBookingRequest(createBookingRequest, sitterUser);
 
         // --- INICIO DE LA MODIFICACIÓN ---
 
@@ -200,7 +203,7 @@ public class BookingServiceImplement implements BookingService {
                 createBookingRequest.getServiceOfferingId(), sitter);
 
         // 3. Validación de reglas de negocio (sin cambios)
-        validateBusinessRules(createBookingRequest, pet, sitter, serviceOffering, currentUser);
+        validateBusinessRules(createBookingRequest, pet, sitter, serviceOffering, sitterUser);
 
         // 4. Cálculo de campos derivados (sin cambios)
         BookingCalculations calculations = calculateBookingDetails(
@@ -209,7 +212,7 @@ public class BookingServiceImplement implements BookingService {
         // 5. Creación y configuración de la entidad Booking
         Booking newBooking = createBookingEntity(
                 account, // <-- PASA LA CUENTA AL MÉTODO
-                pet, sitter, serviceOffering, currentUser,
+                pet, sitter, serviceOffering, sitterUser,
                 createBookingRequest, calculations);
 
         // --- FIN DE LA MODIFICACIÓN ---

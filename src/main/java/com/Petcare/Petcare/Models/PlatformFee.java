@@ -49,7 +49,7 @@ public class PlatformFee {
      * <p>Esta es la relación propietaria. La tarifa no puede existir sin una reserva.</p>
      */
     @OneToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "booking_id", nullable = false, unique = true, foreignKey = @ForeignKey(name = "fk_platformfee_booking"))
+    @JoinColumn(name = "booking_id", unique = true, foreignKey = @ForeignKey(name = "fk_platformfee_booking"))
     @NotNull(message = "La reserva es obligatoria para calcular la tarifa")
     private Booking booking;
 
@@ -96,6 +96,9 @@ public class PlatformFee {
     @Column(name = "created_at", updatable = false, nullable = false)
     private LocalDateTime createdAt;
 
+    @Column(name = "is_active", nullable = false)
+    private boolean isActive = true;
+
     // ========== CONSTRUCTORES ==========
 
     /**
@@ -107,8 +110,7 @@ public class PlatformFee {
     /**
      * Constructor completo para facilitar la creación y pruebas.
      */
-    public PlatformFee(Booking booking, BigDecimal baseAmount, BigDecimal feePercentage, BigDecimal feeAmount, BigDecimal netAmount) {
-        this.booking = booking;
+    public PlatformFee( BigDecimal baseAmount, BigDecimal feePercentage, BigDecimal feeAmount, BigDecimal netAmount, Boolean isActive) {
         this.baseAmount = baseAmount;
         this.feePercentage = feePercentage;
         this.feeAmount = feeAmount;
@@ -187,7 +189,15 @@ public class PlatformFee {
         this.createdAt = createdAt;
     }
 
-    // ========== EQUALS, HASHCODE Y TOSTRING ==========
+    public boolean isActive() {
+        return isActive;
+    }
+
+    public void setActive(boolean active) {
+        isActive = active;
+    }
+
+// ========== EQUALS, HASHCODE Y TOSTRING ==========
 
     /**
      *
