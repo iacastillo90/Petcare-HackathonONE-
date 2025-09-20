@@ -1,5 +1,6 @@
 package com.Petcare.Petcare.DTOs.User;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.*;
 
 /**
@@ -11,33 +12,34 @@ import jakarta.validation.constraints.*;
  *
  * <p><strong>Campos generados automáticamente:</strong></p>
  * <ul>
- *   <li>{@code id}: Generado por la base de datos</li>
- *   <li>{@code role}: Se asigna basándose en el contexto de registro</li>
- *   <li>{@code isActive}: Se inicializa como {@code true}</li>
- *   <li>{@code createdAt} y {@code updatedAt}: Timestamps automáticos</li>
- *   <li>{@code emailVerifiedAt}: Se establece tras verificación</li>
+ * <li>{@code id}: Generado por la base de datos</li>
+ * <li>{@code role}: Se asigna basándose en el contexto de registro</li>
+ * <li>{@code isActive}: Se inicializa como {@code true}</li>
+ * <li>{@code createdAt} y {@code updatedAt}: Timestamps automáticos</li>
+ * <li>{@code emailVerifiedAt}: Se establece tras verificación</li>
  * </ul>
  *
  * <p><strong>Validaciones aplicadas:</strong></p>
  * <ul>
- *   <li>Todos los campos obligatorios están marcados con {@code @NotBlank}</li>
- *   <li>Email válido y único en el sistema</li>
- *   <li>Contraseña con longitud mínima de seguridad</li>
- *   <li>Límites de caracteres en todos los campos de texto</li>
+ * <li>Todos los campos obligatorios están marcados con {@code @NotBlank}</li>
+ * <li>Email válido y único en el sistema</li>
+ * <li>Contraseña con longitud mínima de seguridad</li>
+ * <li>Límites de caracteres en todos los campos de texto</li>
  * </ul>
  *
  * <p><strong>Casos de uso principales:</strong></p>
  * <ul>
- *   <li>Registro de nuevos clientes propietarios de mascotas</li>
- *   <li>Registro de cuidadores que ofrecen servicios</li>
- *   <li>Creación de usuarios administrativos</li>
+ * <li>Registro de nuevos clientes propietarios de mascotas</li>
+ * <li>Registro de cuidadores que ofrecen servicios</li>
+ * <li>Creación de usuarios administrativos</li>
  * </ul>
  *
  * @author Equipo Petcare 10
- * @version 1.0
+ * @version 1.1
  * @since 1.0
  * @see com.Petcare.Petcare.Models.User.User
  */
+@Schema(description = "DTO para la creación de nuevos usuarios en el sistema Petcare.")
 public class CreateUserRequest {
 
     /**
@@ -98,19 +100,19 @@ public class CreateUserRequest {
      * de servicios. Se almacena como texto para soportar formatos internacionales.</p>
      */
     @NotBlank(message = "El número de teléfono es obligatorio")
-    @Size(max = 250, message = "El número de teléfono no puede exceder 250 caracteres")
+    @Size(max = 20, message = "El número de teléfono no puede exceder 20 caracteres")
     private String phoneNumber;
 
     // ========== CONSTRUCTORES ==========
 
     /**
-     * Constructor vacío requerido para frameworks de serialización.
+     * Constructor vacío requerido para frameworks de serialización (como Jackson).
      */
     public CreateUserRequest() {
     }
 
     /**
-     * Constructor completo para facilitar testing y creación programática.
+     * Constructor completo para facilitar la creación de instancias en código, como en pruebas unitarias.
      *
      * @param firstName nombre del usuario
      * @param lastName apellido del usuario
@@ -131,50 +133,98 @@ public class CreateUserRequest {
 
     // ========== GETTERS Y SETTERS ==========
 
+    /**
+     * Obtiene el nombre del usuario.
+     * @return El nombre proporcionado.
+     */
     public String getFirstName() {
         return firstName;
     }
 
+    /**
+     * Establece el nombre del usuario.
+     * @param firstName El nuevo nombre para la solicitud.
+     */
     public void setFirstName(String firstName) {
         this.firstName = firstName;
     }
 
+    /**
+     * Obtiene el apellido del usuario.
+     * @return El apellido proporcionado.
+     */
     public String getLastName() {
         return lastName;
     }
 
+    /**
+     * Establece el apellido del usuario.
+     * @param lastName El nuevo apellido para la solicitud.
+     */
     public void setLastName(String lastName) {
         this.lastName = lastName;
     }
 
+    /**
+     * Obtiene la dirección de correo electrónico.
+     * @return La dirección de email proporcionada.
+     */
     public String getEmail() {
         return email;
     }
 
+    /**
+     * Establece la dirección de correo electrónico.
+     * @param email La nueva dirección de email para la solicitud.
+     */
     public void setEmail(String email) {
         this.email = email;
     }
 
+    /**
+     * Obtiene la contraseña en texto plano.
+     * @return La contraseña proporcionada.
+     */
     public String getPassword() {
         return password;
     }
 
+    /**
+     * Establece la contraseña en texto plano.
+     * @param password La nueva contraseña para la solicitud.
+     */
     public void setPassword(String password) {
         this.password = password;
     }
 
+    /**
+     * Obtiene la dirección física del usuario.
+     * @return La dirección proporcionada.
+     */
     public String getAddress() {
         return address;
     }
 
+    /**
+     * Establece la dirección física del usuario.
+     * @param address La nueva dirección para la solicitud.
+     */
     public void setAddress(String address) {
         this.address = address;
     }
 
+    /**
+     * Obtiene el número de teléfono del usuario.
+     * @return El número de teléfono proporcionado.
+     */
     public String getPhoneNumber() {
         return phoneNumber;
     }
 
+    /**
+     * Establece el número de teléfono del usuario.
+     * @param phoneNumber El nuevo número de teléfono para la solicitud.
+     */
     public void setPhoneNumber(String phoneNumber) {
         this.phoneNumber = phoneNumber;
     }
@@ -182,18 +232,18 @@ public class CreateUserRequest {
     // ========== MÉTODOS DE UTILIDAD ==========
 
     /**
-     * Retorna el nombre completo formateado.
+     * Retorna el nombre completo del usuario concatenando el nombre y el apellido.
      *
-     * @return nombre y apellido concatenados
+     * @return una cadena con el nombre completo, con espacios extra eliminados.
      */
     public String getFullName() {
         return (firstName + " " + lastName).trim();
     }
 
     /**
-     * Verifica si todos los campos obligatorios están presentes.
+     * Verifica si todos los campos obligatorios del DTO han sido poblados con valores no vacíos.
      *
-     * @return true si todos los campos requeridos tienen valor
+     * @return {@code true} si todos los campos requeridos tienen valor, {@code false} en caso contrario.
      */
     public boolean hasAllRequiredFields() {
         return firstName != null && !firstName.trim().isEmpty() &&
@@ -204,6 +254,12 @@ public class CreateUserRequest {
                 phoneNumber != null && !phoneNumber.trim().isEmpty();
     }
 
+    /**
+     * Genera una representación de cadena del objeto para logging y debugging.
+     * <p><strong>Nota de Seguridad:</strong> La contraseña se excluye explícitamente de esta
+     * representación para evitar su exposición accidental en los logs.</p>
+     * @return una cadena representando el estado del objeto.
+     */
     @Override
     public String toString() {
         return "CreateUserRequest{" +

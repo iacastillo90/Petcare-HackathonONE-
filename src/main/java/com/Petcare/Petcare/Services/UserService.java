@@ -7,6 +7,7 @@ import com.Petcare.Petcare.Models.User.Role;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
+import javax.security.auth.login.AccountNotFoundException;
 import java.util.List;
 import java.util.Optional;
 
@@ -69,6 +70,8 @@ public interface UserService {
      */
     AuthResponse registerUser(CreateUserRequest request);
 
+    AuthResponse registerUserSitter(CreateUserRequest request);
+
     /**
      * Verifica el email de un usuario usando un token de verificación.
      * @param token El token JWT de verificación.
@@ -106,7 +109,7 @@ public interface UserService {
      * @param id identificador único del usuario
      * @return respuesta completa del usuario o vacío si no existe
      */
-    Optional<UserResponse> getUserById(Long id);
+    UserResponse getUserById(Long id);
 
     /**
      * Busca un usuario por email con información completa.
@@ -114,7 +117,7 @@ public interface UserService {
      * @param email dirección de correo electrónico
      * @return respuesta completa del usuario o vacío si no existe
      */
-    Optional<UserResponse> getUserByEmail(String email);
+    UserResponse getUserByEmail(String email);
 
     // ========== MÉTODOS DE ACTUALIZACIÓN ==========
 
@@ -131,7 +134,7 @@ public interface UserService {
      * @throws RuntimeException si el usuario no existe
      * @throws IllegalArgumentException si el nuevo email ya está en uso
      */
-    UserResponse updateUser(Long id, CreateUserRequest request);
+    UserResponse updateUser(Long id, UpdateUserRequest request);
 
     /**
      * Activa o desactiva una cuenta de usuario.
@@ -229,4 +232,16 @@ public interface UserService {
      * @return lista de usuarios sin verificar email en formato resumido
      */
     List<UserSummaryResponse> getUnverifiedUsers();
+
+    DashboardStatsDTO getDashboardStatsForUser(Long userId);
+
+    MainDashboardDTO getMainDashboardData(Long id) throws AccountNotFoundException;
+
+    /**
+     * Verifica si un email está disponible para un nuevo registro.
+     *
+     * @param email El email a verificar.
+     * @return true si el email no está registrado, false en caso contrario.
+     */
+    boolean isEmailAvailable(String email);
 }

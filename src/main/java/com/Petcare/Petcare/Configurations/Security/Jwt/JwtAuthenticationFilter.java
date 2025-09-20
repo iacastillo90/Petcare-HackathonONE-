@@ -70,9 +70,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                             .map(SimpleGrantedAuthority::new)
                             .collect(Collectors.toList());
 
-                    // Create a basic UserDetails object from the token's information
-                    UserDetails userDetails = new org.springframework.security.core.userdetails.User(
-                            username, "", authorities); // No password needed here
+                    UserDetails userDetails = this.userDetailsService.loadUserByUsername(username);
 
                     UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
                             userDetails,

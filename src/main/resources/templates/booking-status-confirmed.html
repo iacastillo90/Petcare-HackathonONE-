@@ -1,0 +1,685 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>Reserva confirmada - Petcare</title>
+    <!--[if mso]>
+    <noscript>
+        <xml>
+            <o:OfficeDocumentSettings>
+                <o:PixelsPerInch>96</o:PixelsPerInch>
+            </o:OfficeDocumentSettings>
+        </xml>
+    </noscript>
+    <![endif]-->
+    <style type="text/css">
+        /* Reset y estilos base */
+        body, table, td, p, a, li, blockquote {
+            -webkit-text-size-adjust: 100%;
+            -ms-text-size-adjust: 100%;
+        }
+
+        table, td {
+            mso-table-lspace: 0pt;
+            mso-table-rspace: 0pt;
+        }
+
+        img {
+            -ms-interpolation-mode: bicubic;
+            border: 0;
+            height: auto;
+            line-height: 100%;
+            outline: none;
+            text-decoration: none;
+        }
+
+        /* Estilos principales */
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            line-height: 1.6;
+            color: #2c3e50;
+            background-color: #f8f9fa;
+            margin: 0;
+            padding: 0;
+            width: 100% !important;
+            min-height: 100%;
+        }
+
+        .email-container {
+            max-width: 600px;
+            margin: 0 auto;
+            background-color: #ffffff;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 4px 25px rgba(0, 0, 0, 0.08);
+        }
+
+        /* Header con celebración */
+        .header {
+            background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%);
+            padding: 40px 30px;
+            text-align: center;
+            color: #ffffff;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .header::before {
+            content: "🎉";
+            position: absolute;
+            top: 10px;
+            left: 20px;
+            font-size: 24px;
+            animation: bounce 2s infinite;
+        }
+
+        .header::after {
+            content: "🎉";
+            position: absolute;
+            top: 10px;
+            right: 20px;
+            font-size: 24px;
+            animation: bounce 2s infinite 0.5s;
+        }
+
+        @keyframes bounce {
+            0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
+            40% { transform: translateY(-10px); }
+            60% { transform: translateY(-5px); }
+        }
+
+        .header h1 {
+            margin: 0 0 10px 0;
+            font-size: 32px;
+            font-weight: 700;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .header .subtitle {
+            font-size: 16px;
+            opacity: 0.9;
+            margin: 0;
+            font-weight: 300;
+        }
+
+        .logo {
+            max-width: 80px;
+            height: auto;
+            margin-bottom: 20px;
+            border-radius: 50%;
+        }
+
+        /* Contenido principal */
+        .content {
+            padding: 40px 30px;
+            background-color: #ffffff;
+        }
+
+        .content h2 {
+            color: #2c3e50;
+            font-size: 24px;
+            font-weight: 600;
+            margin: 0 0 20px 0;
+            text-align: center;
+        }
+
+        .content p {
+            margin-bottom: 20px;
+            font-size: 16px;
+            line-height: 1.7;
+            color: #4a5568;
+        }
+
+        .welcome-message {
+            background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            font-weight: 600;
+            font-size: 18px;
+        }
+
+        /* Status confirmado */
+        .status-badge {
+            display: inline-block;
+            padding: 12px 24px;
+            border-radius: 25px;
+            font-size: 16px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin: 20px 0;
+            background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%);
+            color: #ffffff;
+            box-shadow: 0 4px 15px rgba(76, 175, 80, 0.3);
+            animation: pulse-green 3s infinite;
+        }
+
+        @keyframes pulse-green {
+            0% { box-shadow: 0 4px 15px rgba(76, 175, 80, 0.3); }
+            50% { box-shadow: 0 6px 20px rgba(76, 175, 80, 0.5); }
+            100% { box-shadow: 0 4px 15px rgba(76, 175, 80, 0.3); }
+        }
+
+        /* Detalles de la reserva confirmada */
+        .booking-details {
+            background: linear-gradient(135deg, #e8f5e8 0%, #c8e6c9 100%);
+            border-radius: 12px;
+            padding: 25px;
+            margin: 30px 0;
+            border: 2px solid #4CAF50;
+        }
+
+        .booking-details h3 {
+            color: #2e7d32;
+            font-size: 20px;
+            font-weight: 600;
+            margin: 0 0 20px 0;
+            text-align: center;
+        }
+
+        .detail-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 0;
+            border-bottom: 1px solid #a5d6a7;
+        }
+
+        .detail-row:last-child {
+            border-bottom: none;
+            font-weight: 600;
+            font-size: 18px;
+            color: #2e7d32;
+            background-color: rgba(76, 175, 80, 0.2);
+            margin: 15px -25px -25px;
+            padding: 20px 25px;
+            border-radius: 0 0 12px 12px;
+        }
+
+        .detail-label {
+            font-weight: 600;
+            color: #2e7d32;
+            min-width: 140px;
+        }
+
+        .detail-value {
+            color: #388e3c;
+            text-align: right;
+            flex: 1;
+        }
+
+        .highlight-value {
+            color: #2e7d32;
+            font-weight: 700;
+        }
+
+        /* Información del cuidador confirmado */
+        .sitter-confirmed {
+            background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
+            padding: 25px;
+            border-radius: 12px;
+            margin: 30px 0;
+            border: 2px solid #2196f3;
+        }
+
+        .sitter-confirmed h3 {
+            color: #0d47a1;
+            font-size: 18px;
+            font-weight: 600;
+            margin: 0 0 15px 0;
+        }
+
+        .sitter-confirmed p {
+            margin-bottom: 8px;
+            font-size: 14px;
+            color: #1565c0;
+        }
+
+        .sitter-avatar {
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(135deg, #2196f3 0%, #1976d2 100%);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            color: white;
+            margin: 0 auto 15px;
+        }
+
+        /* Notas importantes de confirmación */
+        .confirmation-notes {
+            background: linear-gradient(135deg, #fff3e0 0%, #ffe0b2 100%);
+            padding: 20px;
+            border-radius: 10px;
+            margin: 25px 0;
+            border-left: 4px solid #ff9800;
+        }
+
+        .confirmation-notes h3 {
+            color: #e65100;
+            font-size: 16px;
+            font-weight: 600;
+            margin: 0 0 10px 0;
+        }
+
+        .confirmation-notes p {
+            margin: 0;
+            font-size: 14px;
+            color: #ef6c00;
+        }
+
+        /* Botones de acción */
+        .action-buttons {
+            text-align: center;
+            margin: 35px 0;
+        }
+
+        .action-button {
+            display: inline-block;
+            background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%);
+            color: #ffffff !important;
+            padding: 14px 28px;
+            text-decoration: none;
+            border-radius: 25px;
+            font-size: 16px;
+            font-weight: 600;
+            box-shadow: 0 4px 15px rgba(76, 175, 80, 0.3);
+            transition: all 0.3s ease;
+            margin: 0 10px 15px;
+        }
+
+        .action-button.secondary {
+            background: linear-gradient(135deg, #2196f3 0%, #1976d2 100%);
+            box-shadow: 0 4px 15px rgba(33, 150, 243, 0.3);
+        }
+
+        .action-button.warning {
+            background: linear-gradient(135deg, #ff9800 0%, #f57c00 100%);
+            box-shadow: 0 4px 15px rgba(255, 152, 0, 0.3);
+        }
+
+        .action-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(76, 175, 80, 0.4);
+        }
+
+        .action-button.secondary:hover {
+            box-shadow: 0 6px 20px rgba(33, 150, 243, 0.4);
+        }
+
+        .action-button.warning:hover {
+            box-shadow: 0 6px 20px rgba(255, 152, 0, 0.4);
+        }
+
+        /* Información sobre el pago */
+        .payment-info {
+            background: linear-gradient(135deg, #f3e5f5 0%, #e1bee7 100%);
+            padding: 25px;
+            border-radius: 12px;
+            margin: 30px 0;
+            border-left: 4px solid #9c27b0;
+        }
+
+        .payment-info h3 {
+            color: #6a1b9a;
+            font-size: 18px;
+            font-weight: 600;
+            margin: 0 0 15px 0;
+        }
+
+        .payment-info p {
+            margin-bottom: 10px;
+            font-size: 14px;
+            color: #7b1fa2;
+        }
+
+        /* Recordatorio importante */
+        .reminder-section {
+            background: linear-gradient(135deg, #fff8e1 0%, #fff3c4 100%);
+            color: #f57c00;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 25px 0;
+            border-left: 4px solid #ffc107;
+            border-top: 1px solid #ffcc02;
+        }
+
+        .reminder-section .icon {
+            font-size: 20px;
+            margin-right: 8px;
+        }
+
+        .reminder-section p {
+            margin: 0;
+            font-size: 14px;
+            font-weight: 500;
+            color: #ef6c00;
+        }
+
+        /* Información importante */
+        .info-section {
+            background-color: #e8f5e8;
+            padding: 25px;
+            border-radius: 10px;
+            margin: 30px 0;
+            border-left: 4px solid #4CAF50;
+        }
+
+        .info-section h3 {
+            color: #2e7d32;
+            font-size: 18px;
+            font-weight: 600;
+            margin: 0 0 15px 0;
+        }
+
+        .info-section p {
+            margin-bottom: 10px;
+            font-size: 14px;
+            color: #388e3c;
+        }
+
+        /* Footer */
+        .footer {
+            background-color: #f8f9fa;
+            padding: 30px;
+            text-align: center;
+            border-top: 1px solid #e9ecef;
+        }
+
+        .footer p {
+            margin: 8px 0;
+            font-size: 13px;
+            color: #6c757d;
+        }
+
+        .footer .company-name {
+            font-weight: 600;
+            color: #4CAF50;
+            font-size: 16px;
+        }
+
+        .footer .contact-info {
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px solid #dee2e6;
+        }
+
+        .footer .contact-info a {
+            color: #4CAF50;
+            text-decoration: none;
+        }
+
+        .footer .contact-info a:hover {
+            text-decoration: underline;
+        }
+
+        /* Estilos responsivos */
+        @media only screen and (max-width: 600px) {
+            .email-container {
+                margin: 10px;
+                border-radius: 8px;
+            }
+
+            .header {
+                padding: 30px 20px;
+            }
+
+            .header h1 {
+                font-size: 26px;
+            }
+
+            .content {
+                padding: 30px 20px;
+            }
+
+            .booking-details {
+                padding: 20px;
+            }
+
+            .detail-row {
+                flex-direction: column;
+                align-items: flex-start;
+                text-align: left;
+            }
+
+            .detail-value {
+                text-align: left;
+                margin-top: 5px;
+                font-weight: 600;
+            }
+
+            .action-button {
+                display: block;
+                margin: 15px 0;
+                padding: 12px 24px;
+                font-size: 14px;
+            }
+
+            .footer {
+                padding: 25px 20px;
+            }
+
+            .info-section, .sitter-confirmed, .payment-info, .confirmation-notes {
+                padding: 20px;
+            }
+        }
+
+        /* Soporte para modo oscuro */
+        @media (prefers-color-scheme: dark) {
+            .content p {
+                color: #4a5568;
+            }
+        }
+
+        /* Soporte para clientes de correo específicos */
+        .outlook-fix {
+            mso-table-lspace: 0pt !important;
+            mso-table-rspace: 0pt !important;
+        }
+    </style>
+</head>
+<body>
+<div class="email-container">
+    <!-- Header -->
+    <div class="header">
+        <!-- Logo opcional - descomenta si tienes logo -->
+        <!--<img src="https://tudominio.com/logo-petcare.png" alt="Petcare Logo" class="logo">-->
+        <h1>¡Reserva Confirmada!</h1>
+        <p class="subtitle">Tu cuidador ha aceptado la reserva</p>
+    </div>
+
+    <!-- Contenido principal -->
+    <div class="content">
+        <h2>¡Excelentes noticias!</h2>
+
+        <p class="welcome-message">
+            Hola <strong th:text="${clientName}"></strong>,
+        </p>
+
+        <p>
+            ¡Tu reserva ha sido <strong>confirmada exitosamente</strong>!
+            <span th:text="${sitterName}"></span> ha aceptado cuidar a
+            <span th:text="${petName}"></span> y está preparándose para brindar
+            el mejor servicio posible.
+        </p>
+
+        <!-- Estado confirmado -->
+        <div style="text-align: center;">
+            <span class="status-badge">
+                ✅ RESERVA CONFIRMADA
+            </span>
+        </div>
+
+        <!-- Detalles de la reserva confirmada -->
+        <div class="booking-details">
+            <h3>📋 Detalles de tu reserva confirmada</h3>
+
+            <div class="detail-row">
+                <span class="detail-label">🆔 ID Reserva:</span>
+                <span class="detail-value">#<span th:text="${bookingId}"></span></span>
+            </div>
+
+            <div class="detail-row">
+                <span class="detail-label">🐾 Mascota:</span>
+                <span class="detail-value highlight-value" th:text="${petName}"></span>
+            </div>
+
+            <div class="detail-row">
+                <span class="detail-label">👨‍⚕️ Cuidador:</span>
+                <span class="detail-value" th:text="${sitterName}"></span>
+            </div>
+
+            <div class="detail-row">
+                <span class="detail-label">🛍️ Servicio:</span>
+                <span class="detail-value" th:text="${serviceName}"> por 2 Horas</span>
+            </div>
+
+            <div class="detail-row">
+                <span class="detail-label">📅 Fecha:</span>
+                <span class="detail-value" th:text="${#temporals.format(startDate, 'dd/MM/yyyy')}">15/09/2025</span>
+            </div>
+
+            <div class="detail-row">
+                <span class="detail-label">⏰ Horario:</span>
+                <span class="detail-value">
+                    <span th:text="${#temporals.format(startDate, 'HH:mm')}">14:00</span> -
+                    <span th:text="${#temporals.format(endDate, 'HH:mm')}">16:00</span>
+                </span>
+            </div>
+
+            <div class="detail-row">
+                <span class="detail-label">⏱️ Duración:</span>
+                <span class="detail-value" th:text="${scheduledDurationInMinutes + ' minutos'}">120 minutos</span>
+            </div>
+
+            <div class="detail-row">
+                <span class="detail-label">💰 Total:</span>
+                <span class="detail-value highlight-value">$<span th:text="${totalPrice}">60.00</span></span>
+            </div>
+        </div>
+
+        <!-- Información del cuidador confirmado -->
+        <div class="sitter-confirmed">
+            <h3>👨‍⚕️ Tu cuidador confirmado</h3>
+            <div class="sitter-avatar">👤</div>
+            <p style="text-align: center; font-size: 18px; font-weight: 600; color: #0d47a1;">
+                <span th:text="${sitterName}">Isabel Contreras</span>
+            </p>
+            <p><strong>Estado:</strong> <span style="color: #4CAF50; font-weight: bold;">✅ Confirmado y listo</span></p>
+            <p><strong>Experiencia:</strong> Cuidador verificado y con seguro</p>
+            <p><strong>Contacto:</strong> Te proporcionaremos los datos de contacto 24 horas antes del servicio</p>
+            <p><strong>Ubicación:</strong> Confirmada para el área de servicio</p>
+        </div>
+
+        <!-- Notas especiales si existen -->
+        <div class="confirmation-notes" th:if="${notes}">
+            <h3>📝 Instrucciones especiales recordadas</h3>
+            <p>Tu cuidador ha recibido estas instrucciones especiales sobre <span th:text="${petName}">Luna</span>:</p>
+            <p><em th:text="${notes}">Mi perro Fido es muy amigable pero le asustan los ruidos fuertes.</em></p>
+        </div>
+
+        <!-- Información sobre el pago -->
+        <div class="payment-info">
+            <h3>💳 Información de pago</h3>
+            <p>✅ <strong>Método de pago:</strong> Confirmado y verificado</p>
+            <p>✅ <strong>Monto total:</strong> $<span th:text="${totalPrice}">60.00</span></p>
+            <p>✅ <strong>Cobro:</strong> Se procesará automáticamente al finalizar el servicio</p>
+            <p>✅ <strong>Factura:</strong> Recibirás tu recibo por email después del servicio</p>
+        </div>
+
+        <!-- Recordatorio importante -->
+        <div class="reminder-section">
+            <p>
+                <span class="icon">📅</span>
+                <strong>¡Recordatorio importante!</strong> Tu servicio está programado para el
+                <strong th:text="${#temporals.format(startDate, 'dd/MM/yyyy')}">15/09/2025</strong>
+                de <strong th:text="${#temporals.format(startDate, 'HH:mm')}">14:00</strong>
+                a <strong th:text="${#temporals.format(endDate, 'HH:mm')}">16:00</strong>
+            </p>
+        </div>
+
+        <!-- Botones de acción -->
+        <div class="action-buttons">
+            <a href="#" class="action-button">
+                Ver detalles completos
+            </a>
+            <a href="#" class="action-button secondary">
+                Contactar a mi cuidador
+            </a>
+            <a href="#" class="action-button warning" th:if="${cancellable}">
+                Modificar/Cancelar
+            </a>
+        </div>
+
+        <!-- Información importante post-confirmación -->
+        <div class="info-section">
+            <h3>ℹ️ ¿Qué sigue ahora?</h3>
+            <p>✅ <strong>24 horas antes:</strong> Recibirás los datos de contacto del cuidador</p>
+            <p>✅ <strong>2 horas antes:</strong> Te enviaremos un recordatorio del servicio</p>
+            <p>✅ <strong>Durante el servicio:</strong> Podrás recibir actualizaciones de tu mascota</p>
+            <p>✅ <strong>Al finalizar:</strong> Recibirás un resumen del cuidado brindado</p>
+            <p>✅ <strong>Evaluación:</strong> Podrás calificar el servicio y al cuidador</p>
+        </div>
+
+        <!-- Información de contacto de emergencia -->
+        <div class="info-section">
+            <h3>🚨 ¿Necesitas hacer cambios?</h3>
+            <p>Si necesitas modificar algo antes del servicio, contáctanos:</p>
+            <p>📧 Email: soporte@petcare.com</p>
+            <p>📞 Teléfono: +1 (555) 123-4567</p>
+            <p>💬 Chat en vivo: www.petcare.com/chat</p>
+            <p><strong>Nota:</strong> Los cambios deben solicitarse con al menos 4 horas de anticipación</p>
+        </div>
+
+        <p>
+            ¡Estamos emocionados de que <strong th:text="${petName}">Luna</strong> reciba el
+            mejor cuidado de <strong th:text="${sitterName}">Isabel Contreras</strong>!
+            Tu mascota estará en las mejores manos. 🐾❤️
+        </p>
+
+        <p>
+            <strong>¡Gracias por elegir Petcare!</strong> Nos aseguraremos de que tanto tú
+            como tu mascota tengan una experiencia excepcional.
+        </p>
+    </div>
+
+    <!-- Footer -->
+    <div class="footer">
+        <p class="company-name">Petcare</p>
+        <p>El cuidado que tus mascotas merecen</p>
+
+        <div class="contact-info">
+            <p>
+                <a href="mailto:info@petcare.com">info@petcare.com</a> |
+                <a href="https://www.petcare.com">www.petcare.com</a>
+            </p>
+            <p>
+                <a href="https://www.petcare.com/privacidad">Política de Privacidad</a> |
+                <a href="https://www.petcare.com/terminos">Términos de Servicio</a>
+            </p>
+        </div>
+
+        <p>
+            &copy; <span th:text="${#dates.format(#dates.createNow(), 'yyyy')}">2024</span>
+            Petcare. Todos los derechos reservados.
+        </p>
+
+        <p>
+            <small>
+                Reserva confirmada el
+                <span th:text="${#temporals.format(#temporals.createNow(), 'dd/MM/yyyy HH:mm')}">03/09/2025 20:45</span>
+            </small>
+        </p>
+    </div>
+</div>
+
+<!-- Tracking pixel opcional para analytics -->
+<!--<img src="https://analytics.petcare.com/track.gif?email=booking-confirmed&booking=${bookingId}"
+     width="1" height="1" alt="" style="display:none;">-->
+</body>
+</html>

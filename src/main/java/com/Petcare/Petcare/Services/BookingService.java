@@ -7,6 +7,7 @@ import com.Petcare.Petcare.DTOs.Booking.UpdateBookingRequest;
 import com.Petcare.Petcare.Models.User.User;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.security.core.Authentication;
 
 /**
  * Interfaz para el servicio de gestión de reservas (Bookings).
@@ -34,7 +35,7 @@ public interface BookingService {
      * y coordinación con otros servicios del sistema.</p>
      *
      * @param createBookingRequest DTO con los datos de entrada para la nueva reserva
-     * @param currentUser El usuario autenticado que está realizando la reserva
+     * @param authentication El usuario autenticado que está realizando la reserva
      *
      * @return BookingDetailResponse con los detalles de la reserva recién creada
      *
@@ -42,7 +43,7 @@ public interface BookingService {
      * @throws IllegalStateException si existe conflicto de disponibilidad
      * @throws SecurityException si el usuario no tiene permisos
      */
-    BookingDetailResponse createBooking(CreateBookingRequest createBookingRequest, User currentUser);
+    BookingDetailResponse createBooking(CreateBookingRequest createBookingRequest, Authentication authentication);
 
     /**
      * Obtiene todas las reservas con paginación y información resumida.

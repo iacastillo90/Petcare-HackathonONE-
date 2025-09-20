@@ -3,6 +3,7 @@ package com.Petcare.Petcare.Models;
 import com.Petcare.Petcare.DTOs.Pet.CreatePetRequest;
 import com.Petcare.Petcare.DTOs.Pet.PetResponse;
 import com.Petcare.Petcare.Models.Account.Account;
+import com.Petcare.Petcare.Models.Booking.Booking;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -14,7 +15,9 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.HashSet;
 import java.util.Objects;
+import java.util.Set;
 
 /**
  * Entidad que representa una mascota en la plataforma Petcare.
@@ -29,6 +32,7 @@ import java.util.Objects;
  * <li>Información física: género, color, características especiales</li>
  * <li>Control de estado: activo/inactivo para disponibilidad de servicios</li>
  * <li>Notas especiales para cuidadores: medicamentos, alergias, comportamiento</li>
+ * <li>Relación con reservas históricas y activas</li>
  * <li>Auditoría completa con timestamps de creación y actualización</li>
  * </ul>
  *
@@ -38,6 +42,7 @@ import java.util.Objects;
  * <li>Búsqueda y filtrado de mascotas por características</li>
  * <li>Gestión de disponibilidad para servicios de cuidado</li>
  * <li>Consulta de información detallada para cuidadores</li>
+ * <li>Análisis de historial de servicios y reservas</li>
  * </ul>
  *
  * <p><strong>Patrones implementados:</strong></p>
@@ -45,13 +50,16 @@ import java.util.Objects;
  * <li>Entity Listener para auditoría automática</li>
  * <li>Validación Bean Validation con mensajes en español</li>
  * <li>Relación Many-to-One con Account mediante Foreign Key</li>
+ * <li>Relación One-to-Many bidireccional con Booking</li>
  * <li>Soft delete mediante campo isActive</li>
+ * <li>Métodos de utilidad para gestión de relaciones</li>
  * </ul>
  *
  * @author Equipo Petcare 10
- * @version 1.0
+ * @version 1.1
  * @since 1.0
  * @see Account
+ * @see Booking
  * @see PetResponse
  * @see CreatePetRequest
  */
@@ -62,7 +70,9 @@ import java.util.Objects;
                 @Index(name = "idx_pet_name", columnList = "name"),
                 @Index(name = "idx_pet_species", columnList = "species"),
                 @Index(name = "idx_pet_active", columnList = "is_active"),
-                @Index(name = "idx_pet_account_active", columnList = "account_id, is_active")
+                @Index(name = "idx_pet_account_active", columnList = "account_id, is_active"),
+                @Index(name = "idx_pet_breed", columnList = "breed"),
+                @Index(name = "idx_pet_species_breed", columnList = "species, breed")
         })
 @EntityListeners(AuditingEntityListener.class)
 public class Pet {
@@ -83,6 +93,14 @@ public class Pet {
     @JoinColumn(name = "account_id", nullable = false, foreignKey = @ForeignKey(name = "fk_pet_account"))
     @NotNull(message = "La cuenta es obligatoria")
     private Account account;
+
+    /**
+     * Reservas asociadas a esta mascota.
+     * <p>Incluye tanto reservas históricas como futuras. La relación
+     * es lazy para optimizar el rendimiento.</p>
+     */
+    @OneToMany(mappedBy = "pet", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private Set<Booking> bookings = new HashSet<>();
 
     /**
      * Nombre de la mascota.
@@ -154,6 +172,17 @@ public class Pet {
     @Size(max = 1000, message = "La información de alergias no puede exceder los 1000 caracteres")
     private String allergies;
 
+
+    /**
+     * Información sobre vacunas aplicadas a la mascota.
+     */
+    @Column(columnDefinition = "TEXT")
+    @Size(max = 2000, message = "La información de vacunas no puede exceder los 2000 caracteres")
+    private String vaccinations;
+
+
+
+
     /**
      * Notas especiales para cuidadores.
      */
@@ -205,6 +234,29 @@ public class Pet {
         this.species = species;
         this.breed = breed;
         this.age = age;
+        this.bookings = new HashSet<>();
+    }
+
+    /**
+     * Constructor completo con información detallada.
+     */
+    public Pet(Account account, String name, String species, String breed, Integer age,
+               BigDecimal weight, String gender, String color, String physicalDescription,
+               String medications, String allergies, String vaccinations, String specialNotes) {
+        this.account = account;
+        this.name = name;
+        this.species = species;
+        this.breed = breed;
+        this.age = age;
+        this.weight = weight;
+        this.gender = gender;
+        this.color = color;
+        this.physicalDescription = physicalDescription;
+        this.medications = medications;
+        this.allergies = allergies;
+        this.vaccinations = vaccinations;
+        this.specialNotes = specialNotes;
+        this.bookings = new HashSet<>();
     }
 
     // ========== GETTERS Y SETTERS ==========
@@ -223,6 +275,14 @@ public class Pet {
 
     public void setAccount(Account account) {
         this.account = account;
+    }
+
+    public Set<Booking> getBookings() {
+        return bookings;
+    }
+
+    public void setBookings(Set<Booking> bookings) {
+        this.bookings = bookings;
     }
 
     public String getName() {
@@ -337,7 +397,41 @@ public class Pet {
         this.updatedAt = updatedAt;
     }
 
-    // ========== MÉTODOS DE UTILIDAD ==========
+
+
+    public String getVaccinations() {
+        return vaccinations;
+    }
+
+    public void setVaccinations(String vaccinations) {
+        this.vaccinations = vaccinations;
+    }
+
+
+
+    // ========== MÉTODOS DE UTILIDAD PARA RELACIONES BIDIRECCIONALES ==========
+
+    /**
+     * Agrega una reserva a esta mascota manteniendo la consistencia bidireccional.
+     *
+     * @param booking la reserva a agregar
+     */
+    public void addBooking(Booking booking) {
+        bookings.add(booking);
+        booking.setPet(this);
+    }
+
+    /**
+     * Remueve una reserva de esta mascota manteniendo la consistencia bidireccional.
+     *
+     * @param booking la reserva a remover
+     */
+    public void removeBooking(Booking booking) {
+        bookings.remove(booking);
+        booking.setPet(null);
+    }
+
+    // ========== MÉTODOS DE UTILIDAD EXTENDIDOS ==========
 
     /**
      * Verifica si la mascota pertenece a la cuenta especificada.
@@ -359,30 +453,145 @@ public class Pet {
         return isActive && account != null && account.isActive();
     }
 
+    /**
+     * Verifica si la mascota tiene reservas activas.
+     * <p>Considera activas las reservas en estado PENDING, CONFIRMED o IN_PROGRESS.</p>
+     *
+     * @return true si tiene reservas activas
+     */
+    public boolean hasActiveBookings() {
+        if (bookings == null || bookings.isEmpty()) {
+            return false;
+        }
+        return bookings.stream()
+                .anyMatch(booking -> !booking.isFinalState());
+    }
+
+    /**
+     * Obtiene el número total de reservas completadas.
+     *
+     * @return cantidad de reservas completadas
+     */
+    public long getCompletedBookingsCount() {
+        if (bookings == null) {
+            return 0;
+        }
+        return bookings.stream()
+                .filter(booking -> booking.getStatus() != null)
+                .filter(booking -> booking.getStatus().name().equals("COMPLETED"))
+                .count();
+    }
+
+    /**
+     * Verifica si la mascota puede ser marcada como inactiva.
+     * <p>Una mascota solo puede ser desactivada si no tiene reservas activas.</p>
+     *
+     * @return true si puede ser desactivada
+     */
+    public boolean canBeDeactivated() {
+        return !hasActiveBookings();
+    }
+
+    /**
+     * Obtiene información básica de la mascota para logging.
+     *
+     * @return cadena con información básica
+     */
+    public String getBasicInfo() {
+        return String.format("%s (%s, %s)", name, species, breed);
+    }
+
+    /**
+     * Verifica si la mascota tiene información médica registrada.
+     *
+     * @return true si tiene medicamentos o alergias registradas
+     */
+    public boolean hasMedicalInfo() {
+        return (medications != null && !medications.trim().isEmpty()) ||
+                (allergies != null && !allergies.trim().isEmpty());
+    }
+
+    /**
+     * Obtiene todas las notas relevantes para cuidadores.
+     * <p>Combina información médica y notas especiales en un solo texto.</p>
+     *
+     * @return notas consolidadas para cuidadores
+     */
+    public String getCareTakerNotes() {
+        StringBuilder notes = new StringBuilder();
+
+        if (medications != null && !medications.trim().isEmpty()) {
+            notes.append("Medicamentos: ").append(medications).append("\n");
+        }
+
+        if (allergies != null && !allergies.trim().isEmpty()) {
+            notes.append("Alergias: ").append(allergies).append("\n");
+        }
+
+        if (specialNotes != null && !specialNotes.trim().isEmpty()) {
+            notes.append("Notas especiales: ").append(specialNotes);
+        }
+
+        return notes.toString().trim();
+    }
+
+    /**
+     * Verifica si la mascota tiene información de vacunas registrada.
+     *
+     * @return true si tiene al menos una vacuna registrada
+     */
+    public boolean hasVaccinationInfo() {
+        return vaccinations != null && !vaccinations.trim().isEmpty();
+    }
+
+
     // ========== EQUALS, HASHCODE Y TOSTRING ==========
 
+    /**
+     * Implementación de equals basada en ID único.
+     * <p>Para entidades sin ID persistido, se compara por campos de negocio únicos.</p>
+     */
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
+        if (!(o instanceof Pet)) return false;
         Pet pet = (Pet) o;
-        return id != null && Objects.equals(id, pet.id);
+
+        // Si ambos tienen ID, comparar por ID
+        if (this.id != null && pet.id != null) {
+            return Objects.equals(this.id, pet.id);
+        }
+
+        // Si no tienen ID, comparar por campos de negocio únicos
+        return Objects.equals(getName(), pet.getName()) &&
+                Objects.equals(getAccount(), pet.getAccount()) &&
+                Objects.equals(getSpecies(), pet.getSpecies()) &&
+                Objects.equals(getBreed(), pet.getBreed());
     }
 
+    /**
+     * Implementación de hashCode consistente con equals.
+     */
     @Override
     public int hashCode() {
-        return id != null ? id.hashCode() : getClass().hashCode();
+        if (id != null) {
+            return Objects.hash(id);
+        }
+        return Objects.hash(getName(), getAccount(), getSpecies(), getBreed());
     }
 
+    /**
+     * Representación de cadena optimizada para logging.
+     * <p>Evita lazy loading exceptions al no acceder a relaciones complejas.</p>
+     */
     @Override
     public String toString() {
-        return "Pet{" +
-                "id=" + id +
-                ", name='" + name + '\'' +
-                ", species='" + species + '\'' +
-                ", breed='" + breed + '\'' +
-                ", accountId=" + (account != null ? account.getId() : "null") +
-                ", isActive=" + isActive +
-                '}';
+        return String.format("Pet{id=%d, name='%s', species='%s', breed='%s', " +
+                        "accountId=%d, isActive=%s, bookingsCount=%d, createdAt=%s}",
+                id, name, species, breed,
+                (account != null ? account.getId() : null),
+                isActive,
+                (bookings != null ? bookings.size() : 0),
+                createdAt);
     }
 }

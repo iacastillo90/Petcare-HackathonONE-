@@ -1,5 +1,6 @@
 package com.Petcare.Petcare.Repositories;
 
+import aj.org.objectweb.asm.commons.Remapper;
 import com.Petcare.Petcare.Models.Booking.Booking;
 
 import com.Petcare.Petcare.Models.Booking.BookingStatus;
@@ -11,7 +12,9 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Optional;
 
 @Repository
@@ -34,4 +37,11 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
             "((b.startTime < :endTime AND b.endTime > :startTime)) AND " +
             "b.status IN ('CONFIRMED', 'IN_PROGRESS')")
     boolean existsConflictingBooking(Long sitterId, LocalDateTime startTime, LocalDateTime endTime);
+
+    long countByPetAccountIdAndStartTimeAfterAndStatusNotIn(Long accountId, LocalDateTime now, List<BookingStatus> cancelled);
+
+    long countByPet_Account_IdAndStartTimeBetweenAndStatus(Long accountId, LocalDateTime now, LocalDateTime nextWeek, BookingStatus bookingStatus);
+
+    Optional<Booking> findFirstByAccountIdAndStartTimeAfterOrderByStartTimeAsc(Long accountId, LocalDateTime now);
+
 }

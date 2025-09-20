@@ -3,6 +3,7 @@ package com.Petcare.Petcare.Services.Implement;
 import com.Petcare.Petcare.DTOs.PlatformFee.CreatePlatformFeeRequest;
 import com.Petcare.Petcare.DTOs.PlatformFee.PlatformFeeResponse;
 import com.Petcare.Petcare.Models.Booking.Booking;
+import com.Petcare.Petcare.Models.Invoice.Invoice;
 import com.Petcare.Petcare.Models.PlatformFee;
 import com.Petcare.Petcare.Repositories.BookingRepository;
 import com.Petcare.Petcare.Repositories.PlatformFeeRepository;
@@ -58,6 +59,11 @@ public class PlatformFeeServiceImplement implements PlatformFeeService {
     @Override
     public void recalculatePlatformFee(Booking booking) {
 
+    }
+
+    @Override
+    public void calculateAndCreateFee(Invoice savedInvoice) {
+        
     }
 
 

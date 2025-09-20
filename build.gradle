@@ -38,6 +38,8 @@ dependencies {
 	testRuntimeOnly 'org.junit.platform:junit-platform-launcher' // Launcher de JUnit
 	testImplementation 'com.h2database:h2' // Base de datos H2 para testing
 	implementation 'org.testng:testng:7.7.0'
+    testCompileOnly 'org.projectlombok:lombok'
+    testAnnotationProcessor 'org.projectlombok:lombok'
 
 	// Dependencias de JPA y base de datos
 	implementation 'org.springframework.boot:spring-boot-starter-data-jpa' // JPA
