@@ -1,6 +1,6 @@
-# 🐺 Plataforma Petcare - Hackathon Alura & Oracle ONE
+# 🐺 Plataforma Petcare 
 
-API REST desarrollada en Java y Spring Boot como parte del Hackathon de la especialización backend de Alura Latam y Oracle (ONE). El proyecto simula el backend para una plataforma que conecta a dueños de mascotas con cuidadores para la reserva de servicios.
+API REST desarrollada en Java y Spring Boot. El proyecto simula el backend para una plataforma que conecta a dueños de mascotas con cuidadores para la reserva de servicios.
 
 ---
 
