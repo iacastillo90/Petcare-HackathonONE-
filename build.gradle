@@ -1,3 +1,10 @@
+buildscript {
+    repositories {
+        gradlePluginPortal()
+        mavenCentral()
+    }
+}
+
 plugins {
 	id 'java'
 	id 'org.springframework.boot' version '3.5.4'
@@ -60,8 +67,9 @@ dependencies {
 	implementation 'org.springframework.boot:spring-boot-starter-mail' // Starter para enviar correos electrónicos
     implementation 'org.springframework.boot:spring-boot-starter-thymeleaf' // Starter para plantillas HTML
 
-	// PDF - UPGRADED: 7.2.5 → 7.2.7 (CVE fixes)
-	implementation 'com.itextpdf:itext7-core:7.2.7'
+	// PDF - UPGRADED: 7.2.5 → 8.0.5 (CVE fixes)
+	implementation 'com.itextpdf:itext-core:8.0.5'
+	implementation 'com.itextpdf:bouncy-castle-adapter:8.0.5'
 
 	// Validación
 	implementation 'org.springframework.boot:spring-boot-starter-validation'

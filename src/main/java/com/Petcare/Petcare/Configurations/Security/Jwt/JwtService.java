@@ -14,7 +14,6 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
 import javax.crypto.SecretKey;
-import java.security.Key;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
@@ -25,7 +24,7 @@ import java.util.stream.Collectors;
  * Servicio para manejar tokens JWT (JSON Web Tokens) en la aplicación Petcare.
  * Proporciona funcionalidades para generar, validar y extraer información de tokens JWT usados para autenticación.
  * 
- * <p>Actualizado a JJWT 0.12.5 - API modernizada con métodos fluent.</p>
+ * <p>Actualizado a JJWT 0.12.5 - API modernizada.</p>
  */
 @Service
 public class JwtService {
@@ -104,9 +103,9 @@ public class JwtService {
     /**
      * Obtiene la clave de firma utilizada para operaciones con JWT.
      *
-     * @return El objeto Key para firmar/verificar tokens JWT.
+     * @return El objeto SecretKey para firmar/verificar tokens JWT.
      */
-    private Key getKey() {
+    private SecretKey getKey() {
         byte[] keyBytes = Decoders.BASE64.decode(secretKey);
         return Keys.hmacShaKeyFor(keyBytes);
     }
@@ -202,12 +201,12 @@ public class JwtService {
     public String generateVerificationToken(User user) {
         logger.debug("Generando token de verificación para: {}", user.getEmail());
         Map<String, Object> extraClaims = new HashMap<>();
-        extraClaims.put("userId", user.getId()); // Añadir el ID del usuario es una buena práctica
+        extraClaims.put("userId", user.getId());
 
         return Jwts.builder()
                 .claims(extraClaims)
                 .subject(user.getEmail())
-                .audience().add(VERIFICATION_AUDIENCE).and() // Claim para identificar el propósito
+                .audience().add(VERIFICATION_AUDIENCE).and()
                 .issuedAt(new Date(System.currentTimeMillis()))
                 .expiration(new Date(System.currentTimeMillis() + verificationExpirationTime))
                 .signWith(getKey())
@@ -224,7 +223,7 @@ public class JwtService {
     public Claims getClaimsFromVerificationToken(String token) throws JwtException {
         Claims claims = Jwts.parser()
                 .verifyWith(getKey())
-                .requireAudience(VERIFICATION_AUDIENCE) // Asegura que el token sea para verificación
+                .requireAudience(VERIFICATION_AUDIENCE)
                 .build()
                 .parseSignedClaims(token)
                 .getPayload();

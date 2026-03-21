@@ -52,9 +52,8 @@ public class WebAuthorization {
                                 .requestMatchers(HttpMethod.GET, "/api/users/health").permitAll()
                                 .requestMatchers(HttpMethod.GET, "/verification-success.html").permitAll()
                                 .requestMatchers(HttpMethod.GET, "/api/users/summary").hasRole("ADMIN")
-                                .requestMatchers(HttpMethod.GET, "/swagger-ui/**").permitAll()
-                                .requestMatchers(HttpMethod.GET, "/v3/api-docs/**").permitAll()
-                                .requestMatchers(HttpMethod.GET, "/api-docs", "/api-docs/**", "/swagger-ui/**", "/v3/api-docs/**").permitAll()
+                                .requestMatchers("/swagger-ui/**", "/swagger-ui.html", "/v3/api-docs/**", "/api-docs/**").permitAll()
+                                .requestMatchers("/favicon.ico").permitAll()
                                 //.requestMatchers("/api/**").permitAll()
                                 
                                 // Actuator security - FIXED: Only health and info are public
