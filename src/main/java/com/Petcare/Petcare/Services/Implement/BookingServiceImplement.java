@@ -4,6 +4,7 @@ import com.Petcare.Petcare.DTOs.Booking.BookingDetailResponse;
 import com.Petcare.Petcare.DTOs.Booking.BookingSummaryResponse;
 import com.Petcare.Petcare.DTOs.Booking.CreateBookingRequest;
 import com.Petcare.Petcare.DTOs.Booking.UpdateBookingRequest;
+import com.Petcare.Petcare.Exception.Business.*;
 import com.Petcare.Petcare.Models.Account.Account;
 import com.Petcare.Petcare.Models.Booking.Booking;
 import com.Petcare.Petcare.Models.Booking.BookingStatus;
@@ -173,7 +174,7 @@ public class BookingServiceImplement implements BookingService {
 
         // 4. Busca la entidad User completa en la base de datos
         User currentUser = userRepository.findByEmail(userEmail)
-                .orElseThrow(() -> new RuntimeException("Usuario autenticado no encontrado en la base de datos."));
+                .orElseThrow(() -> new UserNotFoundException("Usuario autenticado no encontrado en la base de datos."));
 
 
         // 1. Validación inicial (sin cambios)
@@ -183,7 +184,7 @@ public class BookingServiceImplement implements BookingService {
 
         // 2. Obtención y validación de entidades relacionadas
         Pet pet = petRepository.findById(createBookingRequest.getPetId())
-                .orElseThrow(() -> new IllegalArgumentException("Mascota no encontrada"));
+                .orElseThrow(() -> new PetNotFoundException(createBookingRequest.getPetId()));
 
         // 3. AHORA, obtén la cuenta directamente de la mascota que ya está persistida
         Account account = pet.getAccount();
@@ -192,7 +193,7 @@ public class BookingServiceImplement implements BookingService {
             throw new IllegalStateException("La mascota no está asociada a ninguna cuenta.");
         }
         if (!account.isActive()) {
-            throw new IllegalStateException("No se puede crear una reserva para una cuenta inactiva.");
+            throw new InactiveAccountException(account.getId());
         }
 
         User sitter = findAndValidateSitter(createBookingRequest.getSitterId());
@@ -278,10 +279,7 @@ public class BookingServiceImplement implements BookingService {
         log.debug("Consultando reserva por ID: {}", id);
 
         Booking booking = bookingRepository.findByIdWithAllRelations(id)
-                .orElseThrow(() -> {
-                    log.warn("Intento de consulta de reserva inexistente con ID: {}", id);
-                    return new IllegalArgumentException("Reserva no encontrada con ID: " + id);
-                });
+                .orElseThrow(() -> new BookingNotFoundException(id));
 
         return BookingDetailResponse.fromEntity(booking);
     }
@@ -336,10 +334,7 @@ public class BookingServiceImplement implements BookingService {
 
         // 1. Obtener reserva existente con todas las relaciones
         Booking existingBooking = bookingRepository.findByIdWithAllRelations(id)
-                .orElseThrow(() -> {
-                    log.warn("Intento de actualización de reserva inexistente con ID: {}", id);
-                    return new IllegalArgumentException("Reserva no encontrada con ID: " + id);
-                });
+                .orElseThrow(() -> new BookingNotFoundException(id));
 
         // 2. Validar que la reserva puede ser modificada
         validateUpdatePermissions(existingBooking, updateRequest);
@@ -408,10 +403,7 @@ public class BookingServiceImplement implements BookingService {
 
         // 1. Obtener reserva existente
         Booking booking = bookingRepository.findById(id)
-                .orElseThrow(() -> {
-                    log.warn("Intento de eliminación de reserva inexistente con ID: {}", id);
-                    return new IllegalArgumentException("Reserva no encontrada con ID: " + id);
-                });
+                .orElseThrow(() -> new BookingNotFoundException(id));
 
         // 2. Validar que puede ser eliminada
         validateDeletionRules(booking);
@@ -480,7 +472,7 @@ public class BookingServiceImplement implements BookingService {
         log.info("Actualizando estado de reserva ID: {} a estado: {}", id, newStatus);
 
         Booking booking = bookingRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("Reserva no encontrada con ID: " + id));
+                .orElseThrow(() -> new BookingNotFoundException(id));
 
         BookingStatus targetStatus = BookingStatus.valueOf(newStatus.toUpperCase());
 
@@ -525,7 +517,7 @@ public class BookingServiceImplement implements BookingService {
         Objects.requireNonNull(currentUser, "El usuario actual no puede ser null");
 
         if (request.getStartTime().isBefore(LocalDateTime.now().plusHours(1))) {
-            throw new IllegalArgumentException("La reserva debe programarse con al menos 1 hora de anticipación");
+            throw new InsufficientTimeException();
         }
     }
 
@@ -542,7 +534,7 @@ public class BookingServiceImplement implements BookingService {
     private Pet findAndValidatePet(Long petId, User currentUser) {
         // 1. Encontrar la mascota
         Pet pet = petRepository.findById(petId)
-                .orElseThrow(() -> new IllegalArgumentException("Mascota no encontrada con ID: " + petId));
+                .orElseThrow(() -> new PetNotFoundException(petId));
 
         // 2. Obtener el ID de la cuenta de la mascota
         Long petAccountId = pet.getAccount().getId();
@@ -552,7 +544,7 @@ public class BookingServiceImplement implements BookingService {
                 .existsByAccountIdAndUserId(petAccountId, currentUser.getId());
 
         if (!isUserMemberOfAccount) {
-            throw new SecurityException("No tiene autorización para crear reservas para esta mascota.");
+            throw new UnauthorizedPetAccessException(petId, petAccountId);
         }
 
         return pet;
@@ -569,15 +561,15 @@ public class BookingServiceImplement implements BookingService {
      */
     private User findAndValidateSitter(Long sitterId) {
         User sitter = userRepository.findById(sitterId)
-                .orElseThrow(() -> new IllegalArgumentException("Cuidador no encontrado con ID: " + sitterId));
+                .orElseThrow(() -> new SitterNotFoundException(sitterId));
 
         // Comprobación directa del rol (más clara y explícita)
         if (sitter.getRole() != Role.SITTER) {
-            throw new IllegalArgumentException("El usuario con ID " + sitterId + " no tiene el rol de cuidador.");
+            throw new SitterRoleRequiredException(sitterId);
         }
 
         if (!sitter.isActive()) {
-            throw new IllegalArgumentException("El cuidador no está activo y no puede recibir nuevas reservas.");
+            throw new SitterInactiveException(sitter.getEmail());
         }
 
         return sitter;
@@ -595,14 +587,14 @@ public class BookingServiceImplement implements BookingService {
      */
     private ServiceOffering findAndValidateServiceOffering(Long serviceOfferingId, User sitter) {
         ServiceOffering serviceOffering = serviceOfferingRepository.findById(serviceOfferingId)
-                .orElseThrow(() -> new IllegalArgumentException("Oferta de servicio no encontrada con ID: " + serviceOfferingId));
+                .orElseThrow(() -> new ServiceOfferingNotFoundException(serviceOfferingId));
 
         if (!serviceOffering.getSitterId().equals(sitter.getId())) {
             throw new IllegalArgumentException("La oferta de servicio no pertenece al cuidador especificado");
         }
 
         if (!serviceOffering.isActive()) {
-            throw new IllegalArgumentException("La oferta de servicio no está disponible");
+            throw new ServiceOfferingInactiveException(serviceOfferingId);
         }
 
         return serviceOffering;
@@ -623,13 +615,13 @@ public class BookingServiceImplement implements BookingService {
                                        ServiceOffering serviceOffering, User currentUser) {
         // Verificar disponibilidad del cuidador
         if (hasScheduleConflict(sitter, request.getStartTime(), serviceOffering)) {
-            throw new IllegalStateException("El cuidador no tiene disponibilidad en el horario solicitado");
+            throw new BookingConflictException("El cuidador no tiene disponibilidad en el horario solicitado");
         }
 
         // Verificar límites del usuario
         long pendingBookings = bookingRepository.countByBookedByUserAndStatus(currentUser, BookingStatus.PENDING);
         if (pendingBookings >= 5) {
-            throw new IllegalStateException("Ha alcanzado el límite máximo de reservas pendientes");
+            throw new MaxPendingBookingsExceededException();
         }
     }
 
@@ -710,7 +702,7 @@ public class BookingServiceImplement implements BookingService {
      */
     private void validateUpdatePermissions(Booking booking, UpdateBookingRequest request) {
         if (booking.getStatus() == BookingStatus.COMPLETED || booking.getStatus() == BookingStatus.CANCELLED) {
-            throw new IllegalStateException("No se pueden modificar reservas en estado " + booking.getStatus());
+            throw new BookingStateException("No se pueden modificar reservas en estado " + booking.getStatus());
         }
 
     }
@@ -758,7 +750,7 @@ public class BookingServiceImplement implements BookingService {
      */
     private void validateDeletionRules(Booking booking) {
         if (booking.getStatus() == BookingStatus.IN_PROGRESS) {
-            throw new IllegalStateException("No se puede eliminar una reserva en progreso");
+            throw new BookingStateException("No se puede eliminar una reserva en progreso");
         }
 
     }
@@ -805,7 +797,7 @@ public class BookingServiceImplement implements BookingService {
         };
 
         if (!validTransition) {
-            throw new IllegalStateException(
+            throw new BookingStateException(
                     String.format("Transición no válida de %s a %s", currentStatus, newStatus));
         }
     }
@@ -817,7 +809,7 @@ public class BookingServiceImplement implements BookingService {
         switch (newStatus) {
             case CANCELLED:
                 if (reason == null || reason.trim().isEmpty()) {
-                    throw new IllegalArgumentException("El motivo de cancelación es obligatorio");
+                    throw new CancellationReasonRequiredException();
                 }
                 booking.setCancellationReason(reason);
                 break;

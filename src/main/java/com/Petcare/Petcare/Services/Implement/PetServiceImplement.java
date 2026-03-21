@@ -1,6 +1,7 @@
 package com.Petcare.Petcare.Services.Implement;
 
 import com.Petcare.Petcare.DTOs.Pet.*;
+import com.Petcare.Petcare.Exception.Business.*;
 import com.Petcare.Petcare.Models.Account.Account;
 import com.Petcare.Petcare.Models.Pet;
 import com.Petcare.Petcare.Models.User.User;
@@ -76,21 +77,18 @@ public class PetServiceImplement implements PetService {
         try {
             // 1. Validar que la cuenta existe y está activa
             Account account = accountRepository.findById(petRequest.getAccountId())
-                    .orElseThrow(() -> {
-                        log.error("Cuenta no encontrada con ID: {}", petRequest.getAccountId());
-                        return new IllegalArgumentException("Cuenta no encontrada con ID: " + petRequest.getAccountId());
-                    });
+                    .orElseThrow(() -> new AccountNotFoundException(petRequest.getAccountId()));
 
             if (!account.isActive()) {
                 log.error("Intento de crear mascota en cuenta inactiva ID: {}", account.getId());
-                throw new IllegalStateException("No se puede crear mascota en cuenta inactiva");
+                throw new InactiveAccountException(account.getId());
             }
 
             // 2. Validar duplicados opcionales (nombres únicos por cuenta)
             if (petRepository.existsByNameIgnoreCaseAndAccountId(petRequest.getName(), petRequest.getAccountId())) {
                 log.warn("Intento de crear mascota con nombre duplicado '{}' en cuenta {}",
                         petRequest.getName(), petRequest.getAccountId());
-                throw new IllegalStateException("Ya existe una mascota con el nombre '" + petRequest.getName() + "' en esta cuenta");
+                throw new PetAlreadyExistsException(petRequest.getName());
             }
 
             // 3. Crear la nueva mascota
@@ -118,10 +116,7 @@ public class PetServiceImplement implements PetService {
         log.debug("Buscando mascota con ID: {}", id);
 
         Pet pet = petRepository.findById(id)
-                .orElseThrow(() -> {
-                    log.error("Mascota no encontrada con ID: {}", id);
-                    return new IllegalArgumentException("Mascota no encontrada con ID: " + id);
-                });
+                .orElseThrow(() -> new PetNotFoundException(id));
 
         // Validar permisos de acceso
         validateUserAccessToPet(pet);
@@ -186,10 +181,7 @@ public class PetServiceImplement implements PetService {
         try {
             // 1. Buscar mascota existente
             Pet existingPet = petRepository.findById(id)
-                    .orElseThrow(() -> {
-                        log.error("Mascota no encontrada para actualizar con ID: {}", id);
-                        return new IllegalArgumentException("Mascota no encontrada con ID: " + id);
-                    });
+                    .orElseThrow(() -> new PetNotFoundException(id));
 
             // 2. Validar permisos de acceso
             validateUserAccessToPet(existingPet);
@@ -199,7 +191,7 @@ public class PetServiceImplement implements PetService {
                     petRepository.existsByNameIgnoreCaseAndAccountId(petRequest.getName(), existingPet.getAccount().getId())) {
                 log.warn("Intento de actualizar con nombre duplicado '{}' en cuenta {}",
                         petRequest.getName(), existingPet.getAccount().getId());
-                throw new IllegalStateException("Ya existe otra mascota con el nombre '" + petRequest.getName() + "' en esta cuenta");
+                throw new PetAlreadyExistsException(petRequest.getName());
             }
 
             // 4. Actualizar campos
@@ -227,10 +219,7 @@ public class PetServiceImplement implements PetService {
         try {
             // 1. Verificar que la mascota existe
             Pet pet = petRepository.findById(id)
-                    .orElseThrow(() -> {
-                        log.error("Mascota no encontrada para eliminar con ID: {}", id);
-                        return new IllegalArgumentException("Mascota no encontrada con ID: " + id);
-                    });
+                    .orElseThrow(() -> new PetNotFoundException(id));
 
             // 2. Validar permisos de acceso
             validateUserAccessToPet(pet);
@@ -407,10 +396,7 @@ public class PetServiceImplement implements PetService {
         log.info("Cambiando estado activo de mascota ID: {}", id);
 
         Pet pet = petRepository.findById(id)
-                .orElseThrow(() -> {
-                    log.error("Mascota no encontrada para cambio de estado ID: {}", id);
-                    return new IllegalArgumentException("Mascota no encontrada con ID: " + id);
-                });
+                .orElseThrow(() -> new PetNotFoundException(id));
 
         validateUserAccessToPet(pet);
 
@@ -623,7 +609,7 @@ public class PetServiceImplement implements PetService {
         if (!pet.belongsToAccount(userAccountId)) {
             log.error("Usuario sin permisos intentó acceder a mascota ID: {} de cuenta: {}",
                     pet.getId(), pet.getAccount().getId());
-            throw new SecurityException("No tiene permisos para acceder a esta mascota");
+            throw new UnauthorizedPetAccessException(pet.getId(), userAccountId);
         }
     }
 

@@ -4,6 +4,7 @@ import com.Petcare.Petcare.DTOs.Invoice.CreateInvoiceRequest;
 import com.Petcare.Petcare.DTOs.Invoice.InvoiceDetailResponse;
 import com.Petcare.Petcare.DTOs.Invoice.InvoiceSummaryResponse;
 import com.Petcare.Petcare.DTOs.Invoice.UpdateInvoiceRequest;
+import com.Petcare.Petcare.Exception.Business.*;
 import com.Petcare.Petcare.Models.Booking.Booking;
 import com.Petcare.Petcare.Models.Booking.BookingStatus;
 import com.Petcare.Petcare.Models.Invoice.Invoice;
@@ -302,10 +303,7 @@ public class InvoiceServiceImplement implements InvoiceService {
 
         // Buscar factura con todas las relaciones necesarias
         Invoice invoice = invoiceRepository.findById(invoiceId)
-                .orElseThrow(() -> {
-                    log.warn("Intento de consulta de factura inexistente con ID: {}", invoiceId);
-                    return new IllegalArgumentException("Factura no encontrada con ID: " + invoiceId);
-                });
+                .orElseThrow(() -> new InvoiceNotFoundException(invoiceId));
 
         log.debug("Factura encontrada: {} - Estado: {} - Total: {}",
                 invoice.getInvoiceNumber(), invoice.getStatus(), invoice.getTotalAmount());
@@ -438,10 +436,7 @@ public class InvoiceServiceImplement implements InvoiceService {
         try {
             // 1. Obtener factura existente con validación
             Invoice invoice = invoiceRepository.findById(invoiceId)
-                    .orElseThrow(() -> {
-                        log.warn("Intento de actualización de factura inexistente con ID: {}", invoiceId);
-                        return new IllegalArgumentException("Factura no encontrada con ID: " + invoiceId);
-                    });
+                    .orElseThrow(() -> new InvoiceNotFoundException(invoiceId));
 
             log.debug("Factura encontrada para actualización: {} - Estado actual: {}",
                     invoice.getInvoiceNumber(), invoice.getStatus());
@@ -520,16 +515,13 @@ public class InvoiceServiceImplement implements InvoiceService {
 
         // 1. Obtener y validar factura
         Invoice invoice = invoiceRepository.findById(invoiceId)
-                .orElseThrow(() -> {
-                    log.warn("Intento de envío de factura inexistente con ID: {}", invoiceId);
-                    return new IllegalArgumentException("Factura no encontrada con ID: " + invoiceId);
-                });
+                .orElseThrow(() -> new InvoiceNotFoundException(invoiceId));
 
         // 2. Validar que puede ser enviada
         if (!invoice.canBeSent()) {
             log.warn("Intento de envío de factura en estado inválido: {} - Estado: {}",
                     invoice.getInvoiceNumber(), invoice.getStatus());
-            throw new IllegalStateException("La factura no puede ser enviada en su estado actual: " + invoice.getStatus());
+            throw new InvoiceStateException("La factura no puede ser enviada en su estado actual: " + invoice.getStatus());
         }
 
         // 3. Cambiar estado a SENT
@@ -602,21 +594,18 @@ public class InvoiceServiceImplement implements InvoiceService {
         try {
             // 1. Obtener y validar factura
             Invoice invoice = invoiceRepository.findById(invoiceId)
-                    .orElseThrow(() -> {
-                        log.warn("Intento de cancelación de factura inexistente con ID: {}", invoiceId);
-                        return new IllegalArgumentException("Factura no encontrada con ID: " + invoiceId);
-                    });
+                    .orElseThrow(() -> new InvoiceNotFoundException(invoiceId));
 
             // 2. Validar que puede ser cancelada
             if (!invoice.canBeCancelled()) {
                 log.warn("Intento de cancelación de factura en estado inválido: {} - Estado: {}",
                         invoice.getInvoiceNumber(), invoice.getStatus());
-                throw new IllegalStateException("La factura no puede ser cancelada en su estado actual: " + invoice.getStatus());
+                throw new InvoiceStateException("La factura no puede ser cancelada en su estado actual: " + invoice.getStatus());
             }
 
             // 3. Validar motivo de cancelación
             if (reason == null || reason.trim().isEmpty()) {
-                throw new IllegalArgumentException("El motivo de cancelación es obligatorio");
+                throw new CancellationReasonRequiredException();
             }
 
             // 4. Aplicar cancelación con auditoría
@@ -656,10 +645,7 @@ public class InvoiceServiceImplement implements InvoiceService {
         log.debug("Validando reserva ID: {} para facturación", bookingId);
 
         return bookingRepository.findById(bookingId)
-                .orElseThrow(() -> {
-                    log.error("Reserva no encontrada para facturación - ID: {}", bookingId);
-                    return new IllegalArgumentException("Reserva no encontrada con ID: " + bookingId);
-                });
+                .orElseThrow(() -> new BookingNotFoundException(bookingId));
     }
 
     /**
@@ -678,19 +664,19 @@ public class InvoiceServiceImplement implements InvoiceService {
         if (booking.getStatus() != BookingStatus.COMPLETED) {
             log.warn("Intento de facturar reserva en estado inválido: {} - Estado: {}",
                     booking.getId(), booking.getStatus());
-            throw new IllegalStateException("Solo se pueden facturar reservas en estado 'COMPLETED'. Estado actual: " + booking.getStatus());
+            throw new BookingStateException("Solo se pueden facturar reservas en estado 'COMPLETED'. Estado actual: " + booking.getStatus());
         }
 
         // Validar que no exista factura previa
         if (invoiceRepository.existsByBookingId(booking.getId())) {
             log.warn("Intento de crear factura duplicada para reserva ID: {}", booking.getId());
-            throw new IllegalStateException("Ya existe una factura para esta reserva con ID: " + booking.getId());
+            throw new InvoiceAlreadyExistsException(booking.getId());
         }
 
         // Validar integridad de datos de la reserva
         if (booking.getTotalPrice() == null || booking.getTotalPrice().compareTo(BigDecimal.ZERO) <= 0) {
             log.error("Reserva con precio inválido - ID: {} - Precio: {}", booking.getId(), booking.getTotalPrice());
-            throw new IllegalStateException("La reserva debe tener un precio válido mayor a cero");
+            throw new InvalidAmountException(booking.getTotalPrice() != null ? booking.getTotalPrice().toString() : "null");
         }
 
         log.debug("Validaciones de negocio completadas exitosamente para reserva ID: {}", booking.getId());
@@ -1021,17 +1007,17 @@ public class InvoiceServiceImplement implements InvoiceService {
         // Validar cambios financieros según el estado
         if (request.hasFinancialChanges()) {
             if (invoice.isFinalState()) {
-                throw new IllegalStateException("No se pueden modificar montos en facturas con estado final: " + invoice.getStatus());
+                throw new InvoiceStateException("No se pueden modificar montos en facturas con estado final: " + invoice.getStatus());
             }
 
             if (invoice.getStatus() == InvoiceStatus.SENT && !isAdminUser()) {
-                throw new IllegalStateException("Solo administradores pueden modificar montos de facturas enviadas");
+                throw new InvoiceStateException("Solo administradores pueden modificar montos de facturas enviadas");
             }
         }
 
         // Validar coherencia de montos si se proporcionan
         if (!request.areAmountsConsistent()) {
-            throw new IllegalArgumentException("Los montos proporcionados no son coherentes: subtotal + platformFee debe igual totalAmount");
+            throw new InvalidAmountException("subtotal + platformFee");
         }
     }
 

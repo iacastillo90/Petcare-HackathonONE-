@@ -3,6 +3,10 @@ package com.Petcare.Petcare.Service;
 import com.Petcare.Petcare.DTOs.Pet.CreatePetRequest;
 import com.Petcare.Petcare.DTOs.Pet.PetResponse;
 import com.Petcare.Petcare.DTOs.Pet.PetSummaryResponse;
+import com.Petcare.Petcare.Exception.Business.AccountNotFoundException;
+import com.Petcare.Petcare.Exception.Business.InactiveAccountException;
+import com.Petcare.Petcare.Exception.Business.PetAlreadyExistsException;
+import com.Petcare.Petcare.Exception.Business.PetNotFoundException;
 import com.Petcare.Petcare.Models.Account.Account;
 import com.Petcare.Petcare.Models.Pet;
 import com.Petcare.Petcare.Models.User.Role;
@@ -201,7 +205,7 @@ class PetServiceImplementTest {
 
             // When/Then
             assertThatThrownBy(() -> petService.createPet(createPetRequest))
-                    .isInstanceOf(IllegalArgumentException.class)
+                    .isInstanceOf(AccountNotFoundException.class)
                     .hasMessageContaining("Cuenta no encontrada con ID: " + VALID_ACCOUNT_ID);
 
             verify(accountRepository).findById(VALID_ACCOUNT_ID);
@@ -217,8 +221,7 @@ class PetServiceImplementTest {
 
             // When/Then
             assertThatThrownBy(() -> petService.createPet(createPetRequest))
-                    .isInstanceOf(IllegalStateException.class)
-                    .hasMessageContaining("No se puede crear mascota en cuenta inactiva");
+                    .isInstanceOf(InactiveAccountException.class);
 
             verify(petRepository, never()).save(any());
         }
@@ -233,7 +236,7 @@ class PetServiceImplementTest {
 
             // When/Then
             assertThatThrownBy(() -> petService.createPet(createPetRequest))
-                    .isInstanceOf(IllegalStateException.class)
+                    .isInstanceOf(PetAlreadyExistsException.class)
                     .hasMessageContaining("Ya existe una mascota con el nombre '" + VALID_PET_NAME + "'");
 
             verify(petRepository, never()).save(any());
@@ -272,7 +275,7 @@ class PetServiceImplementTest {
 
             // When/Then
             assertThatThrownBy(() -> petService.getPetById(NONEXISTENT_PET_ID))
-                    .isInstanceOf(IllegalArgumentException.class)
+                    .isInstanceOf(PetNotFoundException.class)
                     .hasMessageContaining("Mascota no encontrada con ID: " + NONEXISTENT_PET_ID);
 
             verify(petRepository).findById(NONEXISTENT_PET_ID);
