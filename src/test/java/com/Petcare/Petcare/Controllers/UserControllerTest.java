@@ -366,7 +366,7 @@ class UserControllerTest {
         // Convertimos el JSON de la respuesta a un objeto AuthResponse
         AuthResponse authResponse = objectMapper.readValue(responseBody, AuthResponse.class);
         // Devolvemos el token
-        return authResponse.getToken();
+        return authResponse.token();
     }
 
     /**
@@ -744,8 +744,8 @@ class UserControllerTest {
                 .andReturn();
 
         AuthResponse authResponse = objectMapper.readValue(result.getResponse().getContentAsString(), AuthResponse.class);
-        String clientToken = authResponse.getToken();
-        Long clientId = authResponse.getUserProfile().id();
+        String clientToken = authResponse.token();
+        Long clientId = authResponse.userProfile().id();
 
         // Act & Assert
         mockMvc.perform(get("/api/users/{id}", clientId) // Pide su PROPIO ID

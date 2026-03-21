@@ -44,7 +44,7 @@ public class DashboardController {
         String email = authentication.getName();
         UserResponse user = userService.getUserByEmail(email);
 
-        Long userId = user.getId();
+        Long userId = user.id();
         MainDashboardDTO dashboardData = userService.getMainDashboardData(userId);
         return ResponseEntity.ok(dashboardData);
     }
@@ -54,7 +54,7 @@ public class DashboardController {
         String email = authentication.getName();
         UserResponse user = userService.getUserByEmail(email);
 
-        Long userId = user.getId();
+        Long userId = user.id();
 
         DashboardStatsDTO stats = userService.getDashboardStatsForUser(userId);
 
@@ -68,16 +68,16 @@ public class DashboardController {
         UserResponse user = userService.getUserByEmail(userEmail);
 
 
-        Optional<Account> account = accountRepository.findByOwnerUserId(user.getId());
+        Optional<Account> account = accountRepository.findByOwnerUserId(user.id());
 
         // 2. Mapea la entidad User al UserProfileDTO
         UserProfileDTO userProfileDTO = new UserProfileDTO(
-                user.getId(),
-                user.getFirstName(),
-                user.getLastName(),
-                user.getEmail(),
-                user.getRole().name(), // Convierte el Enum a String
-                String.format("%c%c", user.getFirstName().charAt(0), user.getLastName().charAt(0)).toUpperCase(),
+                user.id(),
+                user.firstName(),
+                user.lastName(),
+                user.email(),
+                user.role().name(), // Convierte el Enum a String
+                String.format("%c%c", user.firstName().charAt(0), user.lastName().charAt(0)).toUpperCase(),
                 account.get().getId()
         );
 

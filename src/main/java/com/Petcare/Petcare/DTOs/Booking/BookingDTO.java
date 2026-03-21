@@ -3,6 +3,7 @@ package com.Petcare.Petcare.DTOs.Booking;
 import com.Petcare.Petcare.DTOs.PlatformFee.PlatformFeeDTO;
 import com.Petcare.Petcare.Models.Booking.Booking;
 import com.Petcare.Petcare.Models.Booking.BookingStatus;
+import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.*;
 
 import java.math.BigDecimal;
@@ -11,291 +12,126 @@ import java.time.LocalDateTime;
 /**
  * DTO para transferir información de reservas de servicios de cuidado de mascotas.
  *
- * <p>Este DTO expone los datos necesarios de {@link Booking} sin exponer
- * la estructura interna de las entidades JPA ni causar problemas de lazy loading.</p>
- *
- * <p>Las relaciones con otras entidades se representan mediante sus IDs
- * y información básica necesaria para la presentación.</p>
- *
  * @author Equipo Petcare 10
- * @version 1.0
+ * @version 1.1
+ * @since 1.0
+ * @see Booking
  */
-public class BookingDTO {
+@Schema(description = "DTO para transferir información de reservas de servicios de cuidado de mascotas.")
+public record BookingDTO(
+        @Schema(description = "Identificador único de la reserva.", example = "1")
+        Long id,
 
-    private Long id;
+        // IDs de relaciones
+        @NotNull(message = "El ID de la mascota es obligatorio")
+        @Schema(description = "ID de la mascota que recibirá el servicio.", example = "1")
+        Long petId,
 
-    // ========== IDS DE RELACIONES ==========
+        @Schema(description = "Nombre de la mascota para mostrar en la UI.", example = "Fido")
+        String petName,
 
-    /**
-     * ID de la mascota que recibirá el servicio.
-     */
-    @NotNull(message = "El ID de la mascota es obligatorio")
-    private Long petId;
+        @NotNull(message = "El ID del cuidador es obligatorio")
+        @Schema(description = "ID del cuidador asignado.", example = "2")
+        Long sitterId,
 
-    /**
-     * Nombre de la mascota para mostrar en la UI.
-     */
-    private String petName;
+        @Schema(description = "Nombre completo del cuidador.", example = "Juan Pérez")
+        String sitterName,
 
-    /**
-     * ID del cuidador asignado.
-     */
-    @NotNull(message = "El ID del cuidador es obligatorio")
-    private Long sitterId;
+        @NotNull(message = "El ID de la oferta de servicio es obligatorio")
+        @Schema(description = "ID de la oferta de servicio reservada.", example = "1")
+        Long serviceOfferingId,
 
-    /**
-     * Nombre completo del cuidador.
-     */
-    private String sitterName;
+        @Schema(description = "Nombre del servicio para mostrar en la UI.", example = "Paseo de 30 minutos")
+        String serviceName,
 
-    /**
-     * ID de la oferta de servicio reservada.
-     */
-    @NotNull(message = "El ID de la oferta de servicio es obligatorio")
-    private Long serviceOfferingId;
+        @NotNull(message = "El ID del usuario que crea la reserva es obligatorio")
+        @Schema(description = "ID del usuario que creó la reserva.", example = "3")
+        Long bookedByUserId,
 
-    /**
-     * Nombre del servicio para mostrar en la UI.
-     */
-    private String serviceName;
+        @Schema(description = "Nombre del usuario que creó la reserva.", example = "María García")
+        String bookedByUserName,
 
-    /**
-     * ID del usuario que creó la reserva.
-     */
-    @NotNull(message = "El ID del usuario que crea la reserva es obligatorio")
-    private Long bookedByUserId;
+        // Datos principales de la reserva
+        @NotNull(message = "La fecha y hora de inicio son obligatorias")
+        @Future(message = "La fecha de inicio debe ser futura")
+        @Schema(description = "Fecha y hora programada de inicio del servicio.", example = "2025-02-15T09:00:00")
+        LocalDateTime startTime,
 
-    /**
-     * Nombre del usuario que creó la reserva.
-     */
-    private String bookedByUserName;
+        @NotNull(message = "La fecha y hora de finalización son obligatorias")
+        @Schema(description = "Fecha y hora programada de finalización del servicio.", example = "2025-02-15T11:00:00")
+        LocalDateTime endTime,
 
-    // ========== DATOS PRINCIPALES DE LA RESERVA ==========
+        @Schema(description = "Fecha y hora real de inicio del servicio.", example = "2025-02-15T09:05:00")
+        LocalDateTime actualStartTime,
 
-    /**
-     * Fecha y hora programada de inicio del servicio.
-     */
-    @NotNull(message = "La fecha y hora de inicio son obligatorias")
-    @Future(message = "La fecha de inicio debe ser futura")
-    private LocalDateTime startTime;
+        @Schema(description = "Fecha y hora real de finalización del servicio.", example = "2025-02-15T10:55:00")
+        LocalDateTime actualEndTime,
 
-    /**
-     * Fecha y hora programada de finalización del servicio.
-     */
-    @NotNull(message = "La fecha y hora de finalización son obligatorias")
-    private LocalDateTime endTime;
+        @NotNull(message = "El estado de la reserva es obligatorio")
+        @Schema(description = "Estado actual de la reserva.", example = "PENDING")
+        BookingStatus status,
 
-    /**
-     * Fecha y hora real de inicio del servicio.
-     */
-    private LocalDateTime actualStartTime;
+        @NotNull(message = "El precio total es obligatorio")
+        @DecimalMin(value = "0.0", inclusive = false, message = "El precio debe ser mayor a cero")
+        @Digits(integer = 8, fraction = 2, message = "El precio debe tener máximo 8 dígitos enteros y 2 decimales")
+        @Schema(description = "Precio total acordado para el servicio.", example = "50.00")
+        BigDecimal totalPrice,
 
-    /**
-     * Fecha y hora real de finalización del servicio.
-     */
-    private LocalDateTime actualEndTime;
+        @Size(max = 2000, message = "Las notas no pueden exceder 2000 caracteres")
+        @Schema(description = "Notas adicionales sobre la reserva.", example = "Usar correa larga")
+        String notes,
 
-    /**
-     * Estado actual de la reserva.
-     */
-    @NotNull(message = "El estado de la reserva es obligatorio")
-    private BookingStatus status;
+        @Size(max = 1000, message = "El motivo de cancelación no puede exceder 1000 caracteres")
+        @Schema(description = "Motivo de cancelación si aplica.", example = "Cambio de planes")
+        String cancellationReason,
 
-    /**
-     * Precio total acordado para el servicio.
-     */
-    @NotNull(message = "El precio total es obligatorio")
-    @DecimalMin(value = "0.0", inclusive = false, message = "El precio debe ser mayor a cero")
-    @Digits(integer = 8, fraction = 2, message = "El precio debe tener máximo 8 dígitos enteros y 2 decimales")
-    private BigDecimal totalPrice;
+        @Schema(description = "Fecha y hora de creación de la reserva.", example = "2025-02-10T14:30:00")
+        LocalDateTime createdAt,
 
-    /**
-     * Notas adicionales sobre la reserva.
-     */
-    @Size(max = 2000, message = "Las notas no pueden exceder 2000 caracteres")
-    private String notes;
+        @Schema(description = "Fecha y hora de la última actualización.", example = "2025-02-10T14:30:00")
+        LocalDateTime updatedAt,
 
-    /**
-     * Motivo de cancelación si aplica.
-     */
-    @Size(max = 1000, message = "El motivo de cancelación no puede exceder 1000 caracteres")
-    private String cancellationReason;
-
-    /**
-     * Fecha y hora de creación de la reserva.
-     */
-    private LocalDateTime createdAt;
-
-    /**
-     * Fecha y hora de la última actualización.
-     */
-    private LocalDateTime updatedAt;
-
-    /**
-     * DTO de la tarifa de plataforma asociada.
-     */
-    private PlatformFeeDTO platformFee;
-
-    // ========== CONSTRUCTORES ==========
-
-    /**
-     * Constructor vacío requerido para frameworks de serialización.
-     */
-    public BookingDTO() {
-    }
+        @Schema(description = "DTO de la tarifa de plataforma asociada.")
+        PlatformFeeDTO platformFee
+) {
 
     /**
      * Constructor para crear DTO desde entidad Booking.
      */
     public BookingDTO(Booking booking) {
-        this.id = booking.getId();
-        this.petId = booking.getPet() != null ? booking.getPet().getId() : null;
-        this.petName = booking.getPet() != null ? booking.getPet().getName() : null;
-        this.sitterId = booking.getSitter() != null ? booking.getSitter().getId() : null;
-        this.sitterName = booking.getSitter() != null ?
-                String.format("%s %s",
-                        booking.getSitter().getFirstName(),
-                        booking.getSitter().getLastName()).trim() : null;
-        this.serviceOfferingId = booking.getServiceOffering() != null ?
-                booking.getServiceOffering().getId() : null;
-        this.serviceName = booking.getServiceOffering() != null ?
-                booking.getServiceOffering().getName() : null;
-        this.bookedByUserId = booking.getBookedByUser() != null ?
-                booking.getBookedByUser().getId() : null;
-        this.bookedByUserName = booking.getBookedByUser() != null ?
-                String.format("%s %s",
-                        booking.getBookedByUser().getFirstName(),
-                        booking.getBookedByUser().getLastName()).trim() : null;
-        this.startTime = booking.getStartTime();
-        this.endTime = booking.getEndTime();
-        this.actualStartTime = booking.getActualStartTime();
-        this.actualEndTime = booking.getActualEndTime();
-        this.status = booking.getStatus();
-        this.totalPrice = booking.getTotalPrice();
-        this.notes = booking.getNotes();
-        this.cancellationReason = booking.getCancellationReason();
-        this.createdAt = booking.getCreatedAt();
-        this.updatedAt = booking.getUpdatedAt();
-        this.platformFee = booking.getPlatformFee() != null ?
-                new PlatformFeeDTO(booking.getPlatformFee()) : null;
+        this(
+                booking.getId(),
+                booking.getPet() != null ? booking.getPet().getId() : null,
+                booking.getPet() != null ? booking.getPet().getName() : null,
+                booking.getSitter() != null ? booking.getSitter().getId() : null,
+                booking.getSitter() != null ?
+                        String.format("%s %s",
+                                booking.getSitter().getFirstName(),
+                                booking.getSitter().getLastName()).trim() : null,
+                booking.getServiceOffering() != null ?
+                        booking.getServiceOffering().getId() : null,
+                booking.getServiceOffering() != null ?
+                        booking.getServiceOffering().getName() : null,
+                booking.getBookedByUser() != null ?
+                        booking.getBookedByUser().getId() : null,
+                booking.getBookedByUser() != null ?
+                        String.format("%s %s",
+                                booking.getBookedByUser().getFirstName(),
+                                booking.getBookedByUser().getLastName()).trim() : null,
+                booking.getStartTime(),
+                booking.getEndTime(),
+                booking.getActualStartTime(),
+                booking.getActualEndTime(),
+                booking.getStatus(),
+                booking.getTotalPrice(),
+                booking.getNotes(),
+                booking.getCancellationReason(),
+                booking.getCreatedAt(),
+                booking.getUpdatedAt(),
+                booking.getPlatformFee() != null ?
+                        new PlatformFeeDTO(booking.getPlatformFee()) : null
+        );
     }
-
-    /**
-     * Constructor completo para testing y casos específicos.
-     */
-    public BookingDTO(Long id, Long petId, String petName, Long sitterId, String sitterName,
-                      Long serviceOfferingId, String serviceName, Long bookedByUserId,
-                      String bookedByUserName, LocalDateTime startTime, LocalDateTime endTime,
-                      LocalDateTime actualStartTime, LocalDateTime actualEndTime,
-                      BookingStatus status, BigDecimal totalPrice, String notes,
-                      String cancellationReason, LocalDateTime createdAt, LocalDateTime updatedAt,
-                      PlatformFeeDTO platformFee) {
-        this.id = id;
-        this.petId = petId;
-        this.petName = petName;
-        this.sitterId = sitterId;
-        this.sitterName = sitterName;
-        this.serviceOfferingId = serviceOfferingId;
-        this.serviceName = serviceName;
-        this.bookedByUserId = bookedByUserId;
-        this.bookedByUserName = bookedByUserName;
-        this.startTime = startTime;
-        this.endTime = endTime;
-        this.actualStartTime = actualStartTime;
-        this.actualEndTime = actualEndTime;
-        this.status = status;
-        this.totalPrice = totalPrice;
-        this.notes = notes;
-        this.cancellationReason = cancellationReason;
-        this.createdAt = createdAt;
-        this.updatedAt = updatedAt;
-        this.platformFee = platformFee;
-    }
-
-    // ========== GETTERS ==========
-
-    public Long getId() {
-        return id;
-    }
-
-    public Long getPetId() {
-        return petId;
-    }
-
-    public String getPetName() {
-        return petName;
-    }
-
-    public Long getSitterId() {
-        return sitterId;
-    }
-
-    public String getSitterName() {
-        return sitterName;
-    }
-
-    public Long getServiceOfferingId() {
-        return serviceOfferingId;
-    }
-
-    public String getServiceName() {
-        return serviceName;
-    }
-
-    public Long getBookedByUserId() {
-        return bookedByUserId;
-    }
-
-    public String getBookedByUserName() {
-        return bookedByUserName;
-    }
-
-    public LocalDateTime getStartTime() {
-        return startTime;
-    }
-
-    public LocalDateTime getEndTime() {
-        return endTime;
-    }
-
-    public LocalDateTime getActualStartTime() {
-        return actualStartTime;
-    }
-
-    public LocalDateTime getActualEndTime() {
-        return actualEndTime;
-    }
-
-    public BookingStatus getStatus() {
-        return status;
-    }
-
-    public BigDecimal getTotalPrice() {
-        return totalPrice;
-    }
-
-    public String getNotes() {
-        return notes;
-    }
-
-    public String getCancellationReason() {
-        return cancellationReason;
-    }
-
-    public LocalDateTime getCreatedAt() {
-        return createdAt;
-    }
-
-    public LocalDateTime getUpdatedAt() {
-        return updatedAt;
-    }
-
-    public PlatformFeeDTO getPlatformFee() {
-        return platformFee;
-    }
-
-
-    // ========== MÉTODOS DE UTILIDAD ==========
 
     /**
      * Verifica si la reserva está en un estado activo.
@@ -336,20 +172,5 @@ public class BookingDTO {
             return java.time.Duration.between(actualStartTime, actualEndTime).toHours();
         }
         return 0;
-    }
-
-    @Override
-    public String toString() {
-        return "BookingDTO{" +
-                "id=" + id +
-                ", petName='" + petName + '\'' +
-                ", sitterName='" + sitterName + '\'' +
-                ", serviceName='" + serviceName + '\'' +
-                ", status=" + status +
-                ", startTime=" + startTime +
-                ", endTime=" + endTime +
-                ", totalPrice=" + totalPrice +
-                ", createdAt=" + createdAt +
-                '}';
     }
 }

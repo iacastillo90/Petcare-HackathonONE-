@@ -472,12 +472,10 @@ public class PetServiceImplement implements PetService {
         log.info("Generando estadísticas completas de mascotas (Admin)");
 
         try {
-            PetStatsResponse stats = new PetStatsResponse();
-
             // Conteos básicos
-            stats.setTotalPets(petRepository.count());
-            stats.setActivePets(petRepository.countByIsActiveTrue());
-            stats.setInactivePets(petRepository.countByIsActiveFalse());
+            long totalPets = petRepository.count();
+            long activePets = petRepository.countByIsActiveTrue();
+            long inactivePets = petRepository.countByIsActiveFalse();
 
             // Distribución por especie
             List<Object[]> speciesData = petRepository.countBySpecies();
@@ -487,7 +485,6 @@ public class PetServiceImplement implements PetService {
                 Long count = (Long) row[1];
                 petsBySpecies.put(species != null ? species : "No especificada", count);
             }
-            stats.setPetsBySpecies(petsBySpecies);
 
             // Distribución por género
             List<Object[]> genderData = petRepository.countByGender();
@@ -497,7 +494,6 @@ public class PetServiceImplement implements PetService {
                 Long count = (Long) row[1];
                 petsByGender.put(gender != null ? gender : "No especificado", count);
             }
-            stats.setPetsByGender(petsByGender);
 
             // Distribución por rango de edad
             List<Object[]> ageData = petRepository.countByAgeRange();
@@ -507,24 +503,33 @@ public class PetServiceImplement implements PetService {
                 Long count = (Long) row[1];
                 petsByAgeRange.put(ageRange, count);
             }
-            stats.setPetsByAgeRange(petsByAgeRange);
 
             // Estadísticas de cuentas
-            stats.setAccountsWithPets(petRepository.countDistinctAccounts());
-            if (stats.getAccountsWithPets() > 0) {
-                stats.setAveragePetsPerAccount((double) stats.getTotalPets() / stats.getAccountsWithPets());
-            }
+            long accountsWithPets = petRepository.countDistinctAccounts();
+            double averagePetsPerAccount = accountsWithPets > 0 
+                    ? (double) totalPets / accountsWithPets : 0.0;
 
             // Registros recientes
             LocalDateTime thirtyDaysAgo = LocalDateTime.now().minusDays(30);
             LocalDateTime sevenDaysAgo = LocalDateTime.now().minusDays(7);
-            stats.setPetsRegisteredLast30Days(petRepository.countByCreatedAtGreaterThanEqual(thirtyDaysAgo));
-            stats.setPetsRegisteredLast7Days(petRepository.countByCreatedAtGreaterThanEqual(sevenDaysAgo));
+            long petsRegisteredLast30Days = petRepository.countByCreatedAtGreaterThanEqual(thirtyDaysAgo);
+            long petsRegisteredLast7Days = petRepository.countByCreatedAtGreaterThanEqual(sevenDaysAgo);
 
             log.info("Estadísticas generadas: {} mascotas totales, {} activas, {} cuentas con mascotas",
-                    stats.getTotalPets(), stats.getActivePets(), stats.getAccountsWithPets());
+                    totalPets, activePets, accountsWithPets);
 
-            return stats;
+            return new PetStatsResponse(
+                    totalPets,
+                    activePets,
+                    inactivePets,
+                    petsBySpecies,
+                    petsByGender,
+                    petsByAgeRange,
+                    accountsWithPets,
+                    averagePetsPerAccount,
+                    petsRegisteredLast30Days,
+                    petsRegisteredLast7Days
+            );
 
         } catch (Exception e) {
             log.error("Error al generar estadísticas de mascotas: {}", e.getMessage());

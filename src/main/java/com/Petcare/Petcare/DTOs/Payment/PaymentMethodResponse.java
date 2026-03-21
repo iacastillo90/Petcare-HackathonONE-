@@ -1,69 +1,46 @@
 package com.Petcare.Petcare.DTOs.Payment;
 
-import java.io.Serializable;
+import io.swagger.v3.oas.annotations.media.Schema;
+
 import java.time.LocalDateTime;
 
-public class PaymentMethodResponse implements Serializable {
+/**
+ * DTO para la respuesta con información completa de un método de pago.
+ *
+ * @author Equipo Petcare 10
+ * @version 1.1
+ * @since 1.0
+ */
+@Schema(description = "DTO para la respuesta con información completa de un método de pago.")
+public record PaymentMethodResponse(
+        @Schema(description = "Identificador único del método de pago.", example = "1")
+        Long id,
 
-    private Long id;
-    private Long accountId;
-    private String cardType;
-    private String lastFourDigits;
-    private String expiryDate;
-    private boolean isDefault;
-    private boolean isVerified;
-    private boolean isActive;
-    private LocalDateTime createdAt;
-    private LocalDateTime updatedAt;
+        @Schema(description = "Identificador de la cuenta asociada.", example = "1")
+        Long accountId,
 
-    public PaymentMethodResponse() {}
+        @Schema(description = "Tipo de tarjeta.", example = "VISA")
+        String cardType,
 
-    public PaymentMethodResponse(Long id, Long accountId, String cardType, String lastFourDigits,
-                                 String expiryDate, boolean isDefault, boolean isVerified,
-                                 boolean isActive, LocalDateTime createdAt, LocalDateTime updatedAt) {
-        this.id = id;
-        this.accountId = accountId;
-        this.cardType = cardType;
-        this.lastFourDigits = lastFourDigits;
-        this.expiryDate = expiryDate;
-        this.isDefault = isDefault;
-        this.isVerified = isVerified;
-        this.isActive = isActive;
-        this.createdAt = createdAt;
-        this.updatedAt = updatedAt;
-    }
+        @Schema(description = "Últimos 4 dígitos de la tarjeta.", example = "1234")
+        String lastFourDigits,
 
+        @Schema(description = "Fecha de expiración (MM/YY).", example = "12/25")
+        String expiryDate,
 
+        @Schema(description = "Indica si es el método de pago por defecto.", example = "true")
+        boolean isDefault,
 
+        @Schema(description = "Indica si el método de pago ha sido verificado.", example = "true")
+        boolean isVerified,
 
-// Getters y setters
-    public Long getId() { return id; }
-    public void setId(Long id) { this.id = id; }
+        @Schema(description = "Indica si el método de pago está activo.", example = "true")
+        boolean isActive,
 
-    public Long getAccountId() { return accountId; }
-    public void setAccountId(Long accountId) { this.accountId = accountId; }
+        @Schema(description = "Fecha y hora de creación.", example = "2025-02-10T15:30:00")
+        LocalDateTime createdAt,
 
-    public String getCardType() { return cardType; }
-    public void setCardType(String cardType) { this.cardType = cardType; }
-
-    public String getLastFourDigits() { return lastFourDigits; }
-    public void setLastFourDigits(String lastFourDigits) { this.lastFourDigits = lastFourDigits; }
-
-    public String getExpiryDate() { return expiryDate; }
-    public void setExpiryDate(String expiryDate) { this.expiryDate = expiryDate; }
-
-    public boolean isDefault() { return isDefault; }
-    public void setDefault(boolean aDefault) { isDefault = aDefault; }
-
-    public boolean isVerified() { return isVerified; }
-    public void setVerified(boolean verified) { isVerified = verified; }
-
-    public boolean isActive() { return isActive; }
-    public void setActive(boolean active) { isActive = active; }
-
-    public LocalDateTime getCreatedAt() { return createdAt; }
-    public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
-
-    public LocalDateTime getUpdatedAt() { return updatedAt; }
-    public void setUpdatedAt(LocalDateTime updatedAt) { this.updatedAt = updatedAt; }
+        @Schema(description = "Fecha y hora de la última actualización.", example = "2025-02-10T15:30:00")
+        LocalDateTime updatedAt
+) {
 }

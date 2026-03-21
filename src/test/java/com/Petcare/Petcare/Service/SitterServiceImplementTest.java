@@ -131,10 +131,10 @@ class SitterServiceImplementTest {
 
             // Assert - Verificación del resultado
             assertThat(result).isNotNull();
-            assertThat(result.getId()).isEqualTo(testSitterProfile.getId());
-            assertThat(result.getUserId()).isEqualTo(VALID_USER_ID);
-            assertThat(result.getBio()).isEqualTo(VALID_BIO);
-            assertThat(result.getHourlyRate()).isEqualTo(VALID_HOURLY_RATE);
+            assertThat(result.id()).isEqualTo(testSitterProfile.getId());
+            assertThat(result.userId()).isEqualTo(VALID_USER_ID);
+            assertThat(result.bio()).isEqualTo(VALID_BIO);
+            assertThat(result.hourlyRate()).isEqualTo(VALID_HOURLY_RATE);
 
             // Assert - Verificación de interacciones con repositorios
             verify(userRepository, times(1)).findById(VALID_USER_ID);
@@ -215,9 +215,9 @@ class SitterServiceImplementTest {
 
             // Assert
             assertThat(result).isNotNull();
-            assertThat(result.getUserId()).isEqualTo(VALID_USER_ID);
-            assertThat(result.getBio()).isEqualTo(VALID_BIO);
-            assertThat(result.getHourlyRate()).isEqualTo(VALID_HOURLY_RATE);
+            assertThat(result.userId()).isEqualTo(VALID_USER_ID);
+            assertThat(result.bio()).isEqualTo(VALID_BIO);
+            assertThat(result.hourlyRate()).isEqualTo(VALID_HOURLY_RATE);
 
             verify(sitterProfileRepository, times(1)).findByUserId(VALID_USER_ID);
         }
@@ -271,8 +271,8 @@ class SitterServiceImplementTest {
 
             // Assert
             assertThat(result).isNotNull();
-            assertThat(result.getBio()).isEqualTo("Bio actualizada");
-            assertThat(result.getHourlyRate()).isEqualTo(new BigDecimal("30.00"));
+            assertThat(result.bio()).isEqualTo("Bio actualizada");
+            assertThat(result.hourlyRate()).isEqualTo(new BigDecimal("30.00"));
 
             verify(sitterProfileRepository, times(1)).findByUserId(VALID_USER_ID);
             verify(sitterProfileRepository, times(1)).save(any(SitterProfile.class));
@@ -325,8 +325,8 @@ class SitterServiceImplementTest {
 
             // Assert
             assertThat(result).hasSize(2);
-            assertThat(result).allMatch(dto -> dto.getId() != null);
-            assertThat(result).allMatch(dto -> dto.getUserId() != null);
+            assertThat(result).allMatch(dto -> dto.id() != null);
+            assertThat(result).allMatch(dto -> dto.userId() != null);
 
             verify(sitterProfileRepository, times(1)).findAll();
         }

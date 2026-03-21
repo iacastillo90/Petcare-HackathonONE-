@@ -6,10 +6,12 @@ import com.Petcare.Petcare.DTOs.Invoice.InvoiceItem.InvoiceItemResponse;
 import com.Petcare.Petcare.DTOs.Payment.PaymentSummary;
 import com.Petcare.Petcare.Models.Invoice.Invoice;
 import com.Petcare.Petcare.Models.Invoice.InvoiceStatus;
+import io.swagger.v3.oas.annotations.media.Schema;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 /**
@@ -19,192 +21,62 @@ import java.util.stream.Collectors;
  * denormalizados de las entidades relacionadas para optimizar la presentación
  * en el frontend y minimizar consultas adicionales.</p>
  *
- * <p><strong>Datos denormalizados incluidos:</strong></p>
- * <ul>
- *   <li>Información completa de la cuenta facturada</li>
- *   <li>Detalles de la reserva que origina la factura</li>
- *   <li>Items detallados con cantidades y precios</li>
- *   <li>Historial completo de pagos asociados</li>
- *   <li>Cálculos financieros pre-computados</li>
- * </ul>
- *
- * <p><strong>Casos de uso principales:</strong></p>
- * <ul>
- *   <li>Vista detallada de factura individual</li>
- *   <li>Respuestas de API para operaciones GET específicas</li>
- *   <li>Pantallas de pago y confirmación</li>
- *   <li>Reportes financieros y auditorías</li>
- *   <li>Exportación de facturas (PDF, Excel)</li>
- * </ul>
- *
  * @author Equipo Petcare 10
  * @version 2.0
  * @since 1.0
  * @see Invoice
  * @see InvoiceSummaryResponse
  */
-public class InvoiceDetailResponse {
+@Schema(description = "DTO de respuesta con información completa y detallada de facturas.")
+public record InvoiceDetailResponse(
+        @Schema(description = "Identificador único de la factura.", example = "1")
+        Long id,
 
-    /**
-     * Identificador único de la factura.
-     */
-    private Long id;
+        @Schema(description = "Número único de factura para identificación externa.", example = "INV-2025-1707501234567")
+        String invoiceNumber,
 
-    /**
-     * Número único de factura para identificación externa.
-     *
-     * <p>Formato típico: INV-YYYY-timestamp. Se muestra al cliente
-     * en todas las comunicaciones relacionadas con la factura.</p>
-     */
-    private String invoiceNumber;
+        @Schema(description = "Información resumida de la cuenta facturada.")
+        AccountInfo account,
 
-    /**
-     * Información resumida de la cuenta facturada.
-     *
-     * <p>Incluye datos necesarios para identificar al cliente
-     * sin exponer información sensible innecesaria.</p>
-     */
-    private AccountInfo account;
+        @Schema(description = "Información resumida de la reserva que origina la factura.")
+        BookingInfo booking,
 
-    /**
-     * Información resumida de la reserva que origina la factura.
-     *
-     * <p>Proporciona contexto sobre el servicio prestado
-     * sin cargar la entidad completa de la reserva.</p>
-     */
-    private BookingInfo booking;
+        @Schema(description = "Fecha y hora de emisión de la factura.", example = "2025-02-10T15:30:00")
+        LocalDateTime issueDate,
 
-    /**
-     * Fecha y hora de emisión de la factura.
-     *
-     * <p>Momento en que se generó la factura.
-     * Importante para términos de pago y auditoría.</p>
-     */
-    private LocalDateTime issueDate;
+        @Schema(description = "Fecha límite para el pago de la factura.", example = "2025-02-20T15:30:00")
+        LocalDateTime dueDate,
 
-    /**
-     * Fecha límite para el pago de la factura.
-     *
-     * <p>Después de esta fecha, la factura puede considerarse vencida
-     * y aplicar recargos o penalizaciones según políticas.</p>
-     */
-    private LocalDateTime dueDate;
+        @Schema(description = "Subtotal antes de aplicar tarifas de plataforma.", example = "150.00")
+        BigDecimal subtotal,
 
-    /**
-     * Subtotal antes de aplicar tarifas de plataforma.
-     *
-     * <p>Suma de todos los items de la factura antes de
-     * comisiones y cargos adicionales.</p>
-     */
-    private BigDecimal subtotal;
+        @Schema(description = "Tarifa de plataforma aplicada.", example = "10.00")
+        BigDecimal platformFee,
 
-    /**
-     * Tarifa de plataforma aplicada.
-     *
-     * <p>Comisión que cobra Petcare por facilitar la transacción.
-     * Calculada como porcentaje del subtotal.</p>
-     */
-    private BigDecimal platformFee;
+        @Schema(description = "Monto total final de la factura.", example = "160.00")
+        BigDecimal totalAmount,
 
-    /**
-     * Monto total final de la factura.
-     *
-     * <p>Cantidad total que debe pagar el cliente:
-     * subtotal + platformFee + otros cargos.</p>
-     */
-    private BigDecimal totalAmount;
+        @Schema(description = "Estado actual de la factura.", example = "SENT")
+        InvoiceStatus status,
 
-    /**
-     * Estado actual de la factura.
-     *
-     * <p>Determina las acciones disponibles y el flujo de trabajo
-     * aplicable a esta factura.</p>
-     *
-     * @see InvoiceStatus
-     */
-    private InvoiceStatus status;
+        @Schema(description = "Notas adicionales incluidas en la factura.")
+        String notes,
 
-    /**
-     * Notas adicionales incluidas en la factura.
-     *
-     * <p>Información adicional, términos especiales, o
-     * instrucciones relevantes para el cliente.</p>
-     */
-    private String notes;
+        @Schema(description = "Fecha y hora de creación de la factura.", example = "2025-02-10T15:30:00")
+        LocalDateTime createdAt,
 
-    /**
-     * Fecha y hora de creación de la factura.
-     */
-    private LocalDateTime createdAt;
+        @Schema(description = "Fecha y hora de la última actualización.", example = "2025-02-10T15:30:00")
+        LocalDateTime updatedAt,
 
-    /**
-     * Fecha y hora de la última actualización.
-     */
-    private LocalDateTime updatedAt;
+        @Schema(description = "Lista detallada de items incluidos en la factura.")
+        List<InvoiceItemResponse> items,
 
-    /**
-     * Lista detallada de items incluidos en la factura.
-     *
-     * <p>Cada item incluye descripción, cantidad, precio unitario
-     * y total calculado para transparencia completa.</p>
-     */
-    private List<InvoiceItemResponse> items;
-
-    /**
-     * Historial completo de pagos asociados a esta factura.
-     *
-     * <p>Incluye tanto pagos exitosos como fallidos para
-     * proporcionar un registro completo de transacciones.</p>
-     */
-    private List<PaymentSummary> payments;
-
-    // ========== CONSTRUCTORES ==========
-
-    /**
-     * Constructor vacío requerido para frameworks de serialización.
-     */
-    public InvoiceDetailResponse() {
-    }
-
-    /**
-     * Constructor completo para creación programática.
-     */
-    public InvoiceDetailResponse(Long id, String invoiceNumber, AccountInfo account, BookingInfo booking,
-                                 LocalDateTime issueDate, LocalDateTime dueDate, BigDecimal subtotal,
-                                 BigDecimal platformFee, BigDecimal totalAmount, InvoiceStatus status,
-                                 String notes, LocalDateTime createdAt, LocalDateTime updatedAt,
-                                 List<InvoiceItemResponse> items, List<PaymentSummary> payments) {
-        this.id = id;
-        this.invoiceNumber = invoiceNumber;
-        this.account = account;
-        this.booking = booking;
-        this.issueDate = issueDate;
-        this.dueDate = dueDate;
-        this.subtotal = subtotal;
-        this.platformFee = platformFee;
-        this.totalAmount = totalAmount;
-        this.status = status;
-        this.notes = notes;
-        this.createdAt = createdAt;
-        this.updatedAt = updatedAt;
-        this.items = items;
-        this.payments = payments;
-    }
-
-    // ========== MÉTODO DE FÁBRICA ==========
+        @Schema(description = "Historial completo de pagos asociados a esta factura.")
+        List<PaymentSummary> payments
+) {
 
     /**
      * Crea una instancia de InvoiceDetailResponse desde una entidad Invoice.
-     *
-     * <p>Este método de fábrica maneja de forma segura las relaciones que pueden
-     * ser null y construye los DTOs anidados necesarios para una respuesta completa.</p>
-     *
-     * <p><strong>Manejo de valores null:</strong></p>
-     * <ul>
-     *   <li>Si una relación es null, se asigna null al campo correspondiente</li>
-     *   <li>Las listas vacías se manejan correctamente</li>
-     *   <li>Se preservan todos los campos opcionales como están</li>
-     * </ul>
      *
      * @param invoice la entidad Invoice a convertir
      * @return nueva instancia de InvoiceDetailResponse con datos poblados
@@ -289,10 +161,6 @@ public class InvoiceDetailResponse {
 
     /**
      * Formatea un nombre completo de usuario de manera segura.
-     *
-     * @param firstName nombre
-     * @param lastName apellido
-     * @return nombre completo formateado, o null si ambos son null
      */
     private static String formatUserName(String firstName, String lastName) {
         if (firstName == null && lastName == null) {
@@ -305,12 +173,8 @@ public class InvoiceDetailResponse {
         return (first + " " + last).trim();
     }
 
-    // ========== MÉTODOS DE UTILIDAD ==========
-
     /**
      * Verifica si la factura puede recibir pagos.
-     *
-     * @return true si está en estado que permite pagos
      */
     public boolean canReceivePayments() {
         return status == InvoiceStatus.SENT ||
@@ -320,8 +184,6 @@ public class InvoiceDetailResponse {
 
     /**
      * Verifica si la factura está completamente pagada.
-     *
-     * @return true si está pagada completamente
      */
     public boolean isPaid() {
         return status == InvoiceStatus.PAID;
@@ -329,8 +191,6 @@ public class InvoiceDetailResponse {
 
     /**
      * Verifica si la factura está vencida.
-     *
-     * @return true si la fecha actual supera la fecha de vencimiento
      */
     public boolean isOverdue() {
         return status == InvoiceStatus.OVERDUE ||
@@ -339,8 +199,6 @@ public class InvoiceDetailResponse {
 
     /**
      * Calcula los días restantes hasta el vencimiento.
-     *
-     * @return días hasta vencimiento, negativo si ya venció
      */
     public long getDaysUntilDue() {
         if (dueDate == null) return 0;
@@ -349,21 +207,17 @@ public class InvoiceDetailResponse {
 
     /**
      * Calcula el porcentaje de la tarifa de plataforma sobre el subtotal.
-     *
-     * @return porcentaje de la tarifa, 0 si no hay subtotal
      */
     public BigDecimal getPlatformFeePercentage() {
         if (subtotal == null || subtotal.equals(BigDecimal.ZERO) || platformFee == null) {
             return BigDecimal.ZERO;
         }
-        return platformFee.divide(subtotal, 4, BigDecimal.ROUND_HALF_UP)
+        return platformFee.divide(subtotal, 4, java.math.RoundingMode.HALF_UP)
                 .multiply(new BigDecimal("100"));
     }
 
     /**
      * Obtiene la cantidad total de items en la factura.
-     *
-     * @return número total de items
      */
     public int getTotalItemCount() {
         return items != null ? items.size() : 0;
@@ -371,59 +225,23 @@ public class InvoiceDetailResponse {
 
     /**
      * Obtiene la cantidad total de pagos realizados.
-     *
-     * @return número total de intentos de pago
      */
     public int getTotalPaymentCount() {
         return payments != null ? payments.size() : 0;
     }
 
-    // ========== GETTERS Y SETTERS ==========
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        InvoiceDetailResponse that = (InvoiceDetailResponse) o;
+        return Objects.equals(id, that.id);
+    }
 
-    public Long getId() { return id; }
-    public void setId(Long id) { this.id = id; }
-
-    public String getInvoiceNumber() { return invoiceNumber; }
-    public void setInvoiceNumber(String invoiceNumber) { this.invoiceNumber = invoiceNumber; }
-
-    public AccountInfo getAccount() { return account; }
-    public void setAccount(AccountInfo account) { this.account = account; }
-
-    public BookingInfo getBooking() { return booking; }
-    public void setBooking(BookingInfo booking) { this.booking = booking; }
-
-    public LocalDateTime getIssueDate() { return issueDate; }
-    public void setIssueDate(LocalDateTime issueDate) { this.issueDate = issueDate; }
-
-    public LocalDateTime getDueDate() { return dueDate; }
-    public void setDueDate(LocalDateTime dueDate) { this.dueDate = dueDate; }
-
-    public BigDecimal getSubtotal() { return subtotal; }
-    public void setSubtotal(BigDecimal subtotal) { this.subtotal = subtotal; }
-
-    public BigDecimal getPlatformFee() { return platformFee; }
-    public void setPlatformFee(BigDecimal platformFee) { this.platformFee = platformFee; }
-
-    public BigDecimal getTotalAmount() { return totalAmount; }
-    public void setTotalAmount(BigDecimal totalAmount) { this.totalAmount = totalAmount; }
-
-    public InvoiceStatus getStatus() { return status; }
-    public void setStatus(InvoiceStatus status) { this.status = status; }
-
-    public String getNotes() { return notes; }
-    public void setNotes(String notes) { this.notes = notes; }
-
-    public LocalDateTime getCreatedAt() { return createdAt; }
-    public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
-
-    public LocalDateTime getUpdatedAt() { return updatedAt; }
-    public void setUpdatedAt(LocalDateTime updatedAt) { this.updatedAt = updatedAt; }
-
-    public List<InvoiceItemResponse> getItems() { return items; }
-    public void setItems(List<InvoiceItemResponse> items) { this.items = items; }
-
-    public List<PaymentSummary> getPayments() { return payments; }
-    public void setPayments(List<PaymentSummary> payments) { this.payments = payments; }
+    @Override
+    public int hashCode() {
+        return Objects.hash(id);
+    }
 
     @Override
     public String toString() {

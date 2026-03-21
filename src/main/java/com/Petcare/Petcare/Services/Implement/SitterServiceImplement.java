@@ -104,15 +104,15 @@ public class SitterServiceImplement implements SitterService {
         // Creamos una nueva entidad SitterProfile a partir de los datos del DTO.
         SitterProfile profile = new SitterProfile(
                 user,
-                sitterProfileDTO.getBio(),
-                sitterProfileDTO.getHourlyRate(),
-                sitterProfileDTO.getServicingRadius(),
-                sitterProfileDTO.getProfileImageUrl()
+                sitterProfileDTO.bio(),
+                sitterProfileDTO.hourlyRate(),
+                sitterProfileDTO.servicingRadius(),
+                sitterProfileDTO.profileImageUrl()
         );
 
         // Establecemos los valores booleanos iniciales desde el DTO.
-        profile.setVerified(sitterProfileDTO.isVerified());
-        profile.setAvailableForBookings(sitterProfileDTO.isAvailableForBookings());
+        profile.setVerified(sitterProfileDTO.verified());
+        profile.setAvailableForBookings(sitterProfileDTO.availableForBookings());
 
         // --- Persistencia ---
         // Guardamos la nueva entidad en la base de datos. La transacción asegura que esto sea atómico.
@@ -158,12 +158,12 @@ public class SitterServiceImplement implements SitterService {
                 .orElseThrow(() -> new SitterProfileNotFoundException("El perfil no se encuentra"));
 
         // Actualizamos cada uno de los campos de la entidad con los valores del DTO.
-        profile.setBio(sitterProfileDTO.getBio());
-        profile.setHourlyRate(sitterProfileDTO.getHourlyRate());
-        profile.setServicingRadius(sitterProfileDTO.getServicingRadius());
-        profile.setProfileImageUrl(sitterProfileDTO.getProfileImageUrl());
-        profile.setVerified(sitterProfileDTO.isVerified());
-        profile.setAvailableForBookings(sitterProfileDTO.isAvailableForBookings());
+        profile.setBio(sitterProfileDTO.bio());
+        profile.setHourlyRate(sitterProfileDTO.hourlyRate());
+        profile.setServicingRadius(sitterProfileDTO.servicingRadius());
+        profile.setProfileImageUrl(sitterProfileDTO.profileImageUrl());
+        profile.setVerified(sitterProfileDTO.verified());
+        profile.setAvailableForBookings(sitterProfileDTO.availableForBookings());
 
         // Guardamos la entidad actualizada. JPA se encargará de generar el UPDATE SQL.
         SitterProfile updated = sitterProfileRepository.save(profile);

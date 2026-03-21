@@ -158,8 +158,8 @@ class SitterWorkExperienceServiceImplementTest {
 
             // Assert
             assertThat(responseDTO).isNotNull();
-            assertThat(responseDTO.getId()).isEqualTo(VALID_EXPERIENCE_ID);
-            assertThat(responseDTO.getCompanyName()).isEqualTo(testRequestDTO.getCompanyName());
+            assertThat(responseDTO.id()).isEqualTo(VALID_EXPERIENCE_ID);
+            assertThat(responseDTO.companyName()).isEqualTo(testRequestDTO.getCompanyName());
             verify(sitterProfileRepository, times(1)).findById(VALID_PROFILE_ID);
             verify(workExperienceRepository, times(1)).save(any(SitterWorkExperience.class));
         }

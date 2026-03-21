@@ -3,11 +3,8 @@ package com.Petcare.Petcare.DTOs.User;
 import com.Petcare.Petcare.DTOs.Booking.BookingSummaryResponse;
 import com.Petcare.Petcare.DTOs.Pet.PetSummaryResponse;
 import com.Petcare.Petcare.DTOs.Sitter.SitterProfileSummary;
-import java.util.List;
-
 import io.swagger.v3.oas.annotations.media.Schema;
-import lombok.AllArgsConstructor;
-import lombok.Data;
+import java.util.List;
 
 /**
  * DTO principal que consolida toda la información necesaria para el dashboard del cliente.
@@ -19,44 +16,24 @@ import lombok.Data;
  * </p>
  *
  * @author Equipo Petcare 10
- * @version 1.0
+ * @version 1.1
  * @since 1.0
  * @see com.Petcare.Petcare.Controllers.DashboardController
  */
-@Data
-@AllArgsConstructor
 @Schema(description = "DTO principal que consolida toda la información necesaria para el dashboard del cliente.")
-public class MainDashboardDTO {
+public record MainDashboardDTO(
+        @Schema(description = "Información del perfil del usuario actualmente autenticado.")
+        UserProfileDTO userProfile,
 
-    /**
-     * Información del perfil del usuario actualmente autenticado, como su nombre e iniciales.
-     * @see UserProfileDTO
-     */
-    private UserProfileDTO userProfile;
+        @Schema(description = "Resumen de la próxima cita o reserva programada. Puede ser nulo si no hay citas futuras.")
+        BookingSummaryResponse nextAppointment,
 
-    /**
-     * Un resumen de la próxima cita o reserva que el usuario tiene programada.
-     * Puede ser nulo si no hay citas futuras.
-     * @see BookingSummaryResponse
-     */
-    private BookingSummaryResponse nextAppointment;
+        @Schema(description = "Lista con el resumen de todas las mascotas asociadas a la cuenta del usuario.")
+        List<PetSummaryResponse> userPets,
 
-    /**
-     * Una lista con el resumen de todas las mascotas asociadas a la cuenta del usuario.
-     * @see PetSummaryResponse
-     */
-    private List<PetSummaryResponse> userPets;
+        @Schema(description = "Lista de cuidadores contactados o reservados recientemente.")
+        List<SitterProfileSummary> recentSitters,
 
-    /**
-     * Una lista de cuidadores contactados o reservados recientemente, para facilitar el acceso rápido.
-     * @see SitterProfileSummary
-     */
-    private List<SitterProfileSummary> recentSitters;
-
-    /**
-     * Un objeto que contiene las estadísticas y métricas clave de la cuenta del usuario
-     * (ej. número de mascotas, citas pendientes, etc.).
-     * @see DashboardStatsDTO
-     */
-    private DashboardStatsDTO stats;
-}
+        @Schema(description = "Estadísticas y métricas clave de la cuenta del usuario.")
+        DashboardStatsDTO stats
+) { }

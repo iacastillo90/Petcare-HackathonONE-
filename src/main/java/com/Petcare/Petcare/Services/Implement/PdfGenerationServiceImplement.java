@@ -50,15 +50,15 @@ public class PdfGenerationServiceImplement implements PdfGenerationService {
             // Columna Izquierda: Datos del Cliente
             Cell clientCell = new Cell().setPadding(5).setBorder(null);
             clientCell.add(new Paragraph("Facturado a:").setBold());
-            clientCell.add(new Paragraph(invoice.getAccount().getAccountNumber()));
+            clientCell.add(new Paragraph(invoice.account().getAccountNumber()));
             // Aquí podrías añadir la dirección de la cuenta si la tuvieras en el DTO
             infoTable.addCell(clientCell);
 
             // Columna Derecha: Datos de la Factura
             Cell invoiceCell = new Cell().setPadding(5).setBorder(null).setTextAlignment(TextAlignment.RIGHT);
-            invoiceCell.add(new Paragraph("Factura #: " + invoice.getInvoiceNumber()).setBold());
-            invoiceCell.add(new Paragraph("Fecha de Emisión: " + invoice.getIssueDate().format(DateTimeFormatter.ofPattern("dd/MM/yyyy"))));
-            invoiceCell.add(new Paragraph("Fecha de Vencimiento: " + invoice.getDueDate().format(DateTimeFormatter.ofPattern("dd/MM/yyyy"))));
+            invoiceCell.add(new Paragraph("Factura #: " + invoice.invoiceNumber()).setBold());
+            invoiceCell.add(new Paragraph("Fecha de Emisión: " + invoice.issueDate().format(DateTimeFormatter.ofPattern("dd/MM/yyyy"))));
+            invoiceCell.add(new Paragraph("Fecha de Vencimiento: " + invoice.dueDate().format(DateTimeFormatter.ofPattern("dd/MM/yyyy"))));
             infoTable.addCell(invoiceCell);
 
             document.add(infoTable);
@@ -70,10 +70,10 @@ public class PdfGenerationServiceImplement implements PdfGenerationService {
             itemsTable.addHeaderCell(new Cell().add(new Paragraph("Cantidad").setBold().setTextAlignment(TextAlignment.CENTER)));
             itemsTable.addHeaderCell(new Cell().add(new Paragraph("Total").setBold().setTextAlignment(TextAlignment.RIGHT)));
 
-            for (InvoiceItemResponse item : invoice.getItems()) {
-                itemsTable.addCell(new Cell().add(new Paragraph(item.getDescription())));
-                itemsTable.addCell(new Cell().add(new Paragraph(String.valueOf(item.getQuantity()))).setTextAlignment(TextAlignment.CENTER));
-                itemsTable.addCell(new Cell().add(new Paragraph("$" + item.getLineTotal().toString())).setTextAlignment(TextAlignment.RIGHT));
+            for (InvoiceItemResponse item : invoice.items()) {
+                itemsTable.addCell(new Cell().add(new Paragraph(item.description())));
+                itemsTable.addCell(new Cell().add(new Paragraph(String.valueOf(item.quantity()))).setTextAlignment(TextAlignment.CENTER));
+                itemsTable.addCell(new Cell().add(new Paragraph("$" + item.lineTotal().toString())).setTextAlignment(TextAlignment.RIGHT));
             }
             document.add(itemsTable);
 
@@ -81,11 +81,11 @@ public class PdfGenerationServiceImplement implements PdfGenerationService {
             document.add(new Paragraph("\n"));
             Table totalsTable = new Table(UnitValue.createPercentArray(new float[]{75, 25})).useAllAvailableWidth();
             totalsTable.addCell(new Cell().add(new Paragraph("Subtotal:")).setBorder(null).setTextAlignment(TextAlignment.RIGHT));
-            totalsTable.addCell(new Cell().add(new Paragraph("$" + invoice.getSubtotal())).setBorder(null).setTextAlignment(TextAlignment.RIGHT));
+            totalsTable.addCell(new Cell().add(new Paragraph("$" + invoice.subtotal())).setBorder(null).setTextAlignment(TextAlignment.RIGHT));
             totalsTable.addCell(new Cell().add(new Paragraph("Comisión Plataforma:")).setBorder(null).setTextAlignment(TextAlignment.RIGHT));
-            totalsTable.addCell(new Cell().add(new Paragraph("$" + invoice.getPlatformFee())).setBorder(null).setTextAlignment(TextAlignment.RIGHT));
+            totalsTable.addCell(new Cell().add(new Paragraph("$" + invoice.platformFee())).setBorder(null).setTextAlignment(TextAlignment.RIGHT));
             totalsTable.addCell(new Cell().add(new Paragraph("Total a Pagar:").setBold().setFontSize(14)).setBorder(null).setTextAlignment(TextAlignment.RIGHT));
-            totalsTable.addCell(new Cell().add(new Paragraph("$" + invoice.getTotalAmount()).setBold().setFontSize(14)).setBorder(null).setTextAlignment(TextAlignment.RIGHT));
+            totalsTable.addCell(new Cell().add(new Paragraph("$" + invoice.totalAmount()).setBold().setFontSize(14)).setBorder(null).setTextAlignment(TextAlignment.RIGHT));
 
             document.add(totalsTable);
 

@@ -8,6 +8,8 @@ import com.Petcare.Petcare.Services.AppliedCouponService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.math.BigDecimal;
+
 /**
  * Controller para la gestión de cupones aplicados (AppliedCoupon).
  *
@@ -58,19 +60,11 @@ public class AppliedCouponController {
                                                              @RequestParam String couponCode) {
         AppliedCoupon appliedCoupon = appliedCouponService.applyCoupon(bookingId, accountId, couponCode);
 
-        AppliedCouponResponse response = new AppliedCouponResponse();
-        response.setId(appliedCoupon.getId());
-        response.setBookingId(appliedCoupon.getBookingId());
-        response.setAccountId(appliedCoupon.getAccountId());
-        response.setCouponId(appliedCoupon.getCouponId());
-        response.setDiscountAmount(appliedCoupon.getDiscountAmount());
-        response.setAppliedAt(appliedCoupon.getAppliedAt());
-
         // Obtener total actualizado de la reserva
         Booking booking = bookingRepository.findById(appliedCoupon.getBookingId()).orElse(null);
-        if (booking != null) {
-            response.setBookingTotal(booking.getTotalPrice());
-        }
+        BigDecimal bookingTotal = (booking != null) ? booking.getTotalPrice() : null;
+
+        AppliedCouponResponse response = AppliedCouponResponse.fromEntity(appliedCoupon, bookingTotal);
 
         return ResponseEntity.ok(response);
     }
