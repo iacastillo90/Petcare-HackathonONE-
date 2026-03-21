@@ -4,7 +4,6 @@ import com.Petcare.Petcare.Models.User.User;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
 import org.slf4j.Logger;
@@ -14,6 +13,7 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
+import javax.crypto.SecretKey;
 import java.security.Key;
 import java.util.Date;
 import java.util.HashMap;
@@ -22,8 +22,10 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 
 /**
- * Servicio para manejar tokens JWT (JSON Web Tokens) en la aplicación PodStream.
+ * Servicio para manejar tokens JWT (JSON Web Tokens) en la aplicación Petcare.
  * Proporciona funcionalidades para generar, validar y extraer información de tokens JWT usados para autenticación.
+ * 
+ * <p>Actualizado a JJWT 0.12.5 - API modernizada con métodos fluent.</p>
  */
 @Service
 public class JwtService {
@@ -90,13 +92,12 @@ public class JwtService {
      * @return El token JWT generado como una cadena.
      */
     private String getToken(Map<String, Object> extraClaims, UserDetails user) {
-        return Jwts
-                .builder()
-                .setClaims(extraClaims)
-                .setSubject(user.getUsername())
-                .setIssuedAt(new Date(System.currentTimeMillis()))
-                .setExpiration(new Date(System.currentTimeMillis() + expirationTime))
-                .signWith(getKey(), SignatureAlgorithm.HS256)
+        return Jwts.builder()
+                .claims(extraClaims)
+                .subject(user.getUsername())
+                .issuedAt(new Date(System.currentTimeMillis()))
+                .expiration(new Date(System.currentTimeMillis() + expirationTime))
+                .signWith(getKey())
                 .compact();
     }
 
@@ -125,7 +126,6 @@ public class JwtService {
      * Valida el token JWT verificando si coincide con el usuario y si no ha expirado.
      *
      * @param token       El token JWT a validar.
-     *
      * @return Verdadero si el token es válido, falso en caso contrario.
      */
     public boolean isTokenValid(String token) {
@@ -146,12 +146,11 @@ public class JwtService {
      */
     public Claims getAllClaims(String token) {
         try {
-            return Jwts
-                    .parserBuilder()
-                    .setSigningKey(getKey())
+            return Jwts.parser()
+                    .verifyWith(getKey())
                     .build()
-                    .parseClaimsJws(token)
-                    .getBody();
+                    .parseSignedClaims(token)
+                    .getPayload();
         } catch (JwtException e) {
             logger.warn("Invalid JWT token: {}", e.getMessage());
             throw new IllegalArgumentException("Invalid JWT token: " + e.getMessage());
@@ -206,12 +205,12 @@ public class JwtService {
         extraClaims.put("userId", user.getId()); // Añadir el ID del usuario es una buena práctica
 
         return Jwts.builder()
-                .setClaims(extraClaims)
-                .setSubject(user.getEmail())
-                .setAudience(VERIFICATION_AUDIENCE) // Claim para identificar el propósito
-                .setIssuedAt(new Date(System.currentTimeMillis()))
-                .setExpiration(new Date(System.currentTimeMillis() + verificationExpirationTime))
-                .signWith(getKey(), SignatureAlgorithm.HS256)
+                .claims(extraClaims)
+                .subject(user.getEmail())
+                .audience().add(VERIFICATION_AUDIENCE).and() // Claim para identificar el propósito
+                .issuedAt(new Date(System.currentTimeMillis()))
+                .expiration(new Date(System.currentTimeMillis() + verificationExpirationTime))
+                .signWith(getKey())
                 .compact();
     }
 
@@ -223,14 +222,14 @@ public class JwtService {
      * @throws JwtException si el token es inválido o no es para verificación.
      */
     public Claims getClaimsFromVerificationToken(String token) throws JwtException {
-        Claims claims = Jwts.parserBuilder()
-                .setSigningKey(getKey())
+        Claims claims = Jwts.parser()
+                .verifyWith(getKey())
                 .requireAudience(VERIFICATION_AUDIENCE) // Asegura que el token sea para verificación
                 .build()
-                .parseClaimsJws(token)
-                .getBody();
+                .parseSignedClaims(token)
+                .getPayload();
 
-        // Opcional: Validar que el token no ha expirado (aunque .parseClaimsJws ya lo hace)
+        // Validar que el token no ha expirado
         if (claims.getExpiration().before(new Date())) {
             throw new JwtException("El token de verificación ha expirado");
         }
