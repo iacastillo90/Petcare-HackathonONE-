@@ -74,6 +74,10 @@ dependencies {
 	// Validación
 	implementation 'org.springframework.boot:spring-boot-starter-validation'
 
+	// Flyway Database Migration
+	implementation 'org.flywaydb:flyway-core'
+	implementation 'org.flywaydb:flyway-mysql'
+
 	// Documentacion
 	implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.8.11'
 
