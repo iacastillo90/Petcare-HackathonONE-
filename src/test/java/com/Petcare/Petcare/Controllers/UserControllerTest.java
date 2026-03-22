@@ -468,7 +468,7 @@ class UserControllerTest {
                         .param("active", "false")) // El parámetro para desactivar
                 .andExpect(status().isOk()) // Esperamos 200 OK para una desactivación exitosa
                 .andExpect(jsonPath("$.id").value(savedUser.getId())) // Verificamos que el ID coincide
-                .andExpect(jsonPath("$.active").value(false)); // Verificamos que la respuesta refleje el nuevo estado
+                .andExpect(jsonPath("$.isActive").value(false)); // Verificamos que la respuesta refleje el nuevo estado
 
         // Verificación extra contra la BD
         User toggledUserFromDb = userRepository.findById(savedUser.getId()).orElseThrow();
