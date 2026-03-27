@@ -53,4 +53,13 @@ application-local.properties
 # Archivos del sistema operativo
 .DS_Store
 Thumbs.db
+
+# Archivos de configuración con secretos
 .env
+.env.local
+.env.*.local
+
+# Archivos de auditoría de seguridad - NO SUBIR A REPOSITORIO
+vulnerabilities.md
+security-audit-*.md
+*security-report*
