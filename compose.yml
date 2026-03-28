@@ -12,11 +12,8 @@ services:
     image: mysql:9.2.0
     container_name: petcare-mysql
     restart: unless-stopped
-    environment:
-      MYSQL_ROOT_PASSWORD: rootpassword
-      MYSQL_DATABASE: petcare
-      MYSQL_USER: petcare_user
-      MYSQL_PASSWORD: petcare_pass
+    env_file:
+      - .env
     ports:
       - "3306:3306"
     volumes:
@@ -48,30 +45,10 @@ services:
     networks:
       - petcare-network
 
-  # =================================================================
-  # Nginx Reverse Proxy
-  # =================================================================
-  nginx:
-    image: nginx:latest
-    container_name: petcare-nginx
-    restart: unless-stopped
-    depends_on:
-      - app
-    ports:
-      - "80:80"
-      - "443:443"
-    volumes:
-      - ./nginx.conf:/etc/nginx/nginx.conf:ro
-      - nginx_ssl:/etc/nginx/ssl:ro
-    networks:
-      - petcare-network
-
 networks:
   petcare-network:
     driver: bridge
 
 volumes:
   mysql_data:
-    driver: local
-  nginx_ssl:
     driver: local
