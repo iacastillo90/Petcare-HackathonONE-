@@ -38,25 +38,11 @@ services:
       dockerfile: Dockerfile
     container_name: petcare-app
     restart: unless-stopped
+    env_file:
+      - .env
     depends_on:
       mysql:
         condition: service_healthy
-    environment:
-      # Database Configuration
-      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/petcare
-      SPRING_DATASOURCE_USERNAME: petcare_user
-      SPRING_DATASOURCE_PASSWORD: petcare_pass
-      
-      # JWT Configuration - Generate with: openssl rand -base64 64
-      JWT_SECRET: c29tZS1zZWNyZXQta2V5LWZvci1qd3QtdG9rZW4tZ2VuZXJhdGlvbi1pbi1wcm9kdWN0aW9u
-      JWT_EXPIRATION: 86400000
-      
-      # Mail Configuration (configure with real credentials)
-      SPRING_MAIL_USERNAME: noreply@petcare.com
-      SPRING_MAIL_PASSWORD: your-mail-password
-      
-      # Spring Profile
-      SPRING_PROFILES_ACTIVE: prod
     ports:
       - "8088:8088"
     networks:
