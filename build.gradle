@@ -84,6 +84,9 @@ dependencies {
     // Monitor
     implementation 'org.springframework.boot:spring-boot-starter-actuator'
 
+    // Dotenv for environment variables
+    implementation 'io.github.cdimascio:dotenv-java:3.0.2'
+
 }
 
 tasks.named('test') {
