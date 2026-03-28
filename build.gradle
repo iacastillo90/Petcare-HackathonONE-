@@ -94,6 +94,27 @@ tasks.named('test') {
 	jvmArgs '-javaagent:' + configurations.testRuntimeClasspath.find { it.name.contains('mockito-core') }
 }
 
+// Configuración para IDE (Lombok support)
+ideclipse {
+    javadoc { includeDependencies = true }
+}
+
+eclipse {
+    classpath {
+        containers += 'org.projectlombok lombok.launch.AnnotationProcessorHider$AnnotationProcessor'
+        downloadSources = true
+        downloadJavadoc = true
+    }
+}
+
+idea {
+    module {
+        annotationProcessorPaths += [
+            path('org.projectlombok:lombok')
+        ]
+    }
+}
+
 tasks.withType(JavaCompile) {
 	options.compilerArgs += "-Xlint:deprecation"
 }
