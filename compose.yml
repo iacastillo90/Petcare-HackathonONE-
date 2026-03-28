@@ -10,16 +10,15 @@ services:
   # =================================================================
   mysql:
     image: mysql:9.2.0
-    container_name: petcare-mysql
     restart: unless-stopped
     env_file:
       - .env
     ports:
-      - "3306:3306"
+      - 3306
     volumes:
       - mysql_data:/var/lib/mysql
     networks:
-      - petcare-network
+      - dokploy-network
     healthcheck:
       test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
       interval: 10s
@@ -33,7 +32,6 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: petcare-app
     restart: unless-stopped
     env_file:
       - .env
@@ -41,13 +39,13 @@ services:
       mysql:
         condition: service_healthy
     ports:
-      - "8088:8088"
+      - 8088
     networks:
-      - petcare-network
+      - dokploy-network
 
 networks:
-  petcare-network:
-    driver: bridge
+  dokploy-network:
+    external: true
 
 volumes:
   mysql_data:
