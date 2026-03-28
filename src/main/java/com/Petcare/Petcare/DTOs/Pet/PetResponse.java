@@ -1,117 +1,101 @@
 package com.Petcare.Petcare.DTOs.Pet;
 
 import com.Petcare.Petcare.Models.Pet;
+import io.swagger.v3.oas.annotations.media.Schema;
+
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 /**
  * DTO para la respuesta de información de una mascota.
  * Incluye todos los campos relevantes de la entidad Pet.
+ *
+ * @author Equipo Petcare 10
+ * @version 1.1
+ * @since 1.0
+ * @see Pet
  */
-public class PetResponse {
+@Schema(description = "DTO para la respuesta de información completa de una mascota.")
+public record PetResponse(
+        @Schema(description = "Identificador único de la mascota.", example = "1")
+        Long id,
 
-    private Long id;
-    private Long accountId;
-    private String name;
-    private String species;
-    private String breed;
-    private Integer age;
-    private BigDecimal weight;
-    private String gender;
-    private String color;
-    private String physicalDescription;
-    private String medications;
-    private String allergies;
-    private String vaccinations; // campo incluido
-    private String specialNotes;
-    private boolean isActive;
-    private LocalDateTime createdAt;
-    private LocalDateTime updatedAt;
+        @Schema(description = "ID de la cuenta propietaria.", example = "1")
+        Long accountId,
 
-    // ========== GETTERS Y SETTERS ==========
+        @Schema(description = "Nombre de la mascota.", example = "Fido")
+        String name,
 
-    public Long getId() { return id; }
-    public void setId(Long id) { this.id = id; }
+        @Schema(description = "Especie de la mascota.", example = "Perro")
+        String species,
 
-    public Long getAccountId() { return accountId; }
-    public void setAccountId(Long accountId) { this.accountId = accountId; }
+        @Schema(description = "Raza de la mascota.", example = "Labrador")
+        String breed,
 
-    public String getName() { return name; }
-    public void setName(String name) { this.name = name; }
+        @Schema(description = "Edad de la mascota en años.", example = "3")
+        Integer age,
 
-    public String getSpecies() { return species; }
-    public void setSpecies(String species) { this.species = species; }
+        @Schema(description = "Peso de la mascota en kg.", example = "25.5")
+        BigDecimal weight,
 
-    public String getBreed() { return breed; }
-    public void setBreed(String breed) { this.breed = breed; }
+        @Schema(description = "Género de la mascota.", example = "Macho")
+        String gender,
 
-    public Integer getAge() { return age; }
-    public void setAge(Integer age) { this.age = age; }
+        @Schema(description = "Color principal de la mascota.", example = "Marrón")
+        String color,
 
-    public BigDecimal getWeight() { return weight; }
-    public void setWeight(BigDecimal weight) { this.weight = weight; }
+        @Schema(description = "Descripción física detallada.", example = "Perro mediano de pelo corto")
+        String physicalDescription,
 
-    public String getGender() { return gender; }
-    public void setGender(String gender) { this.gender = gender; }
+        @Schema(description = "Información sobre medicamentos actuales.", example = "Ninguno")
+        String medications,
 
-    public String getColor() { return color; }
-    public void setColor(String color) { this.color = color; }
+        @Schema(description = "Información sobre alergias conocidas.", example = "Polvo")
+        String allergies,
 
-    public String getPhysicalDescription() { return physicalDescription; }
-    public void setPhysicalDescription(String physicalDescription) { this.physicalDescription = physicalDescription; }
+        @Schema(description = "Información de vacunas.", example = "Rabia, Moquillo")
+        String vaccinations,
 
-    public String getMedications() { return medications; }
-    public void setMedications(String medications) { this.medications = medications; }
+        @Schema(description = "Notas especiales para cuidadores.", example = "Muy juguetón")
+        String specialNotes,
 
-    public String getAllergies() { return allergies; }
-    public void setAllergies(String allergies) { this.allergies = allergies; }
+        @Schema(description = "Indica si la mascota está activa.", example = "true")
+        boolean isActive,
 
-    public String getVaccinations() { return vaccinations; }
-    public void setVaccinations(String vaccinations) { this.vaccinations = vaccinations; }
+        @Schema(description = "Fecha y hora de creación.", example = "2025-01-15T10:30:00")
+        LocalDateTime createdAt,
 
-    public String getSpecialNotes() { return specialNotes; }
-    public void setSpecialNotes(String specialNotes) { this.specialNotes = specialNotes; }
-
-    public boolean isActive() { return isActive; }
-    public void setActive(boolean active) { isActive = active; }
-
-    public LocalDateTime getCreatedAt() { return createdAt; }
-    public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
-
-    public LocalDateTime getUpdatedAt() { return updatedAt; }
-    public void setUpdatedAt(LocalDateTime updatedAt) { this.updatedAt = updatedAt; }
-
-    // ========== MÉTODO DE CONVERSIÓN ==========
+        @Schema(description = "Fecha y hora de la última actualización.", example = "2025-01-20T14:00:00")
+        LocalDateTime updatedAt
+) {
 
     /**
      * Convierte una entidad Pet a PetResponse DTO.
      *
      * @param pet entidad Pet
-     * @return PetResponse con todos los campos
+     * @return PetResponse con todos los campos, o null si pet es null
      */
     public static PetResponse fromEntity(Pet pet) {
         if (pet == null) return null;
 
-        PetResponse response = new PetResponse();
-        response.setId(pet.getId());
-        response.setAccountId(pet.getAccount() != null ? pet.getAccount().getId() : null);
-        response.setName(pet.getName());
-        response.setSpecies(pet.getSpecies());
-        response.setBreed(pet.getBreed());
-        response.setAge(pet.getAge());
-        response.setWeight(pet.getWeight());
-        response.setGender(pet.getGender());
-        response.setColor(pet.getColor());
-        response.setPhysicalDescription(pet.getPhysicalDescription());
-        response.setMedications(pet.getMedications());
-        response.setAllergies(pet.getAllergies());
-        response.setVaccinations(pet.getVaccinations());
-        response.setSpecialNotes(pet.getSpecialNotes());
-        response.setActive(pet.isActive());
-        response.setCreatedAt(pet.getCreatedAt());
-        response.setUpdatedAt(pet.getUpdatedAt());
-        return response;
+        return new PetResponse(
+                pet.getId(),
+                pet.getAccount() != null ? pet.getAccount().getId() : null,
+                pet.getName(),
+                pet.getSpecies(),
+                pet.getBreed(),
+                pet.getAge(),
+                pet.getWeight(),
+                pet.getGender(),
+                pet.getColor(),
+                pet.getPhysicalDescription(),
+                pet.getMedications(),
+                pet.getAllergies(),
+                pet.getVaccinations(),
+                pet.getSpecialNotes(),
+                pet.isActive(),
+                pet.getCreatedAt(),
+                pet.getUpdatedAt()
+        );
     }
 }
-
-

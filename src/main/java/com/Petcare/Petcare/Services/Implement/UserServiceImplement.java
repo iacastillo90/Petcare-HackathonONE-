@@ -594,16 +594,16 @@ public class UserServiceImplement implements UserService {
         long adminCount = userRepository.countByRole(Role.ADMIN);
         long verifiedUsers = userRepository.countByEmailVerifiedAtIsNotNull();
 
-        UserStatsResponse stats = UserStatsResponse.builder()
-                .totalUsers(totalUsers)
-                .activeUsers(activeUsers)
-                .clientCount(clientCount)
-                .sitterCount(sitterCount)
-                .adminCount(adminCount)
-                .verifiedUsers(verifiedUsers)
-                .build();
+        UserStatsResponse stats = new UserStatsResponse(
+                totalUsers,
+                activeUsers,
+                clientCount,
+                sitterCount,
+                adminCount,
+                verifiedUsers
+        );
 
-        log.info("Estadísticas generadas: {}", stats.getExecutiveSummary());
+        log.info("Estadísticas generadas: {}", stats.executiveSummary());
         return stats;
     }
 

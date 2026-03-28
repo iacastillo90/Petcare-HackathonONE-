@@ -1,5 +1,6 @@
 package com.Petcare.Petcare.Services.Implement;
 
+import com.Petcare.Petcare.Exception.Business.*;
 import com.Petcare.Petcare.Models.AppliedCoupon;
 import com.Petcare.Petcare.Models.Booking.Booking;
 import com.Petcare.Petcare.Models.DiscountCoupon;
@@ -7,6 +8,7 @@ import com.Petcare.Petcare.Repositories.AppliedCouponRepository;
 import com.Petcare.Petcare.Repositories.BookingRepository;
 import com.Petcare.Petcare.Repositories.DiscountCouponRepository;
 import com.Petcare.Petcare.Services.AppliedCouponService;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -15,6 +17,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
+@Slf4j
 @Service
 public class AppliedCouponServiceImplement implements AppliedCouponService {
 
@@ -36,19 +39,19 @@ public class AppliedCouponServiceImplement implements AppliedCouponService {
         // 1️⃣ Buscar cupón
         Optional<DiscountCoupon> optionalCoupon = discountCouponRepository.findByCouponCode(couponCode);
         if (optionalCoupon.isEmpty()) {
-            throw new RuntimeException("Cupón no encontrado");
+            throw new CouponNotFoundException(couponCode);
         }
         DiscountCoupon coupon = optionalCoupon.get();
 
         // 2️⃣ Validar cupón
         if (!validateCoupon(coupon)) {
-            throw new RuntimeException("El cupón no es válido o ha expirado");
+            throw new CouponExpiredException(couponCode);
         }
 
         // 3️⃣ Calcular descuento
         BigDecimal discountAmount;
         Booking booking = bookingRepository.findById(bookingId)
-                .orElseThrow(() -> new RuntimeException("Reserva no encontrada"));
+                .orElseThrow(() -> new BookingNotFoundException(bookingId));
 
         if (coupon.getDiscountType().name().equals("PERCENTAGE")) {
             discountAmount = booking.getTotalPrice()

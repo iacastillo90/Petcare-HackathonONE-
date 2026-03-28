@@ -1,9 +1,6 @@
 package com.Petcare.Petcare.DTOs.User;
 
 import io.swagger.v3.oas.annotations.media.Schema;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
 
 /**
  * DTO para encapsular las estadísticas clave del dashboard de un cliente.
@@ -12,69 +9,36 @@ import lombok.NoArgsConstructor;
  * de la cuenta de un usuario, ideal para poblar tarjetas de métricas o widgets en
  * el panel principal del cliente.
  * </p>
- * <p>Cada métrica principal se compone de un valor numérico o de estado y un texto
- * descriptivo complementario para la interfaz de usuario.</p>
  *
  * @author Equipo Petcare 10
- * @version 1.0
+ * @version 1.1
  * @since 1.0
  * @see com.Petcare.Petcare.Controllers.DashboardController
- * @see com.Petcare.Petcare.DTOs.User.MainDashboardDTO
+ * @see MainDashboardDTO
  */
-@Data
-@AllArgsConstructor
-@NoArgsConstructor
 @Schema(description = "DTO para encapsular las estadísticas clave del dashboard de un cliente.")
-public class DashboardStatsDTO {
+public record DashboardStatsDTO(
+        @Schema(description = "Número total de mascotas activas asociadas a la cuenta del usuario.", example = "3")
+        int activePets,
 
-    /**
-     * Número total de mascotas activas asociadas a la cuenta del usuario.
-     * <p>Ejemplo: {@code 3}</p>
-     */
-    private int activePets;
+        @Schema(description = "Texto descriptivo contextual para la métrica de mascotas activas.", example = "Total de mascotas activas")
+        String activePetsChange,
 
-    /**
-     * Texto descriptivo contextual para la métrica de mascotas activas.
-     * <p>Ejemplo: {@code "Total de mascotas activas"}</p>
-     */
-    private String activePetsChange;
+        @Schema(description = "Número de citas o reservas futuras programadas.", example = "2")
+        int scheduledAppointments,
 
-    /**
-     * Número de citas o reservas futuras que están programadas y no han sido
-     * completadas ni canceladas.
-     * <p>Ejemplo: {@code 2}</p>
-     */
-    private int scheduledAppointments;
+        @Schema(description = "Texto descriptivo contextual para la métrica de citas programadas.", example = "Próximas citas")
+        String scheduledAppointmentsChange,
 
-    /**
-     * Texto descriptivo contextual para la métrica de citas programadas.
-     * <p>Ejemplo: {@code "Próximas citas"}</p>
-     */
-    private String scheduledAppointmentsChange;
+        @Schema(description = "Estado de las vacunas de las mascotas en formato actualizado/total.", example = "3/4")
+        String vaccinesUpToDate,
 
-    /**
-     * Estado de las vacunas de las mascotas, representado como una cadena de texto.
-     * Usualmente en un formato como 'actualizadas/total'.
-     * <p>Ejemplo: {@code "3/4"}</p>
-     */
-    private String vaccinesUpToDate;
+        @Schema(description = "Texto descriptivo contextual para la métrica de vacunas.", example = "1 pendiente")
+        String vaccinesChange,
 
-    /**
-     * Texto descriptivo contextual para la métrica de vacunas.
-     * <p>Ejemplo: {@code "1 pendiente"}</p>
-     */
-    private String vaccinesChange;
+        @Schema(description = "Número de recordatorios o eventos importantes pendientes.", example = "1")
+        int pendingReminders,
 
-    /**
-     * Número de recordatorios o eventos importantes pendientes en un futuro cercano
-     * (por ejemplo, citas en los próximos 7 días).
-     * <p>Ejemplo: {@code 1}</p>
-     */
-    private int pendingReminders;
-
-    /**
-     * Texto descriptivo contextual para la métrica de recordatorios pendientes.
-     * <p>Ejemplo: {@code "Evento próximo"}</p>
-     */
-    private String pendingRemindersChange;
-}
+        @Schema(description = "Texto descriptivo contextual para la métrica de recordatorios pendientes.", example = "Evento próximo")
+        String pendingRemindersChange
+) { }

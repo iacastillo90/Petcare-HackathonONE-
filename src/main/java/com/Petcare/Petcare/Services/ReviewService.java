@@ -30,10 +30,10 @@ public class ReviewService {
      */
     public ReviewResponse createReview(ReviewDTO reviewDTO) {
         Review review = new Review(
-                reviewDTO.getUserId(),
-                reviewDTO.getPetId(),
-                reviewDTO.getRating(),
-                reviewDTO.getComment()
+                reviewDTO.userId(),
+                reviewDTO.petId(),
+                reviewDTO.rating(),
+                reviewDTO.comment()
         );
 
         Review saved = reviewRepository.save(review);

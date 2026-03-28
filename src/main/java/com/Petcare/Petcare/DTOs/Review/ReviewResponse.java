@@ -1,89 +1,61 @@
 package com.Petcare.Petcare.DTOs.Review;
 
+import com.Petcare.Petcare.Models.Review;
+import io.swagger.v3.oas.annotations.media.Schema;
+
 import java.time.LocalDateTime;
 
 /**
  * DTO para la respuesta de la API al obtener una reseña.
+ *
+ * @author Equipo Petcare 10
+ * @version 1.1
+ * @since 1.0
+ * @see Review
  */
-public class ReviewResponse {
+@Schema(description = "DTO para la respuesta de la API al obtener una reseña.")
+public record ReviewResponse(
+        @Schema(description = "Identificador único de la reseña.", example = "1")
+        Long id,
 
-    private Long id;
-    private Long userId;
-    private Long petId;
-    private Integer rating;
-    private String comment;
-    private LocalDateTime createdAt;
-    private LocalDateTime updatedAt;
+        @Schema(description = "Identificador del usuario que creó la reseña.", example = "1")
+        Long userId,
 
-    // ----- Constructores -----
+        @Schema(description = "Identificador de la mascota reseñada.", example = "1")
+        Long petId,
 
-    public ReviewResponse() {}
+        @Schema(description = "Puntuación de 1 a 5 estrellas.", example = "5")
+        Integer rating,
 
-    public ReviewResponse(Long id, Long userId, Long petId, Integer rating, String comment, LocalDateTime createdAt, LocalDateTime updatedAt) {
-        this.id = id;
-        this.userId = userId;
-        this.petId = petId;
-        this.rating = rating;
-        this.comment = comment;
-        this.createdAt = createdAt;
-        this.updatedAt = updatedAt;
-    }
+        @Schema(description = "Comentario de la reseña.", example = "Excelente servicio de cuidado.")
+        String comment,
 
-    // ----- Getters y Setters -----
+        @Schema(description = "Fecha y hora de creación de la reseña.", example = "2025-02-10T15:30:00")
+        LocalDateTime createdAt,
 
-    public Long getId() {
-        return id;
-    }
+        @Schema(description = "Fecha y hora de la última actualización.", example = "2025-02-10T15:30:00")
+        LocalDateTime updatedAt
+) {
 
-    public void setId(Long id) {
-        this.id = id;
-    }
-
-    public Long getUserId() {
-        return userId;
-    }
-
-    public void setUserId(Long userId) {
-        this.userId = userId;
-    }
-
-    public Long getPetId() {
-        return petId;
-    }
-
-    public void setPetId(Long petId) {
-        this.petId = petId;
-    }
-
-    public Integer getRating() {
-        return rating;
-    }
-
-    public void setRating(Integer rating) {
-        this.rating = rating;
-    }
-
-    public String getComment() {
-        return comment;
-    }
-
-    public void setComment(String comment) {
-        this.comment = comment;
-    }
-
-    public LocalDateTime getCreatedAt() {
-        return createdAt;
-    }
-
-    public void setCreatedAt(LocalDateTime createdAt) {
-        this.createdAt = createdAt;
-    }
-
-    public LocalDateTime getUpdatedAt() {
-        return updatedAt;
-    }
-
-    public void setUpdatedAt(LocalDateTime updatedAt) {
-        this.updatedAt = updatedAt;
+    /**
+     * Crea una instancia de ReviewResponse desde una entidad Review.
+     *
+     * @param review la entidad Review a convertir
+     * @return nueva instancia de ReviewResponse con datos poblados
+     * @throws IllegalArgumentException si review es null
+     */
+    public static ReviewResponse fromEntity(Review review) {
+        if (review == null) {
+            throw new IllegalArgumentException("La entidad Review no puede ser null");
+        }
+        return new ReviewResponse(
+                review.getId(),
+                review.getUserId(),
+                review.getPetId(),
+                review.getRating(),
+                review.getComment(),
+                review.getCreatedAt(),
+                review.getUpdatedAt()
+        );
     }
 }

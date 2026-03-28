@@ -117,7 +117,7 @@ public class PetController {
 
         try {
             PetResponse createdPet = petService.createPet(petRequest);
-            log.info("Mascota creada exitosamente con ID: {}", createdPet.getId());
+            log.info("Mascota creada exitosamente con ID: {}", createdPet.id());
 
             return ResponseEntity.status(HttpStatus.CREATED).body(createdPet);
 
@@ -518,7 +518,7 @@ public class PetController {
         try {
             PetStatsResponse stats = petService.getPetStats();
             log.info("Estadísticas generadas: {} mascotas totales, {} activas",
-                    stats.getTotalPets(), stats.getActivePets());
+                    stats.totalPets(), stats.activePets());
 
             return ResponseEntity.ok(stats);
 

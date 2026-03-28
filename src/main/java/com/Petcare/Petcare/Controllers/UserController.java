@@ -621,7 +621,7 @@ public class UserController {
 
         UserResponse userResponse = userService.createUserByAdmin(request, role);
 
-        log.info("Usuario creado administrativamente con ID: {} y rol: {}", userResponse.getId(), role);
+        log.info("Usuario creado administrativamente con ID: {} y rol: {}", userResponse.id(), role);
         return ResponseEntity.status(HttpStatus.CREATED).body(userResponse);
     }
 
@@ -1502,7 +1502,7 @@ public class UserController {
 
         UserResponse userResponse = userService.getUserById(id);
 
-        log.debug("Usuario encontrado: {}", userResponse.getEmail());
+        log.debug("Usuario encontrado: {}", userResponse.email());
         return ResponseEntity.ok(userResponse);
     }
 
@@ -1965,7 +1965,7 @@ public class UserController {
 
         UserStatsResponse stats = userService.getUserStats();
 
-        log.info("Estadísticas generadas: {}", stats.getExecutiveSummary());
+        log.info("Estadísticas generadas: {}", stats.executiveSummary());
         return ResponseEntity.ok(stats);
     }
 
@@ -2091,7 +2091,7 @@ public class UserController {
 
         try {
             // Verificación básica contando usuarios
-            long userCount = userService.getUserStats().getTotalUsers();
+            long userCount = userService.getUserStats().totalUsers();
             return ResponseEntity.ok("UserService está operativo. Total usuarios: " + userCount);
         } catch (Exception e) {
             log.error("Error en verificación de salud: {}", e.getMessage());

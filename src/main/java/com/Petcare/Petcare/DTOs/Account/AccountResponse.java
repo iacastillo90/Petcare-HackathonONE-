@@ -1,58 +1,57 @@
 package com.Petcare.Petcare.DTOs.Account;
 
 import com.Petcare.Petcare.Models.Account.Account;
+import io.swagger.v3.oas.annotations.media.Schema;
+
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
-public class AccountResponse {
+/**
+ * DTO para representar información de cuenta en respuestas de API.
+ *
+ * @author Equipo Petcare 10
+ * @version 1.2
+ * @since 1.0
+ * @see Account
+ */
+@Schema(description = "DTO con la información completa de una cuenta de usuario.")
+public record AccountResponse(
+        @Schema(description = "Identificador único de la cuenta.", example = "1")
+        Long id,
 
-    private Long id;
-    private String accountNumber;
-    private String accountName;
-    private BigDecimal balance;
-    private String currency;
-    private boolean isActive;
-    private LocalDateTime createdAt;
-    private LocalDateTime updatedAt;
+        @Schema(description = "Número único de identificación de la cuenta.", example = "ACC-2024-001234")
+        String accountNumber,
 
-    // Constructor vacío
-    public AccountResponse() {}
+        @Schema(description = "Nombre descriptivo de la cuenta.", example = "Familia Pérez")
+        String accountName,
 
-    // Constructor con todos los campos
-    public AccountResponse(Long id, String accountNumber, String accountName,
-                           BigDecimal balance, String currency, boolean isActive,
-                           LocalDateTime createdAt, LocalDateTime updatedAt) {
-        this.id = id;
-        this.accountNumber = accountNumber;
-        this.accountName = accountName;
-        this.balance = balance;
-        this.currency = currency;
-        this.isActive = isActive;
-        this.createdAt = createdAt;
-        this.updatedAt = updatedAt;
-    }
+        @Schema(description = "Saldo actual de la cuenta.", example = "150.00")
+        BigDecimal balance,
 
-    // ====================== GETTERS Y SETTERS ======================
-    public Long getId() { return id; }
-    public void setId(Long id) { this.id = id; }
-    public String getAccountNumber() { return accountNumber; }
-    public void setAccountNumber(String accountNumber) { this.accountNumber = accountNumber; }
-    public String getAccountName() { return accountName; }
-    public void setAccountName(String accountName) { this.accountName = accountName; }
-    public BigDecimal getBalance() { return balance; }
-    public void setBalance(BigDecimal balance) { this.balance = balance; }
-    public String getCurrency() { return currency; }
-    public void setCurrency(String currency) { this.currency = currency; }
-    public boolean isActive() { return isActive; }
-    public void setActive(boolean active) { isActive = active; }
-    public LocalDateTime getCreatedAt() { return createdAt; }
-    public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
-    public LocalDateTime getUpdatedAt() { return updatedAt; }
-    public void setUpdatedAt(LocalDateTime updatedAt) { this.updatedAt = updatedAt; }
+        @Schema(description = "Código de moneda ISO 4217.", example = "USD")
+        String currency,
 
-    // ====================== MÉTODOS DE CONVERSIÓN ======================
+        @Schema(description = "Indica si la cuenta está activa.", example = "true")
+        boolean isActive,
 
+        @Schema(description = "Fecha y hora de creación de la cuenta.", example = "2025-02-10T15:25:00Z")
+        LocalDateTime createdAt,
+
+        @Schema(description = "Fecha y hora de la última actualización.", example = "2025-02-10T15:25:00Z")
+        LocalDateTime updatedAt
+) {
+
+    /**
+     * Convierte una entidad del modelo {@link Account} a un DTO {@link AccountResponse}.
+     *
+     * @param account la entidad Account a convertir.
+     * @return nueva instancia de AccountResponse con datos poblados.
+     * @throws IllegalArgumentException si el {@code account} proporcionado es nulo.
+     */
     public static AccountResponse fromEntity(Account account) {
+        if (account == null) {
+            throw new IllegalArgumentException("La entidad Account no puede ser null");
+        }
         return new AccountResponse(
                 account.getId(),
                 account.getAccountNumber(),
@@ -63,5 +62,23 @@ public class AccountResponse {
                 account.getCreatedAt(),
                 account.getUpdatedAt()
         );
+    }
+
+    /**
+     * Verifica si la cuenta puede realizar nuevas reservas.
+     *
+     * @return true si la cuenta está activa.
+     */
+    public boolean canMakeBookings() {
+        return isActive;
+    }
+
+    /**
+     * Verifica si la cuenta tiene saldo positivo.
+     *
+     * @return true si el saldo es mayor a cero.
+     */
+    public boolean hasPositiveBalance() {
+        return balance != null && balance.compareTo(BigDecimal.ZERO) > 0;
     }
 }

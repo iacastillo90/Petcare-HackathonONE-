@@ -1,0 +1,55 @@
+{
+  "version": 1,
+  "skills": {
+    "00-andruia-consultant": {
+      "source": "sickn33/antigravity-awesome-skills",
+      "sourceType": "github",
+      "computedHash": "888707651fff72370b5a43fa114e5a41d3157a155acdcf9d72c0b5497f340a31"
+    },
+    "007": {
+      "source": "sickn33/antigravity-awesome-skills",
+      "sourceType": "github",
+      "computedHash": "6e248a96d0b1a1f1b310fcfa9bb8dc12a3c0832f4a53470160cfbb4bc221901b"
+    },
+    "10-andruia-skill-smith": {
+      "source": "sickn33/antigravity-awesome-skills",
+      "sourceType": "github",
+      "computedHash": "b98cdcceda16871aaa070710748a8bed52c27e10c3635e010598163ae31ff350"
+    },
+    "accessibility-compliance-accessibility-audit": {
+      "source": "sickn33/antigravity-awesome-skills",
+      "sourceType": "github",
+      "computedHash": "072358b91f76f50bf075206bb1a6aca4e063c912f58f6c7456d976841ba4c568"
+    },
+    "active-directory-attacks": {
+      "source": "sickn33/antigravity-awesome-skills",
+      "sourceType": "github",
+      "computedHash": "7d92a16110a1ca3cc5193df768dd012baedb6546e1bc3d23c6a4bd42534f0791"
+    },
+    "activecampaign-automation": {
+      "source": "sickn33/antigravity-awesome-skills",
+      "sourceType": "github",
+      "computedHash": "8971c960f7f6c7e4d8dfa46f2d448db719a646347e19d09bda9244cd913a76d9"
+    },
+    "address-github-comments": {
+      "source": "sickn33/antigravity-awesome-skills",
+      "sourceType": "github",
+      "computedHash": "6687309b103c6bf3d860981b6f64bc811b6aac02d757b568cecd79435b9f0553"
+    },
+    "security-audit": {
+      "source": "sickn33/antigravity-awesome-skills",
+      "sourceType": "github",
+      "computedHash": "91b6ad1d309bd8cb4334c97cf5c995c6ac597375b7ded2b02f76a12d0abc89dc"
+    },
+    "security-auditor": {
+      "source": "sickn33/antigravity-awesome-skills",
+      "sourceType": "github",
+      "computedHash": "acd0ef42b1c5e8196ea3838d7782cf02d092e0bfd077c5b0a916217c9088314a"
+    },
+    "web-security-testing": {
+      "source": "sickn33/antigravity-awesome-skills",
+      "sourceType": "github",
+      "computedHash": "d6d079c0b9f35c3008bf17d776ec9a369c357af9e4b3cfb085244ae14dd40fdd"
+    }
+  }
+}

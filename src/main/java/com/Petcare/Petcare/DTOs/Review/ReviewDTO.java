@@ -1,57 +1,28 @@
 package com.Petcare.Petcare.DTOs.Review;
 
-import jakarta.validation.constraints.*;
+import io.swagger.v3.oas.annotations.media.Schema;
+
+import java.time.LocalDateTime;
 
 /**
  * Data Transfer Object para crear o actualizar una reseña.
+ *
+ * @author Equipo Petcare 10
+ * @version 1.1
+ * @since 1.0
  */
-public class ReviewDTO {
+@Schema(description = "Data Transfer Object para crear o actualizar una reseña.")
+public record ReviewDTO(
+        @Schema(description = "El ID del usuario que crea la reseña.", example = "1")
+        Long userId,
 
-    @NotNull(message = "El ID del usuario es obligatorio")
-    private Long userId;
+        @Schema(description = "El ID de la mascota reseñada.", example = "1")
+        Long petId,
 
-    @NotNull(message = "El ID de la mascota es obligatorio")
-    private Long petId;
+        @Schema(description = "Puntuación de 1 a 5 estrellas.", example = "5")
+        Integer rating,
 
-    @NotNull(message = "El rating es obligatorio")
-    @Min(value = 1, message = "El rating mínimo es 1")
-    @Max(value = 5, message = "El rating máximo es 5")
-    private Integer rating;
-
-    @Size(max = 1000, message = "El comentario no puede superar 1000 caracteres")
-    private String comment;
-
-    // ----- Getters y Setters -----
-
-    public Long getUserId() {
-        return userId;
-    }
-
-    public void setUserId(Long userId) {
-        this.userId = userId;
-    }
-
-    public Long getPetId() {
-        return petId;
-    }
-
-    public void setPetId(Long petId) {
-        this.petId = petId;
-    }
-
-    public Integer getRating() {
-        return rating;
-    }
-
-    public void setRating(Integer rating) {
-        this.rating = rating;
-    }
-
-    public String getComment() {
-        return comment;
-    }
-
-    public void setComment(String comment) {
-        this.comment = comment;
-    }
+        @Schema(description = "Comentario de la reseña.", example = "Excelente servicio de cuidado.")
+        String comment
+) {
 }

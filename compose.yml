@@ -12,13 +12,10 @@ services:
       - SPRING_DATASOURCE_USERNAME=petcare_user
       - SPRING_DATASOURCE_PASSWORD=petcare_pass
     depends_on:
-      - petcare-db
-    develop:
-      watch:
-        - action: rebuild
-          path: ./src
-        - action: rebuild
-          path: ./build.gradle
+      petcare-db:
+        condition: service_healthy
+    restart: unless-stopped
+
   petcare-db:
     image: mysql:latest
     environment:
@@ -30,6 +27,12 @@ services:
       - "3306:3306"
     volumes:
       - mysql-volume:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-proot_password"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
 
 volumes:
   mysql-volume:

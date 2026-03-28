@@ -144,8 +144,8 @@ class SitterProfileControllerTest {
                     .andExpect(content().contentType(MediaType.APPLICATION_JSON));
 
             SitterProfileDTO responseDTO = extractResponse(result, SitterProfileDTO.class);
-            assertThat(responseDTO.getId()).isNotNull();
-            assertThat(responseDTO.getUserId()).isEqualTo(sitterUser.getId());
+            assertThat(responseDTO.id()).isNotNull();
+            assertThat(responseDTO.userId()).isEqualTo(sitterUser.getId());
 
             // Assert - Verificación del Estado de la Base de Datos H2
             assertThat(sitterProfileRepository.count()).isEqualTo(initialCount + 1);
@@ -232,9 +232,9 @@ class SitterProfileControllerTest {
             result.andExpect(status().isOk());
 
             SitterProfileDTO responseDTO = extractResponse(result, SitterProfileDTO.class);
-            assertThat(responseDTO.getId()).isEqualTo(persistedProfile.getId());
-            assertThat(responseDTO.getUserId()).isEqualTo(sitterUser.getId());
-            assertThat(responseDTO.getBio()).isEqualTo(DEFAULT_BIO);
+            assertThat(responseDTO.id()).isEqualTo(persistedProfile.getId());
+            assertThat(responseDTO.userId()).isEqualTo(sitterUser.getId());
+            assertThat(responseDTO.bio()).isEqualTo(DEFAULT_BIO);
 
             logDatabaseState("Después de que un Sitter consulta su propio perfil");
         }
@@ -256,8 +256,8 @@ class SitterProfileControllerTest {
             // Assert
             result.andExpect(status().isOk());
             SitterProfileDTO responseDTO = extractResponse(result, SitterProfileDTO.class);
-            assertThat(responseDTO.getId()).isEqualTo(persistedProfile.getId());
-            assertThat(responseDTO.getUserId()).isEqualTo(sitterUser.getId());
+            assertThat(responseDTO.id()).isEqualTo(persistedProfile.getId());
+            assertThat(responseDTO.userId()).isEqualTo(sitterUser.getId());
         }
 
         /**

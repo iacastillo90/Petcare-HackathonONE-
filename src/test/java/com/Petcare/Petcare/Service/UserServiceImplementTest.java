@@ -141,7 +141,7 @@ class UserServiceImplementTest {
 
         // Verificamos que la respuesta sea la esperada
         assertThat(response).isNotNull();
-        assertThat(response.getToken()).isEqualTo("fake-jwt-token");
+        assertThat(response.token()).isEqualTo("fake-jwt-token");
         // Una parte importante del login es actualizar cuándo fue el último acceso
         assertThat(user.getLastLoginAt()).isNotNull();
 
@@ -260,8 +260,8 @@ class UserServiceImplementTest {
 
         // Verificamos la respuesta del servicio
         assertThat(response).isNotNull();
-        assertThat(response.getToken()).isEqualTo("fake-jwt-token");
-        assertThat(response.getRole()).isEqualTo(Role.SITTER.name());
+        assertThat(response.token()).isEqualTo("fake-jwt-token");
+        assertThat(response.role()).isEqualTo(Role.SITTER.name());
 
         // La verificación más importante: el usuario debe tener el rol SITTER
         User savedUser = userCaptor.getValue();
@@ -357,8 +357,8 @@ class UserServiceImplementTest {
 
         // Verificamos la respuesta
         assertThat(response).isNotNull();
-        assertThat(response.getToken()).isEqualTo("fake-client-token");
-        assertThat(response.getRole()).isEqualTo(Role.CLIENT.name());
+        assertThat(response.token()).isEqualTo("fake-client-token");
+        assertThat(response.role()).isEqualTo(Role.CLIENT.name());
 
         // Lo más importante: verificar que el rol asignado sea CLIENT
         User savedUser = userCaptor.getValue();
@@ -423,9 +423,9 @@ class UserServiceImplementTest {
         assertThat(result).hasSize(2);
 
         // Verificamos que el mapeo entidad->DTO sea correcto para el primer usuario
-        assertThat(result.get(0).getEmail()).isEqualTo("ivan@example.com");
-        assertThat(result.get(0).getFullName()).isEqualTo("Ivan Castillo");
-        assertThat(result.get(0).getRole()).isEqualTo(Role.CLIENT);
+        assertThat(result.get(0).email()).isEqualTo("ivan@example.com");
+        assertThat(result.get(0).fullName()).isEqualTo("Ivan Castillo");
+        assertThat(result.get(0).role()).isEqualTo(Role.CLIENT);
 
         // Confirmamos que se llamó al método correcto del repositorio
         verify(userRepository).findAll();
@@ -472,9 +472,9 @@ class UserServiceImplementTest {
         assertThat(result).getClass();
 
         // Verificamos que el mapeo sea correcto
-        assertThat(result.getId()).isEqualTo(user.getId());
-        assertThat(result.getEmail()).isEqualTo(user.getEmail());
-        assertThat(result.getFirstName()).isEqualTo("Ivan");
+        assertThat(result.id()).isEqualTo(user.getId());
+        assertThat(result.email()).isEqualTo(user.getEmail());
+        assertThat(result.firstName()).isEqualTo("Ivan");
 
         verify(userRepository).findById(1L);
     }
@@ -513,9 +513,9 @@ class UserServiceImplementTest {
 
         // Verificamos que se encuentre el usuario correcto
         assertThat(result).getClass();
-        assertThat(result.getId()).isEqualTo(user.getId());
-        assertThat(result.getEmail()).isEqualTo(user.getEmail());
-        assertThat(result.getFirstName()).isEqualTo("Ivan");
+        assertThat(result.id()).isEqualTo(user.getId());
+        assertThat(result.email()).isEqualTo(user.getEmail());
+        assertThat(result.firstName()).isEqualTo("Ivan");
 
         verify(userRepository).findByEmail(userEmail);
     }
@@ -561,9 +561,9 @@ class UserServiceImplementTest {
         UserResponse result = userService.updateUser(userId, updateRequest);
 
         // Verificamos que solo se actualizaron los campos esperados
-        assertThat(result.getFirstName()).isEqualTo("Ivan Actualizado");
-        assertThat(result.getLastName()).isEqualTo("Castillo Actualizado");
-        assertThat(result.getAddress()).isEqualTo("Nueva Direccion 456");
+        assertThat(result.firstName()).isEqualTo("Ivan Actualizado");
+        assertThat(result.lastName()).isEqualTo("Castillo Actualizado");
+        assertThat(result.address()).isEqualTo("Nueva Direccion 456");
 
         // Importante: la contraseña NO debe haberse procesado
         verify(passwordEncoder, never()).encode(anyString());
@@ -766,8 +766,8 @@ class UserServiceImplementTest {
 
         // Verificamos la respuesta
         assertThat(result).isNotNull();
-        assertThat(result.getEmail()).isEqualTo(adminRequest.getEmail());
-        assertThat(result.getRole()).isEqualTo(specifiedRole);
+        assertThat(result.email()).isEqualTo(adminRequest.getEmail());
+        assertThat(result.role()).isEqualTo(specifiedRole);
 
         // Lo más importante: verificar que el usuario guardado tiene el rol especificado
         User savedUser = userCaptor.getValue();
@@ -906,7 +906,7 @@ class UserServiceImplementTest {
         UserResponse response = userService.markEmailAsVerified(userId);
 
         // Verificamos que la respuesta tenga fecha de verificación
-        assertThat(response.getEmailVerifiedAt()).isNotNull();
+        assertThat(response.emailVerifiedAt()).isNotNull();
 
         // Y que el usuario guardado también tenga la fecha establecida
         User savedUser = userCaptor.getValue();
@@ -961,11 +961,11 @@ class UserServiceImplementTest {
         assertThat(result).hasSize(2);
 
         // Verificamos que todos los usuarios retornados tengan el rol solicitado
-        assertThat(result).allMatch(userSummary -> userSummary.getRole() == roleToFind);
+        assertThat(result).allMatch(userSummary -> userSummary.role() == roleToFind);
 
         // Verificamos el mapeo correcto del primer usuario
-        assertThat(result.get(0).getFullName()).isEqualTo("Sitter Uno");
-        assertThat(result.get(0).getEmail()).isEqualTo("sitter1@example.com");
+        assertThat(result.get(0).fullName()).isEqualTo("Sitter Uno");
+        assertThat(result.get(0).email()).isEqualTo("sitter1@example.com");
 
         verify(userRepository).findAllByRole(roleToFind);
     }

@@ -12,6 +12,10 @@ import org.springframework.security.core.AuthenticationException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
+import org.springframework.http.converter.HttpMessageNotReadableException;
+import org.springframework.web.bind.MissingServletRequestParameterException;
+import jakarta.validation.ConstraintViolationException;
 
 import java.time.LocalDateTime;
 import java.util.HashMap;
@@ -83,7 +87,13 @@ public class GlobalExceptionHandler {
     @ExceptionHandler({
             UserNotFoundException.class,
             SitterProfileNotFoundException.class,
-            WorkExperienceNotFoundException.class
+            WorkExperienceNotFoundException.class,
+            BookingNotFoundException.class,
+            PetNotFoundException.class,
+            AccountNotFoundException.class,
+            ServiceOfferingNotFoundException.class,
+            InvoiceNotFoundException.class,
+            SitterNotFoundException.class
     })
     public ResponseEntity<ErrorResponseDTO> handleResourceNotFoundExceptions(RuntimeException ex) {
         ErrorResponseDTO errorResponse = new ErrorResponseDTO(
@@ -107,7 +117,12 @@ public class GlobalExceptionHandler {
     @ExceptionHandler({
             EmailAlreadyExistsException.class,
             SitterProfileAlreadyExistsException.class,
-            WorkExperienceConflictException.class
+            WorkExperienceConflictException.class,
+            BookingStateException.class,
+            BookingConflictException.class,
+            InvoiceStateException.class,
+            InvoiceAlreadyExistsException.class,
+            PetAlreadyExistsException.class
     })
     public ResponseEntity<ErrorResponseDTO> handleConflictExceptions(RuntimeException ex) {
         ErrorResponseDTO errorResponse = new ErrorResponseDTO(
@@ -175,6 +190,172 @@ public class GlobalExceptionHandler {
         );
         logger.warn("Access denied: {}", ex.getMessage());
         return new ResponseEntity<>(errorResponse, HttpStatus.FORBIDDEN);
+    }
+
+    /**
+     * Handler for inactive resource exceptions.
+     * Returns 400 Bad Request for inactive accounts, sitters, or service offerings.
+     */
+    @ExceptionHandler({
+            InactiveAccountException.class,
+            SitterInactiveException.class,
+            ServiceOfferingInactiveException.class
+    })
+    public ResponseEntity<ErrorResponseDTO> handleInactiveResourceExceptions(RuntimeException ex) {
+        ErrorResponseDTO errorResponse = new ErrorResponseDTO(
+                HttpStatus.BAD_REQUEST.value(),
+                ex.getMessage(),
+                LocalDateTime.now(),
+                null
+        );
+        logger.warn("Inactive resource: {}", ex.getMessage());
+        return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
+    }
+
+    /**
+     * Handler for validation exceptions.
+     * Returns 400 Bad Request for validation errors.
+     */
+    @ExceptionHandler({
+            InvalidAmountException.class,
+            CancellationReasonRequiredException.class,
+            InsufficientTimeException.class,
+            SitterRoleRequiredException.class,
+            MaxPendingBookingsExceededException.class
+    })
+    public ResponseEntity<ErrorResponseDTO> handleValidationExceptions(RuntimeException ex) {
+        ErrorResponseDTO errorResponse = new ErrorResponseDTO(
+                HttpStatus.BAD_REQUEST.value(),
+                ex.getMessage(),
+                LocalDateTime.now(),
+                null
+        );
+        logger.warn("Validation error: {}", ex.getMessage());
+        return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
+    }
+
+    /**
+     * Handler for unauthorized access to pets.
+     * Returns 403 Forbidden.
+     */
+    @ExceptionHandler(UnauthorizedPetAccessException.class)
+    public ResponseEntity<ErrorResponseDTO> handleUnauthorizedPetAccessException(UnauthorizedPetAccessException ex) {
+        ErrorResponseDTO errorResponse = new ErrorResponseDTO(
+                HttpStatus.FORBIDDEN.value(),
+                ex.getMessage(),
+                LocalDateTime.now(),
+                null
+        );
+        logger.warn("Unauthorized pet access: {}", ex.getMessage());
+        return new ResponseEntity<>(errorResponse, HttpStatus.FORBIDDEN);
+    }
+
+    /**
+     * Handler for coupon exceptions.
+     * Returns 404 for not found, 400 for expired.
+     */
+    @ExceptionHandler(CouponNotFoundException.class)
+    public ResponseEntity<ErrorResponseDTO> handleCouponNotFoundException(CouponNotFoundException ex) {
+        ErrorResponseDTO errorResponse = new ErrorResponseDTO(
+                HttpStatus.NOT_FOUND.value(),
+                ex.getMessage(),
+                LocalDateTime.now(),
+                null
+        );
+        logger.warn("Coupon not found: {}", ex.getMessage());
+        return new ResponseEntity<>(errorResponse, HttpStatus.NOT_FOUND);
+    }
+
+    @ExceptionHandler(CouponExpiredException.class)
+    public ResponseEntity<ErrorResponseDTO> handleCouponExpiredException(CouponExpiredException ex) {
+        ErrorResponseDTO errorResponse = new ErrorResponseDTO(
+                HttpStatus.BAD_REQUEST.value(),
+                ex.getMessage(),
+                LocalDateTime.now(),
+                null
+        );
+        logger.warn("Coupon expired: {}", ex.getMessage());
+        return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
+    }
+
+    /**
+     * Handler for SecurityException (non-Spring Security).
+     * Returns 403 Forbidden.
+     */
+    @ExceptionHandler(SecurityException.class)
+    public ResponseEntity<ErrorResponseDTO> handleSecurityException(SecurityException ex) {
+        ErrorResponseDTO errorResponse = new ErrorResponseDTO(
+                HttpStatus.FORBIDDEN.value(),
+                ex.getMessage(),
+                LocalDateTime.now(),
+                null
+        );
+        logger.warn("Security exception: {}", ex.getMessage());
+        return new ResponseEntity<>(errorResponse, HttpStatus.FORBIDDEN);
+    }
+
+    /**
+     * Handler for constraint violations.
+     * Returns 400 Bad Request.
+     */
+    @ExceptionHandler(ConstraintViolationException.class)
+    public ResponseEntity<ErrorResponseDTO> handleConstraintViolation(ConstraintViolationException ex) {
+        ErrorResponseDTO errorResponse = new ErrorResponseDTO(
+                HttpStatus.BAD_REQUEST.value(),
+                "Validación fallida: " + ex.getMessage(),
+                LocalDateTime.now(),
+                null
+        );
+        logger.warn("Constraint violation: {}", ex.getMessage());
+        return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
+    }
+
+    /**
+     * Handler for missing servlet request parameter.
+     * Returns 400 Bad Request.
+     */
+    @ExceptionHandler(MissingServletRequestParameterException.class)
+    public ResponseEntity<ErrorResponseDTO> handleMissingParam(MissingServletRequestParameterException ex) {
+        ErrorResponseDTO errorResponse = new ErrorResponseDTO(
+                HttpStatus.BAD_REQUEST.value(),
+                "Parámetro requerido: " + ex.getParameterName(),
+                LocalDateTime.now(),
+                null
+        );
+        logger.warn("Missing parameter: {}", ex.getParameterName());
+        return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
+    }
+
+    /**
+     * Handler for invalid HTTP message (malformed JSON, etc.).
+     * Returns 400 Bad Request.
+     */
+    @ExceptionHandler(HttpMessageNotReadableException.class)
+    public ResponseEntity<ErrorResponseDTO> handleMessageNotReadable(HttpMessageNotReadableException ex) {
+        ErrorResponseDTO errorResponse = new ErrorResponseDTO(
+                HttpStatus.BAD_REQUEST.value(),
+                "Cuerpo de solicitud inválido",
+                LocalDateTime.now(),
+                null
+        );
+        logger.warn("Invalid request body: {}", ex.getMessage());
+        return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
+    }
+
+    /**
+     * Handler for method argument type mismatch.
+     * Returns 400 Bad Request.
+     */
+    @ExceptionHandler(MethodArgumentTypeMismatchException.class)
+    public ResponseEntity<ErrorResponseDTO> handleTypeMismatch(MethodArgumentTypeMismatchException ex) {
+        ErrorResponseDTO errorResponse = new ErrorResponseDTO(
+                HttpStatus.BAD_REQUEST.value(),
+                "Valor inválido para: " + ex.getName(),
+                LocalDateTime.now(),
+                null
+        );
+        logger.warn("Type mismatch for parameter: {}", ex.getName());
+        return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
     }
 
     /**

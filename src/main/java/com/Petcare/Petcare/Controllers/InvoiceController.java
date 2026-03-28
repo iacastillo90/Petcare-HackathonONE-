@@ -225,7 +225,7 @@ public class InvoiceController {
             InvoiceDetailResponse newInvoice = invoiceService.generateInvoiceForBooking(request);
 
             log.info("Factura generada exitosamente: {} para reserva ID: {}",
-                    newInvoice.getInvoiceNumber(), request.getBookingId());
+                    newInvoice.invoiceNumber(), request.getBookingId());
 
             return ResponseEntity.status(HttpStatus.CREATED).body(newInvoice);
 
@@ -323,7 +323,7 @@ public class InvoiceController {
             InvoiceDetailResponse invoice = invoiceService.getInvoiceById(id);
 
             log.debug("Factura encontrada: {} - Estado: {}",
-                    invoice.getInvoiceNumber(), invoice.getStatus());
+                    invoice.invoiceNumber(), invoice.status());
 
             return ResponseEntity.ok(invoice);
 
@@ -552,7 +552,7 @@ public class InvoiceController {
             InvoiceDetailResponse updatedInvoice = invoiceService.updateInvoice(id, request);
 
             log.info("Factura ID: {} actualizada exitosamente a estado: {}",
-                    id, updatedInvoice.getStatus());
+                    id, updatedInvoice.status());
 
             return ResponseEntity.ok(updatedInvoice);
 
@@ -653,7 +653,7 @@ public class InvoiceController {
             headers.setContentLength(pdfBytes.length);
 
             // Nombre de archivo profesional con información identificativa
-            String filename = String.format("factura-%s.pdf", invoice.getInvoiceNumber());
+            String filename = String.format("factura-%s.pdf", invoice.invoiceNumber());
             headers.setContentDispositionFormData("inline", filename);
 
             // Headers adicionales para optimización
@@ -661,7 +661,7 @@ public class InvoiceController {
             headers.set("X-Content-Type-Options", "nosniff");
 
             log.info("PDF generado exitosamente para factura: {} - Tamaño: {} bytes",
-                    invoice.getInvoiceNumber(), pdfBytes.length);
+                    invoice.invoiceNumber(), pdfBytes.length);
 
             return new ResponseEntity<>(pdfBytes, headers, HttpStatus.OK);
 
@@ -764,7 +764,7 @@ public class InvoiceController {
             InvoiceDetailResponse sentInvoice = invoiceService.sendInvoice(id);
 
             log.info("Factura enviada exitosamente por email: {} a estado SENT",
-                    sentInvoice.getInvoiceNumber());
+                    sentInvoice.invoiceNumber());
 
             return ResponseEntity.ok(sentInvoice);
 
@@ -886,7 +886,7 @@ public class InvoiceController {
             InvoiceDetailResponse cancelledInvoice = invoiceService.cancelInvoice(id, reason);
 
             log.info("Factura cancelada exitosamente: {} - Motivo registrado",
-                    cancelledInvoice.getInvoiceNumber());
+                    cancelledInvoice.invoiceNumber());
 
             return ResponseEntity.ok(cancelledInvoice);
 
@@ -993,7 +993,7 @@ public class InvoiceController {
             InvoiceDetailResponse autoInvoice = invoiceService.generateInvoiceForBooking(autoRequest);
 
             log.info("Factura automática generada exitosamente: {} para reserva ID: {}",
-                    autoInvoice.getInvoiceNumber(), bookingId);
+                    autoInvoice.invoiceNumber(), bookingId);
 
             return ResponseEntity.status(HttpStatus.CREATED).body(autoInvoice);
 
