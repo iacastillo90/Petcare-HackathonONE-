@@ -12,8 +12,11 @@ services:
     image: mysql:9.2.0
     container_name: petcare-mysql
     restart: unless-stopped
-    env_file:
-      - .env
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_DATABASE: petcare
+      MYSQL_USER: petcare_user
+      MYSQL_PASSWORD: petcare_pass
     ports:
       - "3306:3306"
     volumes:
@@ -37,6 +40,10 @@ services:
     restart: unless-stopped
     env_file:
       - .env
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:mysql://mysql:3306/petcare
+      - SPRING_DATASOURCE_USERNAME={SPRING_DATASOURCE_USERNAME}
+      - SPRING_DATASOURCE_PASSWORD={SPRING_DATASOURCE_PASSWORD}
     depends_on:
       mysql:
         condition: service_healthy
