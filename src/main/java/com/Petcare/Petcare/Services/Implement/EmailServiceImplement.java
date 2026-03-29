@@ -65,7 +65,7 @@ public class EmailServiceImplement implements EmailService {
     );
 
     // Plantillas predefinidas del sistema
-    private static final String VERIFICATION_TEMPLATE = "Email-verified";
+    private static final String VERIFICATION_TEMPLATE = "email-verified";
     private static final String VERRIFICATION_BOOKING_TEMPLATE = "new-booking-sitter";
 
     // Dependencias inyectadas
