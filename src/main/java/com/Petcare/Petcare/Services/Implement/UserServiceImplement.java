@@ -23,6 +23,8 @@ import io.jsonwebtoken.JwtException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
@@ -161,6 +163,7 @@ public class UserServiceImplement implements UserService {
     }
 
     @Override
+    @CacheEvict(value = "users", allEntries = true)
     public AuthResponse registerUserSitter(CreateUserRequest request) {
         log.info("Intento de registro para email: {}", request.getEmail());
 
@@ -237,6 +240,7 @@ public class UserServiceImplement implements UserService {
      */
     @Override
     @Transactional
+    @CacheEvict(value = "users", allEntries = true)
     public AuthResponse registerUser(CreateUserRequest request) {
         log.info("Intento de registro para email: {}", request.getEmail());
 
@@ -311,6 +315,7 @@ public class UserServiceImplement implements UserService {
      */
     @Override
     @Transactional(readOnly = true)
+    @Cacheable(value = "users", key = "'all'")
     public List<UserResponse> getAllUsers() {
         log.debug("Obteniendo todos los usuarios del sistema");
         return userRepository.findAll()
@@ -348,6 +353,7 @@ public class UserServiceImplement implements UserService {
      */
     @Override
     @Transactional(readOnly = true)
+    @Cacheable(value = "users", key = "#id")
     public UserResponse getUserById(Long id) {
         log.debug("Buscando usuario por ID: {}", id);
         User user = userRepository.findById(id)
@@ -364,6 +370,7 @@ public class UserServiceImplement implements UserService {
      */
     @Override
     @Transactional(readOnly = true)
+    @Cacheable(value = "users", key = "#email", unless = "#result == null")
     public UserResponse getUserByEmail(String email) {
         log.debug("Buscando usuario por email: {}", email);
         User user = userRepository.findByEmail(email)
@@ -385,6 +392,7 @@ public class UserServiceImplement implements UserService {
      */
     @Override
     @Transactional
+    @CacheEvict(value = "users", key = "#id")
     public UserResponse updateUser(Long id, UpdateUserRequest request) {
         log.info("Actualizando usuario con ID: {}", id);
 
@@ -431,6 +439,7 @@ public class UserServiceImplement implements UserService {
      */
     @Override
     @Transactional
+    @CacheEvict(value = "users", key = "#id")
     public void deleteUser(Long id) {
         log.info("Eliminando usuario con ID: {}", id);
 
@@ -455,6 +464,7 @@ public class UserServiceImplement implements UserService {
      */
     @Override
     @Transactional
+    @CacheEvict(value = "users", allEntries = true)
     public UserResponse createUserByAdmin(CreateUserRequest request, Role role) {
         log.info("Creando usuario por admin con rol: {} para email: {}", role, request.getEmail());
 
@@ -480,6 +490,7 @@ public class UserServiceImplement implements UserService {
      */
     @Override
     @Transactional
+    @CacheEvict(value = "users", key = "#id")
     public UserResponse toggleUserActive(Long id, boolean active) {
         log.info("Cambiando estado activo del usuario ID: {} a: {}", id, active);
 
@@ -507,6 +518,7 @@ public class UserServiceImplement implements UserService {
      */
     @Override
     @Transactional
+    @CacheEvict(value = "users", key = "#id")
     public UserResponse markEmailAsVerified(Long id) {
         log.info("Marcando email como verificado para usuario ID: {}", id);
 
@@ -534,6 +546,7 @@ public class UserServiceImplement implements UserService {
      */
     @Override
     @Transactional(readOnly = true)
+    @Cacheable(value = "users", key = "#role")
     public List<UserSummaryResponse> getUsersByRole(Role role) {
         log.debug("Obteniendo usuarios con rol: {}", role);
         return userRepository.findAllByRole(role)
