@@ -441,6 +441,7 @@ public class BookingServiceImplement implements BookingService {
      * @since 2.0
      */
     @Override
+    @Cacheable(value = "bookings", key = "#userId")
     public Page<BookingSummaryResponse> getBookingsByUser(Long userId, String role, String status, Pageable pageable) {
         log.debug("Consultando reservas para usuario ID: {}, rol: {}, estado: {}", userId, role, status);
 

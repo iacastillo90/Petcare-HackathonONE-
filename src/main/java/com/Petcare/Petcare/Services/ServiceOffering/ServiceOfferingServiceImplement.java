@@ -124,6 +124,7 @@ public class ServiceOfferingServiceImplement implements ServiceOfferingService {
      * @throws IllegalArgumentException si el servicio no existe
      */
     @Override
+    @Cacheable(value = "services", key = "#id")
     public ServiceOfferingDTO getServiceById(Long id) {
         ServiceOffering service = serviceOfferingRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Servicio no encontrado con ID: " + id));

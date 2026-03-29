@@ -244,6 +244,7 @@ public class SitterServiceImplement implements SitterService {
      */
     @Override
     @Transactional(readOnly = true) // Marcado como solo lectura porque es una operación de consulta.
+    @Cacheable(value = "sitters", key = "#city")
     public List<SitterProfileSummary> findSitters(String city) {
 
         List<SitterProfile> profiles;
