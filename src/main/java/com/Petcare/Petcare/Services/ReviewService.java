@@ -4,6 +4,8 @@ import com.Petcare.Petcare.DTOs.Review.ReviewDTO;
 import com.Petcare.Petcare.DTOs.Review.ReviewResponse;
 import com.Petcare.Petcare.Models.Review;
 import com.Petcare.Petcare.Repositories.ReviewRepository;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -28,6 +30,7 @@ public class ReviewService {
      * @param reviewDTO datos de la reseña a crear
      * @return ReviewResponse con los datos guardados
      */
+    @CacheEvict(value = "reviews", allEntries = true)
     public ReviewResponse createReview(ReviewDTO reviewDTO) {
         Review review = new Review(
                 reviewDTO.userId(),
@@ -46,6 +49,7 @@ public class ReviewService {
      * @param petId ID de la mascota
      * @return lista de ReviewResponse
      */
+    @Cacheable(value = "reviews", key = "#petId")
     public List<ReviewResponse> getReviewsByPetId(Long petId) {
         return reviewRepository.findByPetId(petId)
                 .stream()
@@ -59,6 +63,7 @@ public class ReviewService {
      * @param userId ID del usuario
      * @return lista de ReviewResponse
      */
+    @Cacheable(value = "reviews", key = "'user_' + #userId")
     public List<ReviewResponse> getReviewsByUserId(Long userId) {
         return reviewRepository.findByUserId(userId)
                 .stream()

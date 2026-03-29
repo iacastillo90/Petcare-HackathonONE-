@@ -7,6 +7,8 @@ import com.Petcare.Petcare.Models.ServiceOffering.ServiceOffering;
 import com.Petcare.Petcare.Models.User.User;
 import com.Petcare.Petcare.Repositories.ServiceOfferingRepository;
 import com.Petcare.Petcare.Repositories.UserRepository;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
@@ -53,6 +55,7 @@ public class ServiceOfferingServiceImplement implements ServiceOfferingService {
      * @return Lista de DTOs con todos los servicios registrados
      */
     @Override
+    @Cacheable(value = "services", key = "'all'")
     public List< ServiceOfferingDTO > getAllServices() {
         return serviceOfferingRepository.findAll()
                 .stream()
@@ -61,6 +64,7 @@ public class ServiceOfferingServiceImplement implements ServiceOfferingService {
     }
 
     @Override
+    @CacheEvict(value = "services", allEntries = true)
     public ServiceOfferingDTO createServiceOffering(CreateServiceOfferingDTO createServiceOfferingDTO, Long id) {
         //Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         //String username = authentication.getName();
@@ -120,6 +124,7 @@ public class ServiceOfferingServiceImplement implements ServiceOfferingService {
      * @throws IllegalArgumentException si el servicio no existe
      */
     @Override
+    @Cacheable(value = "services", key = "#id")
     public ServiceOfferingDTO getServiceById(Long id) {
         ServiceOffering service = serviceOfferingRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Servicio no encontrado con ID: " + id));
@@ -127,6 +132,7 @@ public class ServiceOfferingServiceImplement implements ServiceOfferingService {
     }
 
     @Override
+    @CacheEvict(value = "services", key = "#id")
     public ServiceOfferingDTO updateServiceOffering(Long id, UpdateServiceOfferingDTO updateService) {
         ServiceOffering existingService = serviceOfferingRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Servicio no encontrado con ID: " + id));
@@ -142,6 +148,7 @@ public class ServiceOfferingServiceImplement implements ServiceOfferingService {
     }
 
     @Override
+    @CacheEvict(value = "services", key = "#id")
     public void deleteServiceOffering ( Long id ) {
         if (!serviceOfferingRepository.existsById(id)) {
             throw new IllegalArgumentException("El servicio no existe");

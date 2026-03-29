@@ -3,6 +3,8 @@ package com.Petcare.Petcare.Services.Implement;
 import com.Petcare.Petcare.Models.DiscountCoupon;
 import com.Petcare.Petcare.Repositories.DiscountCouponRepository;
 import com.Petcare.Petcare.Services.DiscountCouponService;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -18,6 +20,7 @@ public class DiscountCouponServiceImplement implements DiscountCouponService {
     }
 
     @Override
+    @CacheEvict(value = "discounts", allEntries = true)
     public DiscountCoupon saveDiscountCoupon(DiscountCoupon discountCoupon) {
         return discountCouponRepository.save(discountCoupon);
     }
@@ -28,16 +31,19 @@ public class DiscountCouponServiceImplement implements DiscountCouponService {
     }
 
     @Override
+    @Cacheable(value = "discounts", key = "#couponCode")
     public Optional<DiscountCoupon> getDiscountCouponByCode(String couponCode) {
         return discountCouponRepository.findByCouponCode(couponCode);
     }
 
     @Override
+    @Cacheable(value = "discounts", key = "'all'")
     public List<DiscountCoupon> getAllDiscountCoupons() {
         return discountCouponRepository.findAll();
     }
 
     @Override
+    @CacheEvict(value = "discounts", key = "#id")
     public void deleteDiscountCoupon(Long id) {
         discountCouponRepository.deleteById(id);
     }
