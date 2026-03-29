@@ -22,12 +22,14 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
 
 /**
  * Implementación consolidada del servicio de gestión de facturas para Petcare.
@@ -1121,5 +1123,21 @@ public class InvoiceServiceImplement implements InvoiceService {
         // Verifica si alguna de las "autoridades" (roles) del usuario es 'ROLE_ADMIN'
         return auth.getAuthorities().stream()
                 .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
+    }
+
+    // ========== MÉTODOS ASYNC ==========
+
+    @Async("taskExecutor")
+    public CompletableFuture<InvoiceDetailResponse> getInvoiceByIdAsync(Long invoiceId) {
+        log.debug("Executing getInvoiceByIdAsync({}) in background thread", invoiceId);
+        InvoiceDetailResponse invoice = getInvoiceById(invoiceId);
+        return CompletableFuture.completedFuture(invoice);
+    }
+
+    @Async("taskExecutor")
+    public CompletableFuture<Page<InvoiceSummaryResponse>> getInvoicesByAccountIdAsync(Long accountId, Pageable pageable) {
+        log.debug("Executing getInvoicesByAccountIdAsync({}) in background thread", accountId);
+        Page<InvoiceSummaryResponse> invoices = getInvoicesByAccountId(accountId, pageable);
+        return CompletableFuture.completedFuture(invoices);
     }
 }

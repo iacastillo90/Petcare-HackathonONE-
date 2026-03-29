@@ -9,6 +9,7 @@ import com.Petcare.Petcare.Repositories.BookingRepository;
 import com.Petcare.Petcare.Repositories.DiscountCouponRepository;
 import com.Petcare.Petcare.Services.AppliedCouponService;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -16,6 +17,7 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
 
 @Slf4j
 @Service
@@ -104,5 +106,21 @@ public class AppliedCouponServiceImplement implements AppliedCouponService {
     public boolean validateCoupon(DiscountCoupon coupon) {
         if (!coupon.isActive()) return false;
         return coupon.getExpiryDate().isAfter(LocalDateTime.now());
+    }
+
+    // ========== MÉTODOS ASYNC ==========
+
+    @Async("taskExecutor")
+    public CompletableFuture<List<AppliedCoupon>> getCouponsByAccountAsync(Long accountId) {
+        log.debug("Executing getCouponsByAccountAsync({}) in background thread", accountId);
+        List<AppliedCoupon> coupons = getCouponsByAccount(accountId);
+        return CompletableFuture.completedFuture(coupons);
+    }
+
+    @Async("taskExecutor")
+    public CompletableFuture<List<AppliedCoupon>> getCouponsByBookingAsync(Long bookingId) {
+        log.debug("Executing getCouponsByBookingAsync({}) in background thread", bookingId);
+        List<AppliedCoupon> coupons = getCouponsByBooking(bookingId);
+        return CompletableFuture.completedFuture(coupons);
     }
 }

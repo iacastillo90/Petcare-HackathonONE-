@@ -6,15 +6,19 @@ import com.Petcare.Petcare.Models.Account.Account;
 import com.Petcare.Petcare.Models.User.User;
 import com.Petcare.Petcare.Repositories.AccountRepository;
 import com.Petcare.Petcare.Services.AccountService;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 
+@Slf4j
 @Service
 @Transactional
 public class AccountServiceImplement implements AccountService {
@@ -46,5 +50,21 @@ public class AccountServiceImplement implements AccountService {
         return accountRepository.findAll().stream()
                 .map(AccountResponse::fromEntity)
                 .collect(Collectors.toList());
+    }
+
+    // ========== MÉTODOS ASYNC ==========
+
+    @Async("taskExecutor")
+    public CompletableFuture<List<AccountResponse>> getAllAccountsAsync() {
+        log.debug("Executing getAllAccountsAsync in background thread");
+        List<AccountResponse> accounts = getAllAccounts();
+        return CompletableFuture.completedFuture(accounts);
+    }
+
+    @Async("taskExecutor")
+    public CompletableFuture<AccountResponse> getAccountByIdAsync(Long id) {
+        log.debug("Executing getAccountByIdAsync({}) in background thread", id);
+        AccountResponse account = getAccountById(id);
+        return CompletableFuture.completedFuture(account);
     }
 }

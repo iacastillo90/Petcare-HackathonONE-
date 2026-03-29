@@ -13,6 +13,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -24,6 +25,7 @@ import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 
 /**
@@ -688,6 +690,28 @@ public class PetServiceImplement implements PetService {
 
 
         return account.getId();
+    }
+
+    // ========== MÉTODOS ASYNC ==========
+
+    /**
+     * Get all pets asynchronously.
+     */
+    @Async("taskExecutor")
+    public CompletableFuture<List<PetResponse>> getAllPetsAsync() {
+        log.debug("Executing getAllPetsAsync in background thread");
+        List<PetResponse> pets = getAllPets();
+        return CompletableFuture.completedFuture(pets);
+    }
+
+    /**
+     * Get pet by ID asynchronously.
+     */
+    @Async("taskExecutor")
+    public CompletableFuture<PetResponse> getPetByIdAsync(Long id) {
+        log.debug("Executing getPetByIdAsync({}) in background thread", id);
+        PetResponse pet = getPetById(id);
+        return CompletableFuture.completedFuture(pet);
     }
 
 }

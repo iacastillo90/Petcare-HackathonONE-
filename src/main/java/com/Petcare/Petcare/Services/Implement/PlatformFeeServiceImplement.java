@@ -9,12 +9,16 @@ import com.Petcare.Petcare.Repositories.BookingRepository;
 import com.Petcare.Petcare.Repositories.PlatformFeeRepository;
 import com.Petcare.Petcare.Services.PlatformFeeService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.util.concurrent.CompletableFuture;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class PlatformFeeServiceImplement implements PlatformFeeService {
@@ -66,5 +70,13 @@ public class PlatformFeeServiceImplement implements PlatformFeeService {
         
     }
 
+    // ========== MÉTODOS ASYNC ==========
+
+    @Async("taskExecutor")
+    public CompletableFuture<PlatformFeeResponse> calculateAndCreateFeeAsync(CreatePlatformFeeRequest request) {
+        log.debug("Executing calculateAndCreateFeeAsync in background thread");
+        PlatformFeeResponse fee = calculateAndCreateFee(request);
+        return CompletableFuture.completedFuture(fee);
+    }
 
 }

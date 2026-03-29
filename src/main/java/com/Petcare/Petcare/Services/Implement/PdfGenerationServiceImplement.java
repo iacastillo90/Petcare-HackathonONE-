@@ -4,6 +4,7 @@ import com.Petcare.Petcare.DTOs.Invoice.InvoiceDetailResponse;
 import com.Petcare.Petcare.DTOs.Invoice.InvoiceItem.InvoiceItemResponse;
 import com.Petcare.Petcare.Services.PdfGenerationService;
 import com.itextpdf.kernel.geom.PageSize;
+import lombok.extern.slf4j.Slf4j;
 import com.itextpdf.kernel.pdf.PdfDocument;
 import com.itextpdf.kernel.pdf.PdfWriter;
 import com.itextpdf.layout.Document;
@@ -13,10 +14,13 @@ import com.itextpdf.layout.element.Table;
 import com.itextpdf.layout.properties.TextAlignment;
 import com.itextpdf.layout.properties.UnitValue;
 import org.springframework.stereotype.Service;
+import org.springframework.scheduling.annotation.Async;
 
 import java.io.ByteArrayOutputStream;
 import java.time.format.DateTimeFormatter;
+import java.util.concurrent.CompletableFuture;
 
+@Slf4j
 @Service
 public class PdfGenerationServiceImplement implements PdfGenerationService {
 
@@ -103,5 +107,14 @@ public class PdfGenerationServiceImplement implements PdfGenerationService {
         }
 
         return baos.toByteArray();
+    }
+
+    // ========== MÉTODOS ASYNC ==========
+
+    @Async("taskExecutor")
+    public CompletableFuture<byte[]> generateInvoicePdfAsync(InvoiceDetailResponse invoice) {
+        log.debug("Executing generateInvoicePdfAsync in background thread");
+        byte[] pdf = generateInvoicePdf(invoice);
+        return CompletableFuture.completedFuture(pdf);
     }
 }

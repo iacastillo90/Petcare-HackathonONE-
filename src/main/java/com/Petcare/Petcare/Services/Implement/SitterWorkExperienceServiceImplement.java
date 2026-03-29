@@ -12,14 +12,17 @@ import com.Petcare.Petcare.Repositories.SitterProfileRepository;
 import com.Petcare.Petcare.Repositories.SitterWorkExperienceRepository;
 import com.Petcare.Petcare.Services.SitterWorkExperienceService;
 import com.Petcare.Petcare.DTOs.SitterWorkExperience.SitterWorkExperienceMapper;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 
 /**
@@ -35,6 +38,7 @@ import java.util.stream.Collectors;
  * @version 1.0
  * @since 1.0
  */
+@Slf4j
 @Service
 public class SitterWorkExperienceServiceImplement implements SitterWorkExperienceService {
 
@@ -161,5 +165,21 @@ public class SitterWorkExperienceServiceImplement implements SitterWorkExperienc
         if (!isAdmin && !ownerId.equals(currentUser.getId())) {
             throw new AccessDeniedException("No tiene permisos para modificar la experiencia laboral de otro cuidador.");
         }
+    }
+
+    // ========== MÉTODOS ASYNC ==========
+
+    @Async("taskExecutor")
+    public CompletableFuture<List<SitterWorkExperienceSummaryDTO>> getWorkExperiencesBySitterProfileIdAsync(Long sitterProfileId) {
+        log.debug("Executing getWorkExperiencesBySitterProfileIdAsync({}) in background thread", sitterProfileId);
+        List<SitterWorkExperienceSummaryDTO> experiences = getWorkExperiencesBySitterProfileId(sitterProfileId);
+        return CompletableFuture.completedFuture(experiences);
+    }
+
+    @Async("taskExecutor")
+    public CompletableFuture<SitterWorkExperienceResponseDTO> getWorkExperienceByIdAsync(Long id) {
+        log.debug("Executing getWorkExperienceByIdAsync({}) in background thread", id);
+        SitterWorkExperienceResponseDTO experience = getWorkExperienceById(id);
+        return CompletableFuture.completedFuture(experience);
     }
 }

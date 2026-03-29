@@ -10,13 +10,16 @@ import com.Petcare.Petcare.Models.User.User;
 import com.Petcare.Petcare.Repositories.SitterProfileRepository;
 import com.Petcare.Petcare.Repositories.UserRepository;
 import com.Petcare.Petcare.Services.SitterService;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
 
 import java.util.stream.Collectors;
 
@@ -50,6 +53,7 @@ import java.util.stream.Collectors;
  * @see SitterService
  * @see SitterProfile
  */
+@Slf4j
 @Service
 public class SitterServiceImplement implements SitterService {
 
@@ -265,6 +269,28 @@ public class SitterServiceImplement implements SitterService {
         return profiles.stream()
                 .map(sitterProfileMapper::toSummaryDto)
                 .collect(Collectors.toList());
+    }
+
+    // ========== MÉTODOS ASYNC ==========
+
+    /**
+     * Get all sitter profiles asynchronously.
+     */
+    @Async("taskExecutor")
+    public CompletableFuture<List<SitterProfileDTO>> getAllSitterProfilesAsync() {
+        log.debug("Executing getAllSitterProfilesAsync in background thread");
+        List<SitterProfileDTO> profiles = getAllSitterProfiles();
+        return CompletableFuture.completedFuture(profiles);
+    }
+
+    /**
+     * Find sitters by city asynchronously.
+     */
+    @Async("taskExecutor")
+    public CompletableFuture<List<SitterProfileSummary>> findSittersAsync(String city) {
+        log.debug("Executing findSittersAsync({}) in background thread", city);
+        List<SitterProfileSummary> sitters = findSitters(city);
+        return CompletableFuture.completedFuture(sitters);
     }
 
 }

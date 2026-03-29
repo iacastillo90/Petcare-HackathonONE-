@@ -26,6 +26,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
@@ -45,6 +46,7 @@ import javax.security.auth.login.AccountNotFoundException;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.stream.Collectors;
 
@@ -1028,6 +1030,48 @@ public class UserServiceImplement implements UserService {
     @Transactional(readOnly = true)
     public boolean isEmailAvailable(String email) {
         return !userRepository.existsByEmail(email);
+    }
+
+    // ========== MÉTODOS ASYNC ==========
+
+    /**
+     * Get all users asynchronously - useful for admin dashboards.
+     */
+    @Async("taskExecutor")
+    public CompletableFuture<List<UserResponse>> getAllUsersAsync() {
+        log.debug("Executing getAllUsersAsync in background thread");
+        List<UserResponse> users = getAllUsers();
+        return CompletableFuture.completedFuture(users);
+    }
+
+    /**
+     * Get user by ID asynchronously.
+     */
+    @Async("taskExecutor")
+    public CompletableFuture<UserResponse> getUserByIdAsync(Long id) {
+        log.debug("Executing getUserByIdAsync({}) in background thread", id);
+        UserResponse user = getUserById(id);
+        return CompletableFuture.completedFuture(user);
+    }
+
+    /**
+     * Get users by role asynchronously.
+     */
+    @Async("taskExecutor")
+    public CompletableFuture<List<UserSummaryResponse>> getUsersByRoleAsync(Role role) {
+        log.debug("Executing getUsersByRoleAsync({}) in background thread", role);
+        List<UserSummaryResponse> users = getUsersByRole(role);
+        return CompletableFuture.completedFuture(users);
+    }
+
+    /**
+     * Get user stats asynchronously - heavy computation for dashboards.
+     */
+    @Async("taskExecutor")
+    public CompletableFuture<UserStatsResponse> getUserStatsAsync() {
+        log.debug("Executing getUserStatsAsync in background thread");
+        UserStatsResponse stats = getUserStats();
+        return CompletableFuture.completedFuture(stats);
     }
 
 }

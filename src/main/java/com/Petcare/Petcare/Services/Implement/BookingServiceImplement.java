@@ -26,12 +26,15 @@ import org.springframework.dao.DataAccessException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.core.Authentication;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Objects;
+import java.util.concurrent.CompletableFuture;
 
 /**
  * Implementación concreta del servicio de gestión de reservas de cuidado de mascotas.
@@ -848,5 +851,21 @@ public class BookingServiceImplement implements BookingService {
 
         public LocalDateTime getEndTime() { return endTime; }
         public BigDecimal getTotalPrice() { return totalPrice; }
+    }
+
+    // ========== MÉTODOS ASYNC ==========
+
+    @Async("taskExecutor")
+    public CompletableFuture<Page<BookingSummaryResponse>> getAllBookingsAsync(Pageable pageable) {
+        log.debug("Executing getAllBookingsAsync in background thread");
+        Page<BookingSummaryResponse> bookings = getAllBookings(pageable);
+        return CompletableFuture.completedFuture(bookings);
+    }
+
+    @Async("taskExecutor")
+    public CompletableFuture<BookingDetailResponse> getBookingByIdAsync(Long id) {
+        log.debug("Executing getBookingByIdAsync({}) in background thread", id);
+        BookingDetailResponse booking = getBookingById(id);
+        return CompletableFuture.completedFuture(booking);
     }
 }
