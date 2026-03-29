@@ -14,8 +14,6 @@ import io.swagger.v3.oas.models.security.SecurityRequirement;
 import io.swagger.v3.oas.models.security.SecurityScheme;
 import io.swagger.v3.oas.models.servers.Server;
 
-import jakarta.servlet.http.HttpServletRequest;
-
 /**
  * Configuration for Swagger/OpenAPI documentation with JWT authentication.
  * 
@@ -23,7 +21,7 @@ import jakarta.servlet.http.HttpServletRequest;
  * - Adds JWT bearer token authentication to Swagger UI
  * - Documents all API endpoints
  * - Provides contact information
- * - Automatically detects server URL from request in production
+ * - Uses configured base URL (petcare.api.base-url property)
  */
 @Configuration
 public class SwaggerConfig {
@@ -32,9 +30,10 @@ public class SwaggerConfig {
     private String baseUrl;
 
     @Bean
-    public OpenAPI customOpenAPI(HttpServletRequest request) {
-        // Detect production URL from request headers if running behind proxy
-        String serverUrl = detectServerUrl(request);
+    public OpenAPI customOpenAPI() {
+        // Use configured base URL - detectServerUrl removed as it requires HTTP request context
+        // which is not available at startup. For production, configure petcare.api.base-url
+        String serverUrl = baseUrl;
         
         return new OpenAPI()
                 .info(new Info()
@@ -100,46 +99,6 @@ public class SwaggerConfig {
                                        ```
                                        Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
                                        ```
-                                    """)));
-    }
-
-    /**
-     * Detects the server URL from request headers (for production behind proxy)
-     * or falls back to configured base-url.
-     */
-    private String detectServerUrl(HttpServletRequest request) {
-        // Check for forwarded headers (set by reverse proxy/load balancer)
-        String forwardedProto = request.getHeader("X-Forwarded-Proto");
-        String forwardedHost = request.getHeader("X-Forwarded-Host");
-        String forwardedPort = request.getHeader("X-Forwarded-Port");
-        String forwardedPrefix = request.getHeader("X-Forwarded-Prefix");
-
-        if (forwardedHost != null) {
-            StringBuilder url = new StringBuilder();
-            
-            // Determine protocol
-            if (forwardedProto != null) {
-                url.append(forwardedProto).append("://");
-            } else {
-                url.append(request.getScheme()).append("://");
-            }
-            
-            url.append(forwardedHost);
-            
-            // Determine port
-            if (forwardedPort != null && !forwardedPort.equals("80") && !forwardedPort.equals("443")) {
-                url.append(":").append(forwardedPort);
-            }
-            
-            // Add prefix if present
-            if (forwardedPrefix != null && !forwardedPrefix.isEmpty()) {
-                url.append(forwardedPrefix);
-            }
-            
-            return url.toString();
-        }
-
-        // Fallback to configured base-url
-        return baseUrl;
+                                     """)));
     }
 }

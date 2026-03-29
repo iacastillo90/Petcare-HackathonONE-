@@ -52,7 +52,7 @@ public class WebAuthorization {
                                 .requestMatchers(HttpMethod.GET, "/api/users/health").permitAll()
                                 .requestMatchers(HttpMethod.GET, "/verification-success.html").permitAll()
                                 .requestMatchers(HttpMethod.GET, "/api/users/summary").hasRole("ADMIN")
-                                .requestMatchers("/swagger-ui/**", "/swagger-ui.html", "/v3/api-docs/**", "/api-docs/**").permitAll()
+                                .requestMatchers("/swagger-ui/**", "/swagger-ui.html", "/swagger-ui/index.html", "/v3/api-docs/**", "/api-docs/**", "/swagger-resources/**", "/webjars/**").permitAll()
                                 .requestMatchers("/favicon.ico").permitAll()
                                 //.requestMatchers("/api/**").permitAll()
                                 

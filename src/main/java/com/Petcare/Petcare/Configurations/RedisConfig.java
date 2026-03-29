@@ -6,6 +6,7 @@ import org.springframework.cache.CacheManager;
 import org.springframework.cache.annotation.EnableCaching;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Profile;
 import org.springframework.data.redis.cache.RedisCacheConfiguration;
 import org.springframework.data.redis.cache.RedisCacheManager;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
@@ -22,9 +23,12 @@ import org.springframework.data.redis.serializer.StringRedisSerializer;
  * - Configures Redis as the cache backing store
  * - Sets 12-hour TTL for all cached entries
  * - Uses Jackson JSON serialization for cached objects
+ * 
+ * NOTE: This configuration is disabled in test profile (test application.properties excludes Redis)
  */
 @Configuration
 @EnableCaching
+@Profile("!test")
 public class RedisConfig {
 
     /**
