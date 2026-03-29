@@ -30,14 +30,14 @@
 
 - [x] 4.1 Add @Cacheable(value = "sitters", key = "#userId") to getSitterProfile() in SitterServiceImplement
 - [x] 4.2 Add @Cacheable(value = "sitters", key = "'all'") to getAllSitterProfiles() in SitterServiceImplement
-- [ ] 4.3 Add @Cacheable(value = "sitters", key = "#city") to findSitters() in SitterServiceImplement
+- [x] 4.3 Add @Cacheable(value = "sitters", key = "#city") to findSitters() in SitterServiceImplement
 - [x] 4.4 Add @CacheEvict(value = "sitters", allEntries = true) to createSitterProfile() in SitterServiceImplement
 - [x] 4.5 Add @CacheEvict(value = "sitters", key = "#userId") to updateSitterProfile() in SitterServiceImplement
 - [x] 4.6 Add @CacheEvict(value = "sitters", key = "#userId") to deleteSitterProfile() in SitterServiceImplement
 
 ## Phase 5: Core Implementation - Service Offering
 
-- [ ] 5.1 Add @Cacheable(value = "services", key = "#id") to getServiceById() in ServiceOfferingImplement
+- [x] 5.1 Add @Cacheable(value = "services", key = "#id") to getServiceById() in ServiceOfferingImplement
 - [x] 5.2 Add @Cacheable(value = "services", key = "'all'") to getAllServices() in ServiceOfferingImplement
 - [x] 5.3 Add @CacheEvict(value = "services", allEntries = true) to createServiceOffering() in ServiceOfferingImplement
 - [x] 5.4 Add @CacheEvict(value = "services", key = "#id") to updateServiceOffering() in ServiceOfferingImplement
@@ -46,15 +46,15 @@
 ## Phase 6: Core Implementation - Booking Service
 
 - [x] 6.1 Add @Cacheable(value = "bookings", key = "#id") to getBookingById() in BookingServiceImplement
-- [ ] 6.2 Add @Cacheable(value = "bookings", key = "#userId") to getBookingsByUser() in BookingServiceImplement
+- [x] 6.2 Add @Cacheable(value = "bookings", key = "#userId") to getBookingsByUser() in BookingServiceImplement
 - [x] 6.3 Add @Cacheable(value = "bookings", key = "'all'") to getAllBookings() in BookingServiceImplement
 - [x] 6.4 Add @CacheEvict(value = "bookings", allEntries = true) to createBooking() in BookingServiceImplement
 - [x] 6.5 Add @CacheEvict(value = "bookings", key = "#id") to updateBookingStatus() in BookingServiceImplement
 
 ## Phase 7: Core Implementation - Other Services
 
-- [ ] 7.1 Add @Cacheable to ReviewServiceImplement (getReviewsByPetId, getReviewsByUserId)
-- [ ] 7.2 Add @CacheEvict to ReviewServiceImplement (createReview)
+- [x] 7.1 Add @Cacheable to ReviewServiceImplement (getReviewsByPetId, getReviewsByUserId)
+- [x] 7.2 Add @CacheEvict to ReviewServiceImplement (createReview)
 - [x] 7.3 Add @Cacheable to DiscountCouponImplement (getDiscountCouponByCode)
 - [x] 7.4 Add @CacheEvict to DiscountCouponImplement (saveDiscountCoupon)
 - [x] 7.5 Add @Cacheable to AccountServiceImplement (getAccountById, getAllAccounts)

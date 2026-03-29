@@ -11,6 +11,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.thymeleaf.TemplateEngine;
 import org.thymeleaf.context.Context;
@@ -454,6 +455,55 @@ public class EmailServiceImplement implements EmailService {
         } catch (Exception e) {
             logger.error("Plantilla '{}' no encontrada o inaccesible: {}", templateName, e.getMessage());
             throw new IllegalArgumentException("La plantilla especificada no existe: " + templateName, e);
+        }
+    }
+
+    // ========== EJEMPLOS DE @ASYNC PARA CONCURRENCIA ==========
+
+    /**
+     * Ejemplo de método async para enviar email en background.
+     * 
+     * Este método se ejecuta en un thread separado del pool configurado en AsyncConfig.
+     * El SecurityContext se propaga automáticamente gracias a DelegatingSecurityContextAsyncTaskExecutor.
+     * 
+     * Uso:
+     * emailService.sendEmailAsync(email);
+     */
+    @Async("taskExecutor")
+    public void sendEmailAsync(Email email) {
+        logger.info("Iniciando envío async de email a: {}", email.getTo());
+        long startTime = System.currentTimeMillis();
+        
+        try {
+            sendEmail(email);
+            long duration = System.currentTimeMillis() - startTime;
+            logger.info("Email enviado async exitosamente a {} en {}ms", email.getTo(), duration);
+        } catch (Exception e) {
+            logger.error("Error enviando email async a {}: {}", email.getTo(), e.getMessage());
+        }
+    }
+
+    /**
+     * Ejemplo de método async que retorna CompletableFuture.
+     * 
+     * Permite esperar el resultado de forma no bloqueante.
+     * El SecurityContext se propaga automáticamente.
+     * 
+     * Uso:
+     * CompletableFuture<Boolean> result = emailService.sendEmailWithResultAsync(email);
+     * result.thenAccept(success -> ...);
+     */
+    @Async("taskExecutor")
+    public java.util.concurrent.CompletableFuture<Boolean> sendEmailWithResultAsync(Email email) {
+        logger.info("Iniciando envío async con resultado a: {}", email.getTo());
+        
+        try {
+            sendEmail(email);
+            logger.info("Email enviado exitosamente a: {}", email.getTo());
+            return java.util.concurrent.CompletableFuture.completedFuture(true);
+        } catch (Exception e) {
+            logger.error("Error enviando email a {}: {}", email.getTo(), e.getMessage());
+            return java.util.concurrent.CompletableFuture.completedFuture(false);
         }
     }
 }
