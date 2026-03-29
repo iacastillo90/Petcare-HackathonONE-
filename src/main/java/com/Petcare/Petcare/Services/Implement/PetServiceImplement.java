@@ -11,6 +11,8 @@ import com.Petcare.Petcare.Repositories.UserRepository;
 import com.Petcare.Petcare.Services.PetService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -71,6 +73,7 @@ public class PetServiceImplement implements PetService {
 
     @Override
     @Transactional
+    @CacheEvict(value = "pets", allEntries = true)
     public PetResponse createPet(CreatePetRequest petRequest) {
         log.info("Iniciando creación de mascota para cuenta ID: {}", petRequest.getAccountId());
 
@@ -112,6 +115,7 @@ public class PetServiceImplement implements PetService {
 
     @Override
     @Transactional(readOnly = true)
+    @Cacheable(value = "pets", key = "#id")
     public PetResponse getPetById(Long id) {
         log.debug("Buscando mascota con ID: {}", id);
 
@@ -127,6 +131,7 @@ public class PetServiceImplement implements PetService {
 
     @Override
     @Transactional(readOnly = true)
+    @Cacheable(value = "pets", key = "'all'")
     public List<PetResponse> getAllPets() {
         log.debug("Obteniendo todas las mascotas del sistema");
 
@@ -175,6 +180,7 @@ public class PetServiceImplement implements PetService {
 
     @Override
     @Transactional
+    @CacheEvict(value = "pets", key = "#id")
     public PetResponse updatePet(Long id, CreatePetRequest petRequest) {
         log.info("Actualizando mascota con ID: {}", id);
 
@@ -213,6 +219,7 @@ public class PetServiceImplement implements PetService {
 
     @Override
     @Transactional
+    @CacheEvict(value = "pets", key = "#id")
     public void deletePet(Long id) {
         log.info("Eliminando mascota con ID: {}", id);
 
@@ -247,6 +254,7 @@ public class PetServiceImplement implements PetService {
 
     @Override
     @Transactional(readOnly = true)
+    @Cacheable(value = "pets", key = "#accountId")
     public List<PetResponse> getPetsByAccountId(Long accountId) {
         log.debug("Obteniendo mascotas de cuenta ID: {}", accountId);
 

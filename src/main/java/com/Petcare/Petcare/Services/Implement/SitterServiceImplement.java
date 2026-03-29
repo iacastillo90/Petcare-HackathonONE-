@@ -10,6 +10,8 @@ import com.Petcare.Petcare.Models.User.User;
 import com.Petcare.Petcare.Repositories.SitterProfileRepository;
 import com.Petcare.Petcare.Repositories.UserRepository;
 import com.Petcare.Petcare.Services.SitterService;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -88,6 +90,7 @@ public class SitterServiceImplement implements SitterService {
      */
     @Override
     @Transactional
+    @CacheEvict(value = "sitters", allEntries = true)
     public SitterProfileDTO createSitterProfile(Long userId, SitterProfileDTO sitterProfileDTO) {
         // --- Validación Interna ---
         // Buscamos al usuario por su ID. Si no lo encontramos, es un error irrecuperable.
@@ -152,6 +155,7 @@ public class SitterServiceImplement implements SitterService {
      */
     @Override
     @Transactional
+    @CacheEvict(value = "sitters", key = "#userId")
     public SitterProfileDTO updateSitterProfile(Long userId, SitterProfileDTO sitterProfileDTO) {
         // Primero, obtenemos el perfil existente de la base de datos.
         SitterProfile profile = sitterProfileRepository.findByUserId(userId)
@@ -199,6 +203,7 @@ public class SitterServiceImplement implements SitterService {
      */
     @Override
     @Transactional(readOnly = true)
+    @Cacheable(value = "sitters", key = "'all'")
     public List<SitterProfileDTO> getAllSitterProfiles() {
         // Obtenemos todas las entidades de perfil de la base de datos.
         List<SitterProfile> profiles = sitterProfileRepository.findAll();
@@ -219,6 +224,7 @@ public class SitterServiceImplement implements SitterService {
      */
     @Override
     @Transactional
+    @CacheEvict(value = "sitters", key = "#userId")
     public void deleteSitterProfile(Long userId) {
         // Buscamos el perfil que se va a eliminar. Si no existe, lanzará una excepción.
         SitterProfile profile = sitterProfileRepository.findByUserId(userId)
