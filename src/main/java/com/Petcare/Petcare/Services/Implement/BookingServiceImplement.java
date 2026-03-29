@@ -20,6 +20,8 @@ import com.Petcare.Petcare.Services.PlatformFeeService;
 import jakarta.validation.ValidationException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.dao.DataAccessException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -168,6 +170,7 @@ public class BookingServiceImplement implements BookingService {
      */
     @Override
     @Transactional
+    @CacheEvict(value = "bookings", allEntries = true)
     public BookingDetailResponse createBooking(CreateBookingRequest createBookingRequest, Authentication authentication) {
 
         String userEmail = authentication.getName();
@@ -248,6 +251,7 @@ public class BookingServiceImplement implements BookingService {
      * @since 1.0
      */
     @Override
+    @Cacheable(value = "bookings", key = "'all'")
     public Page<BookingSummaryResponse> getAllBookings(Pageable pageable) {
         log.debug("Consultando todas las reservas con paginación: {}", pageable);
 
@@ -275,6 +279,7 @@ public class BookingServiceImplement implements BookingService {
      * @since 1.0
      */
     @Override
+    @Cacheable(value = "bookings", key = "#id")
     public BookingDetailResponse getBookingById(Long id) {
         log.debug("Consultando reserva por ID: {}", id);
 
@@ -329,6 +334,7 @@ public class BookingServiceImplement implements BookingService {
      */
     @Override
     @Transactional
+    @CacheEvict(value = "bookings", key = "#id")
     public BookingDetailResponse updateBooking(Long id, UpdateBookingRequest updateRequest) {
         log.info("Iniciando actualización de reserva ID: {}", id);
 
@@ -398,6 +404,7 @@ public class BookingServiceImplement implements BookingService {
      */
     @Override
     @Transactional
+    @CacheEvict(value = "bookings", key = "#id")
     public void deleteBooking(Long id) {
         log.info("Iniciando eliminación de reserva ID: {}", id);
 
@@ -468,6 +475,7 @@ public class BookingServiceImplement implements BookingService {
      */
     @Override
     @Transactional
+    @CacheEvict(value = "bookings", key = "#id")
     public BookingDetailResponse updateBookingStatus(Long id, String newStatus, String reason) {
         log.info("Actualizando estado de reserva ID: {} a estado: {}", id, newStatus);
 
