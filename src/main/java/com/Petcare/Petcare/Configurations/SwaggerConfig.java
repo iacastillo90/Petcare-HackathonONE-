@@ -1,5 +1,11 @@
 package com.Petcare.Petcare.Configurations;
 
+import java.util.List;
+
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+
 import io.swagger.v3.oas.models.Components;
 import io.swagger.v3.oas.models.OpenAPI;
 import io.swagger.v3.oas.models.info.Contact;
@@ -7,11 +13,8 @@ import io.swagger.v3.oas.models.info.Info;
 import io.swagger.v3.oas.models.security.SecurityRequirement;
 import io.swagger.v3.oas.models.security.SecurityScheme;
 import io.swagger.v3.oas.models.servers.Server;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
 
-import java.util.List;
+import jakarta.servlet.http.HttpServletRequest;
 
 /**
  * Configuration for Swagger/OpenAPI documentation with JWT authentication.
@@ -20,6 +23,7 @@ import java.util.List;
  * - Adds JWT bearer token authentication to Swagger UI
  * - Documents all API endpoints
  * - Provides contact information
+ * - Automatically detects server URL from request in production
  */
 @Configuration
 public class SwaggerConfig {
@@ -28,7 +32,10 @@ public class SwaggerConfig {
     private String baseUrl;
 
     @Bean
-    public OpenAPI customOpenAPI() {
+    public OpenAPI customOpenAPI(HttpServletRequest request) {
+        // Detect production URL from request headers if running behind proxy
+        String serverUrl = detectServerUrl(request);
+        
         return new OpenAPI()
                 .info(new Info()
                         .title("Petcare API")
@@ -59,7 +66,7 @@ public class SwaggerConfig {
                                 .name("Petcare Team")
                                 .email("support@petcare.com")))
                 .servers(List.of(
-                        new Server().url(baseUrl).description("Local server")))
+                        new Server().url(serverUrl).description("Server")))
                 .addSecurityItem(new SecurityRequirement().addList("bearerAuth"))
                 .components(new Components()
                         .addSecuritySchemes("bearerAuth", new SecurityScheme()
@@ -94,5 +101,45 @@ public class SwaggerConfig {
                                        Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
                                        ```
                                     """)));
+    }
+
+    /**
+     * Detects the server URL from request headers (for production behind proxy)
+     * or falls back to configured base-url.
+     */
+    private String detectServerUrl(HttpServletRequest request) {
+        // Check for forwarded headers (set by reverse proxy/load balancer)
+        String forwardedProto = request.getHeader("X-Forwarded-Proto");
+        String forwardedHost = request.getHeader("X-Forwarded-Host");
+        String forwardedPort = request.getHeader("X-Forwarded-Port");
+        String forwardedPrefix = request.getHeader("X-Forwarded-Prefix");
+
+        if (forwardedHost != null) {
+            StringBuilder url = new StringBuilder();
+            
+            // Determine protocol
+            if (forwardedProto != null) {
+                url.append(forwardedProto).append("://");
+            } else {
+                url.append(request.getScheme()).append("://");
+            }
+            
+            url.append(forwardedHost);
+            
+            // Determine port
+            if (forwardedPort != null && !forwardedPort.equals("80") && !forwardedPort.equals("443")) {
+                url.append(":").append(forwardedPort);
+            }
+            
+            // Add prefix if present
+            if (forwardedPrefix != null && !forwardedPrefix.isEmpty()) {
+                url.append(forwardedPrefix);
+            }
+            
+            return url.toString();
+        }
+
+        // Fallback to configured base-url
+        return baseUrl;
     }
 }
