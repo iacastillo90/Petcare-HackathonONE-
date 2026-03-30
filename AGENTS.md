@@ -445,7 +445,7 @@ class PetServiceImplementTest {
 
 ## API Documentation
 
-**Swagger UI**: `http://localhost:8088/swagger-ui.html`
+**Swagger UI**: `http://localhost:8088/swagger-ui/index.html`
 **OpenAPI JSON**: `http://localhost:8088/v3/api-docs`
 
 All controllers should use OpenAPI annotations:
@@ -618,8 +618,17 @@ hotfix/security-patch
    export JWT_EXPIRATION="86400000"
    export MAIL_USERNAME="noreply@petcare.com"
    export MAIL_PASSWORD="mail-password"
+   export PETCARE_API_BASE_URL="http://localhost:8088"
    ```
 4. **IDE**: Use Lombok annotation processor support
+
+---
+
+## Important Notes
+
+- **Email templates**: Use lowercase names (e.g., `email-verified`, not `Email-verified`)
+- **Test profile**: Redis is disabled in test profile (`@Profile("!test")` in RedisConfig)
+- **Production**: Use HTTP (not HTTPS) for `petcare.api.base-url` unless Traefik handles SSL
 
 ---
 
@@ -628,3 +637,37 @@ hotfix/security-patch
 - `ddl-auto=update` - Use Flyway/Liquibase for production migrations
 - Test coverage gaps in controller and integration tests
 - JWT implementation needs security audit before production
+
+---
+
+## Docker Commands
+
+```bash
+# Build and start all services
+docker compose up -d
+
+# View logs
+docker compose logs -f app
+
+# Rebuild application
+docker compose build --no-cache app
+docker compose up -d
+
+# Stop all services
+docker compose down
+```
+
+---
+
+## Async Implementation
+
+This project uses `@Async` for concurrent operations:
+
+- **AsyncConfig**: Configured with `DelegatingSecurityContextAsyncTaskExecutor` for proper Spring Security context propagation
+- **AsyncService wrappers**: Located in `Services/` folder (e.g., `UserAsyncService`)
+- **@Async methods in Implement classes**: Most service implementations have async variants (e.g., `getAllUsersAsync()`)
+
+Key notes:
+- Use `@Async("taskExecutor")` for async methods
+- Security context is automatically propagated to async threads
+- Configure thread pool in `AsyncConfig.java`
