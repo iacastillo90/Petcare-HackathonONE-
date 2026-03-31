@@ -208,7 +208,7 @@ public class SitterProfileController {
      * @throws SitterProfileNotFoundException si no existe un perfil de cuidador para el ID de usuario proporcionado.
      */
     @GetMapping("/{userId}")
-    @PreAuthorize("hasRole('ADMIN') or #userId == authentication.principal.id")
+    @PreAuthorize(" hasAnyRole('CLIENT', 'SITTER', 'ADMIN') ")
     @Operation(
             summary = "Obtener Perfil de Cuidador por ID de Usuario",
             description = "Recupera los detalles completos del perfil de un cuidador, incluyendo biografía, tarifas y disponibilidad. El acceso está restringido a administradores o al propio usuario."
@@ -322,7 +322,7 @@ public class SitterProfileController {
      * perfiles completos de todos los cuidadores y un estado HTTP 200 (OK).
      */
     @GetMapping
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('CLIENT', 'SITTER', 'ADMIN') ")
     @Operation(
             summary = "Obtener todos los perfiles de cuidadores (Admin)",
             description = "Endpoint administrativo que devuelve una lista completa de todos los perfiles de cuidadores registrados en la plataforma. Requiere rol de 'ADMIN'.",

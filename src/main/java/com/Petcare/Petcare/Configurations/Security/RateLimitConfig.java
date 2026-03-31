@@ -7,7 +7,7 @@ import org.springframework.context.annotation.Configuration;
 @ConfigurationProperties(prefix = "petcare.ratelimit")
 public class RateLimitConfig {
 
-    private int requestsPerMinute = 5;
+    private int requestsPerMinute = 50;
     private int blockDurationMinutes = 15;
     private boolean enabled = true;
 

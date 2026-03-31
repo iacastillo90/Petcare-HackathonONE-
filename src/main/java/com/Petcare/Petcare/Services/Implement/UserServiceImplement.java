@@ -222,12 +222,16 @@ public class UserServiceImplement implements UserService {
         // 3. Generar el token JWT para el nuevo usuario
         String token = jwtService.getToken(savedUser);
 
+        // Construir el perfil del usuario
+        UserProfileDTO userProfile = buildUserProfile(savedUser);
+
         log.info("Usuario registrado exitosamente: {} con ID: {}", savedUser.getEmail(), savedUser.getId());
 
         // 4. Devolver la respuesta de autenticación
         return AuthResponse.builder()
                 .token(token)
                 .role(savedUser.getRole().name())
+                .userProfile(userProfile)
                 .build();
     }
     /**
@@ -299,12 +303,16 @@ public class UserServiceImplement implements UserService {
         // 3. Generar el token JWT para el nuevo usuario
         String token = jwtService.getToken(savedUser);
 
+        // Construir el perfil del usuario
+        UserProfileDTO userProfile = buildUserProfile(savedUser);
+
         log.info("Usuario registrado exitosamente: {} con ID: {}", savedUser.getEmail(), savedUser.getId());
 
         // 4. Devolver la respuesta de autenticación
         return AuthResponse.builder()
                 .token(token)
                 .role(savedUser.getRole().name())
+                .userProfile(userProfile)
                 .build();
     }
 

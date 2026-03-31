@@ -54,7 +54,7 @@ public class JwtService {
         }
         byte[] keyBytes;
         try {
-            keyBytes = Decoders.BASE64.decode(secretKey);
+            keyBytes = Decoders.BASE64URL.decode(secretKey);
         } catch (IllegalArgumentException e) {
             throw new IllegalArgumentException("JWT secret key must be a valid Base64-encoded string");
         }
@@ -106,7 +106,7 @@ public class JwtService {
      * @return El objeto SecretKey para firmar/verificar tokens JWT.
      */
     private SecretKey getKey() {
-        byte[] keyBytes = Decoders.BASE64.decode(secretKey);
+        byte[] keyBytes = Decoders.BASE64URL.decode(secretKey);
         return Keys.hmacShaKeyFor(keyBytes);
     }
 

@@ -1,78 +1,40 @@
 package com.Petcare.Petcare.Configurations.Security;
 
-import java.util.Arrays;
-import java.util.List;
-
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
+import java.util.List;
+
 /**
- * Configuración de CORS para permitir solicitudes de origen cruzado.
- *
- * NOTA: Se usa CorsConfigurationSource bean en lugar de WebMvcConfigurer
- * para que Spring Security lo utilice correctamente en el SecurityFilterChain.
- * Esto evita que las peticiones preflight (OPTIONS) sean bloqueadas por el filtro de seguridad.
+ * Clase de configuración de CORS (Cross-Origin Resource Sharing) a nivel de Spring Security.
  */
 @Configuration
 public class CorsConfig {
 
-    // Dominios permitidos - el frontend en Traefik y Swagger local
-    private static final String TRAEFIK_FRONTEND_URL = "http://petcare-frontend-ppd6vc-370d89-144-225-147-45.traefik.me";
-    private static final String LOCALHOST_3000 = "http://localhost:3000";
-    private static final String LOCALHOST_5173 = "http://localhost:5173";
-    private static final String LOCALHOST_8088 = "http://localhost:8088";
-    private static final String LOCALHOST_4200 = "http://localhost:4200";
-
     /**
-     * Configura las políticas de CORS para permitir solicitudes de origen cruzado.
-     * Spring Security usa este bean automáticamente cuando se habilita .cors() en SecurityFilterChain.
-     *
-     * @return CorsConfigurationSource configurado con los orígenes permitidos.
+     * Define la fuente de configuración CORS para que Spring Security la intercepte
+     * correctamente en el filtro pre-flight (OPTIONS).
      */
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
 
-        // Orígenes permitidos
-        configuration.setAllowedOrigins(List.of(
-                TRAEFIK_FRONTEND_URL,
-                LOCALHOST_3000,
-                LOCALHOST_5173,
-                LOCALHOST_8088,
-                LOCALHOST_4200
-        ));
+        // 1. Orígenes permitidos (El frontend exacto)
+        configuration.setAllowedOrigins(List.of("https://frontend-pet-403q5exqo-iacastillo90s-projects.vercel.app","http://localhost:5173"));
 
-        // Métodos HTTP permitidos
-        configuration.setAllowedMethods(Arrays.asList(
-                "GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH", "HEAD"
-        ));
+        // 2. Métodos HTTP permitidos
+        configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
 
-        // Headers permitidos - incluir todos los necesarios para JWT y API
-        configuration.setAllowedHeaders(Arrays.asList(
-                "Authorization",
-                "Content-Type",
-                "X-Requested-With",
-                "Accept",
-                "Origin",
-                "Access-Control-Request-Method",
-                "Access-Control-Request-Headers"
-        ));
+        // 3. Cabeceras permitidas
+        configuration.setAllowedHeaders(List.of("Authorization", "Content-Type"));
 
-        // Headers expuestos al cliente
-        configuration.setExposedHeaders(Arrays.asList(
-                "Authorization",
-                "Content-Disposition"
-        ));
-
-        // Permitir credenciales (cookies, auth headers)
+        // 4. Permitir envío de credenciales (esencial para Axios con withCredentials)
         configuration.setAllowCredentials(true);
 
-        // Cache de preflight por 1 hora
-        configuration.setMaxAge(3600L);
-
+        // 5. Aplicar estas reglas a todas las rutas del backend
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", configuration);
 
