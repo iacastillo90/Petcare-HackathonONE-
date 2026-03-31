@@ -34,6 +34,7 @@ public class RateLimitFilter extends OncePerRequestFilter {
     private static final long WINDOW_MILLIS = 60_000;
     private static final long CLEANUP_INTERVAL_MILLIS = 300_000;
 
+    // NOTA: No incluir paths que terminen con "/" - la lógica de isExcluded los agrega automáticamente
     private static final Set<String> EXCLUDED_PATHS = Set.of(
             "/api/services",
             "/api/users/login",
@@ -44,11 +45,8 @@ public class RateLimitFilter extends OncePerRequestFilter {
             "/api/users/health",
             "/verification-success.html",
             "/swagger-ui",
-            "/swagger-ui/",
             "/v3/api-docs",
-            "/v3/api-docs/",
             "/api-docs",
-            "/api-docs/",
             "/actuator"
     );
 
