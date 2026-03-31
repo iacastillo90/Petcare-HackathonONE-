@@ -52,6 +52,7 @@ dependencies {
 	implementation 'org.springframework.boot:spring-boot-starter-data-jpa' // JPA
 	implementation 'org.springframework.boot:spring-boot-starter-data-rest' // Repositorios expuestos como API REST
 	//runtimeOnly 'com.h2database:h2'
+    implementation 'org.postgresql:postgresql'
 	runtimeOnly 'com.mysql:mysql-connector-j:9.2.0' // Conector MySQL
 
 	// Lombok
