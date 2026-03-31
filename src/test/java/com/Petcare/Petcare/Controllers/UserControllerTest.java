@@ -15,9 +15,11 @@ import com.Petcare.Petcare.Repositories.UserRepository;
 import com.Petcare.Petcare.Services.EmailService;
 import com.Petcare.Petcare.Services.UserService;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.junit.jupiter.api.Test;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -76,8 +78,17 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
 @Transactional
-@Tag(name = "UserControllerTest", description = "Pruebas de integración para el controlador de usuarios")
+@Tag(name = "UserControllerTest", description = "Pruebas de integración para el controlador de usuario")
 class UserControllerTest {
+
+    /**
+     * Limpia el contexto de seguridad después de cada test para evitar
+     * contaminación entre tests.
+     */
+    @AfterEach
+    void tearDown() {
+        SecurityContextHolder.clearContext();
+    }
 
     @Autowired private MockMvc mockMvc;
     @Autowired private ObjectMapper objectMapper;
