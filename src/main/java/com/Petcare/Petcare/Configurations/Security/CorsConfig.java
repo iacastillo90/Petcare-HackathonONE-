@@ -23,7 +23,7 @@ public class CorsConfig {
         CorsConfiguration configuration = new CorsConfiguration();
 
         // 1. Orígenes permitidos (El frontend exacto)
-        configuration.setAllowedOrigins(List.of("http://localhost:5174"));
+        configuration.setAllowedOrigins(List.of("*"));
 
         // 2. Métodos HTTP permitidos
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
