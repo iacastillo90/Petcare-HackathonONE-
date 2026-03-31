@@ -106,7 +106,7 @@ public class JwtService {
      * @return El objeto SecretKey para firmar/verificar tokens JWT.
      */
     private SecretKey getKey() {
-        byte[] keyBytes = Decoders.BASE64.decode(secretKey);
+        byte[] keyBytes = Decoders.BASE64URL.decode(secretKey);
         return Keys.hmacShaKeyFor(keyBytes);
     }
 
