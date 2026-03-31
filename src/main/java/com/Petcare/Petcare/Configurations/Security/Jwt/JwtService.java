@@ -54,7 +54,7 @@ public class JwtService {
         }
         byte[] keyBytes;
         try {
-            keyBytes = Decoders.BASE64.decode(secretKey);
+            keyBytes = Decoders.BASE64URL.decode(secretKey);
         } catch (IllegalArgumentException e) {
             throw new IllegalArgumentException("JWT secret key must be a valid Base64-encoded string");
         }
