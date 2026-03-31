@@ -1,9 +1,7 @@
 package com.Petcare.Petcare.Configurations.Web;
 
-import com.Petcare.Petcare.Configurations.Security.Jwt.JwtAuthenticationFilter;
 import lombok.RequiredArgsConstructor;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -14,11 +12,16 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.web.cors.CorsConfigurationSource;
+
+import com.Petcare.Petcare.Configurations.Security.Jwt.JwtAuthenticationFilter;
 
 /**
- * Clase de configuración de Spring Security para definir políticas de autorización y configurar la cadena de filtros de seguridad.
- * Maneja la autenticación basada en JWT y asegura que las sesiones sean sin estado.
+ * Configuración de autorización web y cadena de filtros de seguridad.
+ * Maneja autenticación JWT sin estado, CORS integrado con Spring Security,
+ * y define reglas de acceso público/protegido para endpoints de la API.
  */
+@Slf4j
 @Configuration
 @EnableWebSecurity
 @EnableMethodSecurity
@@ -27,7 +30,7 @@ public class WebAuthorization {
 
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
     private final AuthenticationProvider authProvider;
-    private static final Logger logger = LoggerFactory.getLogger(WebAuthorization.class);
+    private final CorsConfigurationSource corsConfigurationSource;
 
     /**
      * Define la cadena de filtros de seguridad para configurar las políticas de seguridad de la aplicación.
@@ -38,12 +41,18 @@ public class WebAuthorization {
      */
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-        logger.info("Configuring security filter chain");
+        log.info("Configuring security filter chain");
         return http
+                // Habilitar CORS usando el CorsConfigurationSource bean de CorsConfig
+                .cors(cors -> cors.configurationSource(corsConfigurationSource))
                 .csrf(csrf ->
                         csrf.disable())
                 .authorizeHttpRequests(authRequest ->
                         authRequest
+                                // Permitir peticiones preflight (CORS) sin autenticación
+                                .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+
+                                // Endpoints públicos de usuarios
                                 .requestMatchers(HttpMethod.POST, "/api/users/login").permitAll()
                                 .requestMatchers(HttpMethod.POST, "/api/users/register").permitAll()
                                 .requestMatchers(HttpMethod.POST, "/api/users/register-sitter").permitAll()
@@ -52,16 +61,26 @@ public class WebAuthorization {
                                 .requestMatchers(HttpMethod.GET, "/api/users/health").permitAll()
                                 .requestMatchers(HttpMethod.GET, "/verification-success.html").permitAll()
                                 .requestMatchers(HttpMethod.GET, "/api/users/summary").hasRole("ADMIN")
-                                .requestMatchers("/swagger-ui/**", "/swagger-ui.html", "/swagger-ui/index.html", "/v3/api-docs/**", "/api-docs/**", "/swagger-resources/**", "/webjars/**").permitAll()
+
+                                // Swagger / OpenAPI - permitir acceso público
+                                .requestMatchers(
+                                        "/swagger-ui/**",
+                                        "/swagger-ui.html",
+                                        "/swagger-ui/index.html",
+                                        "/v3/api-docs/**",
+                                        "/v3/api-docs",
+                                        "/api-docs/**",
+                                        "/swagger-resources/**",
+                                        "/webjars/**"
+                                ).permitAll()
                                 .requestMatchers("/favicon.ico").permitAll()
-                                //.requestMatchers("/api/**").permitAll()
-                                
-                                // Actuator security - FIXED: Only health and info are public
-                                // All other actuator endpoints require ADMIN role
+
+                                // Actuator security - Solo health y info son públicos
                                 .requestMatchers(HttpMethod.GET, "/actuator/health").permitAll()
                                 .requestMatchers(HttpMethod.GET, "/actuator/info").permitAll()
                                 .requestMatchers("/actuator/**").hasRole("ADMIN")
-                                
+
+                                // Todo lo demás requiere autenticación
                                 .anyRequest().authenticated()
                 )
                 .sessionManagement(sessionManager ->
