@@ -411,7 +411,7 @@ public class InvoiceController {
      * @since 1.0
      */
     @GetMapping("/account/{accountId}")
-    @PreAuthorize("hasRole('ADMIN') or @securityService.isAccountOwner(authentication, #accountId)")
+    @PreAuthorize("hasAnyRole('CLIENT', 'SITTER', 'ADMIN') ")
     @Operation(
             summary = "Listar facturas de una cuenta con paginación",
             description = "Obtiene lista paginada de facturas para una cuenta específica con filtros automáticos"
