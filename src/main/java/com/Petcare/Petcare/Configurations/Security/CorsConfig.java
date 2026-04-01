@@ -23,7 +23,7 @@ public class CorsConfig {
         CorsConfiguration configuration = new CorsConfiguration();
 
         // 1. Orígenes permitidos (El frontend exacto)
-        configuration.setAllowedOrigins(List.of("https://frontend-pet-k5t0g2wbr-iacastillo90s-projects.vercel.app/","http://localhost:5173"));
+        configuration.setAllowedOrigins(List.of("https://frontend-pet-pay-kohl.vercel.app","http://localhost:5173"));
 
         // 2. Métodos HTTP permitidos
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
